@@ -1,0 +1,3 @@
+[database]
+driver = "postgres"
+dsn = "user=postgres password=qwerty dbname=online_store sslmode=disable"

@@ -1,0 +1,11 @@
+<!-- templates/navigation.html -->
+{{ define "navigation.html" }}
+<nav>
+    <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/hello">Hello Page</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/user-dashboard">User Dashboard</a></li>
+    </ul>
+</nav>
+{{ end }}
