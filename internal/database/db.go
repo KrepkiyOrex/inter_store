@@ -24,7 +24,6 @@ type DB struct {
 }
 
 func Connect() (*DB, error) {
-
 	// Load the configuration from the file
 	cfg, err := toml.LoadFile("config/config.toml")
 	if err != nil {
