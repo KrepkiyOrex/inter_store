@@ -49,7 +49,7 @@ func Connect() (*DB, error) {
 		return nil, err
 	}
 
-	log.Println("Connecting to the database successfully")
+	log.Print("Connecting to the database successfully: ")
 
 	return &DB{DB: db}, nil
 }

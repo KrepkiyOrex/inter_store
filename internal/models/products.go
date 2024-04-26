@@ -8,24 +8,17 @@ import (
 	"strconv"
 
 	"First_internet_store/internal/database"
+
 	"First_internet_store/internal/utils"
 )
 
-// type DB struct {
-// 	*sql.DB
-// }
-
-// type Store struct {
-// 	DB *DB
-// }
-
 // Главная страница с товарами
-// func (connect *DB) ProductsHandler(w http.ResponseWriter, r *http.Request) {
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
-	// Connecting to the DB
+	// Connect to the database
 	db, err := database.Connect()
 	if err != nil {
-		log.Fatal("Ошибка при подключении к базе данных:", err)
+		log.Println("Error connecting to the database")
+		return
 	}
 
 	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
@@ -72,62 +65,9 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	log.Print("Handling request for products")
 }
-
-// func ProductsHandler(w http.ResponseWriter, r *http.Request) {
-// 	// Подключение к БД
-// 	db, err := sql.Open("postgres", "user=postgres password=qwerty dbname=online_store sslmode=disable")
-
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	defer db.Close()
-
-// 	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-// 	rows, err := db.Query("SELECT name, price, id FROM products")
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	defer rows.Close()
-
-// 	// Создание списка для хранения товаров
-// 	var products []struct {
-// 		Name  string
-// 		Price int
-// 		ID    int
-// 	}
-
-// 	// Считывание данных о товарах из результатов запроса
-// 	for rows.Next() {
-// 		var product struct {
-// 			Name  string
-// 			Price int
-// 			ID    int
-// 		}
-// 		if err := rows.Scan(&product.Name, &product.Price, &product.ID); err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-// 		// Добавление продуктов в список
-// 		products = append(products, product)
-// 	}
-
-// 	if err := rows.Err(); err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Загружаем шаблон страницы товаров и передаем ему данные о товарах
-// 	link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/products.html"
-// 	tmpl := template.Must(template.ParseFiles(link))
-// 	err = tmpl.Execute(w, products)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
 
 // Обработчик для добавления товара в корзину
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
