@@ -45,4 +45,11 @@ func StartServer() {
 	if err != nil {
 		log.Fatal("Listen and Server:", err)
 	}
+
+	/*
+			Это более короткий способ?
+
+			// Запускаем сервер
+		    log.Fatal(http.ListenAndServe(":8080", nil))
+	*/
 }

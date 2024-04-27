@@ -17,12 +17,12 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// Connect to the database
 	db, err := database.Connect()
 	if err != nil {
+		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
 		log.Println("Error connecting to the database")
 		return
 	}
 
 	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-	// rows, err := db.Query("SELECT name, price, id FROM products")
 	rows, err := db.Query("SELECT name, price, id FROM products")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -77,9 +77,6 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid error ID", http.StatusBadRequest)
 		return
 	}
-
-	// Здесь можно выполнить логику добавления товара в корзину
-	// Например, сохранить его в сессии или базе данных
 
 	// Получаем сессию пользователя
 	session, err := utils.Store.Get(r, "session-name")

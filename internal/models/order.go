@@ -1,9 +1,9 @@
 package models
 
 import (
-	"database/sql"
-	"fmt"
+	"First_internet_store/internal/database"
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 )
@@ -14,8 +14,51 @@ type Order struct {
 	OrderDate time.Time
 }
 
+// Заказы пользователя ??????????????????
+func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	// Получение ID пользователя из сессии или запроса в зависимости от вашей логики
+	userID := 1 // Ваша логика получения идентификатора пользователя
+
+	// db, err := database.Connect()
+	// if err != nil {
+	// 	fmt.Println("Error connecting to the database", err)
+	// 	return
+	// }
+	// defer db.Close()
+
+	// err = db.Ping()
+	// if err != nil {
+	// 	fmt.Println("Error pinging the database", err)
+	// 	return
+	// }
+
+	// Получение заказов пользователя с БД
+	orders, err := getOrdersForUser( /* db, */ userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Загрузка HTML шаблона
+	link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/orders.html"
+	tmpl := template.Must(template.ParseFiles(link))
+
+	// Отправка страницы HTML с данными о заказах
+	if err := tmpl.Execute(w, orders); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 // Для получения заказов пользователя из базы данных
-func getOrdersForUser(db *sql.DB, userId int) ([]Order, error) {
+func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {
+	db, err := database.Connect()
+	if err != nil {
+		log.Fatal("Error connecting to the database:", err)
+		return nil, err
+	}
+	defer db.Close()
+
 	// подготовка SQL запроса
 	query := `
 		SELECT id, order_date
@@ -50,41 +93,4 @@ func getOrdersForUser(db *sql.DB, userId int) ([]Order, error) {
 	}
 
 	return orders, nil
-}
-
-// Заказы пользователя ??????????????????
-func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	// Получение ID пользователя из сессии или запроса в зависимости от вашей логики
-	userID := 1 // Ваша логика получения идентификатора пользователя
-
-	// Настройка подключения к БД
-	db, err := sql.Open("postgres", "user=postgres password=qwerty dbname=online_store sslmode=disable")
-	if err != nil {
-		fmt.Println("Error connecting to the database", err)
-		return
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("Error pinging the database", err)
-		return
-	}
-
-	// Получение заказов пользователя с БД
-	orders, err := getOrdersForUser(db, userID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Загрузка HTML шаблона
-	link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/orders.html"
-	tmpl := template.Must(template.ParseFiles(link))
-
-	// Отправка страницы HTML с данными о заказах
-	if err := tmpl.Execute(w, orders); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 }

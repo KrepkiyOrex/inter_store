@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"database/sql"
+	"First_internet_store/internal/database"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,7 +9,7 @@ import (
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Подключаемся к базе данных PostgreSQL
-	db, err := sql.Open("postgres", "user=postgres password=qwerty dbname=online_store sslmode=disable")
+	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
 		log.Fatal("Error connecting to the database:", err)
@@ -44,6 +44,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Выводим сообщение о успешной регистрации
 	fmt.Fprintf(w, "User %s successfully registered!", userName)
+
+	log.Printf("User %s added to the database", userName)
 }
 
 // Обработчик для отображения HTML-страницы регистрации

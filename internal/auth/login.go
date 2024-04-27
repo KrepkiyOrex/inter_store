@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"First_internet_store/internal/database"
 	"First_internet_store/internal/utils"
 )
 
@@ -85,15 +86,24 @@ func loginHandler_000________000(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome, %s!", username)
 }
 
-// ===============================
+// ==========================================================================================
+// ==========================================================================================
 
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "templates/login.html")
+	http.ServeFile(w, r, "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/login.html")
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Подключаемся к базе данных PostgreSQL
-	db, err := sql.Open("postgres", "user=postgres password=qwerty dbname=online_store sslmode=disable")
+	// db, err := sql.Open("postgres", "user=postgres password=qwerty dbname=online_store sslmode=disable")
+	// if err != nil {
+	// 	http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+	// 	log.Fatal("Error connecting to the database:", err)
+	// 	return
+	// }
+	// defer db.Close()
+
+	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
 		log.Fatal("Error connecting to the database:", err)
