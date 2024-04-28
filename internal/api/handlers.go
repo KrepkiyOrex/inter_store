@@ -21,7 +21,8 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/headers", others.HeadersHandler)
 
 	router.HandleFunc("/products", models.ProductsHandler)
-	router.HandleFunc("/add-to-cart", models.AddToCartHandler)
+	router.HandleFunc("/list", models.ListHandler)
+	// router.HandleFunc("/add-to-cart", models.AddToCartHandler)
 	router.HandleFunc("/cart", models.ViewCartHandler)
 	router.HandleFunc("/users-orders", models.UserOrdersHandler) // error "driver"
 

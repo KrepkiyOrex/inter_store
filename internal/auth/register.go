@@ -30,7 +30,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
-	// Сохраняем данные пользователя в базе данных
+	// Сохраняем данные пользователя в базе данных "users"
 	_, err = db.Exec(
 		"INSERT INTO users (username, email, password)"+
 			"VALUES ($1, $2, $3)",
@@ -50,6 +50,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 // Обработчик для отображения HTML-страницы регистрации
 func ShowRegistrationPage(w http.ResponseWriter, r *http.Request) {
-	link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/register.html"
+	link := "web/views/register.html"
 	http.ServeFile(w, r, link)
 }

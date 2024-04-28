@@ -5,11 +5,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"strconv"
 
 	"First_internet_store/internal/database"
-
-	"First_internet_store/internal/utils"
 )
 
 // Главная страница с товарами
@@ -58,7 +55,9 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Загружаем шаблон страницы товаров и передаем ему данные о товарах
-	link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/products.html"
+	// link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/products.html"
+	// link := "./web/views/products.html"
+	link := "web/views/products.html"
 	tmpl := template.Must(template.ParseFiles(link))
 	err = tmpl.Execute(w, products)
 	if err != nil {
@@ -70,42 +69,48 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Обработчик для добавления товара в корзину
-func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
-	// Получаем идентификатор товара из запроса (здесь предполагается, что у вас есть идентификатор товара)
-	productID, err := strconv.Atoi(r.FormValue("product_id"))
-	if err != nil {
-		http.Error(w, "Invalid error ID", http.StatusBadRequest)
-		return
-	}
+// func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Получаем идентификатор товара из запроса (здесь предполагается, что у вас есть идентификатор товара)
+// 	productID, err := strconv.Atoi(r.FormValue("product_id"))
+// 	if err != nil {
+// 		http.Error(w, "Invalid error ID", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Получаем сессию пользователя
-	session, err := utils.Store.Get(r, "session-name")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	// Получаем сессию пользователя
+// 	session, err := utils.Store.Get(r, "session-name")
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Получаем или создаем массив для товаров в корзине
-	cart, ok := session.Values["cart"].([]string)
-	if !ok {
-		cart = []string{}
-	}
+// 	// Получаем или создаем массив для товаров в корзине
+// 	cart, ok := session.Values["cart"].([]string)
+// 	if !ok {
+// 		cart = []string{}
+// 	}
 
-	// Добавляем идентификатор товара в корзину
-	cart = append(cart, strconv.Itoa(productID))
+// 	// Добавляем идентификатор товара в корзину
+// 	cart = append(cart, strconv.Itoa(productID))
 
-	// Сохраняем обновленную корзину в сессии
-	session.Values["cart"] = cart
-	err = session.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	// Сохраняем обновленную корзину в сессии
+// 	session.Values["cart"] = cart
+// 	err = session.Save(r, w)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Перенаправляем пользователя обратно на страницу с товарами
-	http.Redirect(w, r, "/products", http.StatusSeeOther)
-}
+// 	// Перенаправляем пользователя обратно на страницу с товарами
+// 	http.Redirect(w, r, "/products", http.StatusSeeOther)
+// }
 
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "View cart page")
+}
+
+
+func ListHandler(w http.ResponseWriter, r *http.Request) {
+	link := "web/views/list.html"
+	http.ServeFile(w, r, link)
 }

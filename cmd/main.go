@@ -24,8 +24,6 @@ import (
 )
 
 func main() {
-	// db.Connect()
-
 	// Инициализируем хранилище сессий
 	utils.Store = sessions.NewCookieStore([]byte("your-secret-key"))
 

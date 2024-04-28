@@ -90,7 +90,7 @@ func loginHandler_000________000(w http.ResponseWriter, r *http.Request) {
 // ==========================================================================================
 
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/login.html")
+	http.ServeFile(w, r, "web/views/login.html")
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +178,7 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	username := session.Values["user_id"].(string)
 
 	// Загружаем HTML-шаблон страницы панели управления пользователя
-	link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/user_dashboard.html"
+	link := "web/views/user_dashboard.html"
 	tmpl := template.Must(template.ParseFiles(link))
 
 	// Передаем имя пользователя в HTML-шаблон и отправляем его клиенту
