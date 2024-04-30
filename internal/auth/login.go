@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -37,6 +38,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Извлекаем данные из формы
 	userName := r.Form.Get("username")
 	password := r.Form.Get("password")
+	fmt.Println("Test", userName)
 
 	// Проверяем данные пользователя в базе данных
 	// V Здесь должна быть проверка пароля и другая бизнес-логика аутентификации
@@ -70,6 +72,37 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		// Другие атрибуты, такие как Secure и SameSite, могут быть также установлены в соответствии с вашими требованиями безопасности.
 	})
 
+	// ==================================================
+
+	// Узнай что хранится в токене? если и имя клиента то видимо стоит записать с
+	// него в сессию? узнай как правильно
+	// Узнай что хранится в токене? если и имя клиента то видимо стоит записать с
+	// него в сессию? узнай как правильно
+	// Узнай что хранится в токене? если и имя клиента то видимо стоит записать с
+	// него в сессию? узнай как правильно
+	// Узнай что хранится в токене? если и имя клиента то видимо стоит записать с
+	// него в сессию? узнай как правильно
+	// Узнай что хранится в токене? если и имя клиента то видимо стоит записать с
+	// него в сессию? узнай как правильно
+	// Узнай что хранится в токене? если и имя клиента то видимо стоит записать с
+	// него в сессию? узнай как правильно
+
+	// Если всё успешно, можно выполнить действия после успешной авторизации, например, установить сессию
+	session, err := utils.Store.Get(r, "session-name")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	session.Values["user_id"] = userName
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// ==============================================================
+
 	// Редирект на другую страницу после успешной аутентификации
 	http.Redirect(w, r, "/user-dashboard", http.StatusFound)
 }
@@ -93,6 +126,9 @@ func authenticateUser(username, password string) (int, error) {
 		// В случае ошибки или неверных учетных данных возвращаем ошибку аутентификации
 		return 0, err
 	}
+
+	log.Println("SELECT storedUsername", storedUsername)
+	log.Println("SELECT username", username)
 
 	// Проверяем соответствие имени пользователя и хэшированного пароля из базы данных с предоставленными данными
 	// Здесь должна быть ваша логика хэширования и проверки пароля
@@ -189,6 +225,7 @@ func GetUserFromToken(tokenString string) (User, error) {
 		Email: claims["email"].(string),
 	}
 
+	// fmt.Println("Test", user.Name, user.ID, user.ID)
 	return user, nil
 }
 
@@ -222,6 +259,13 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// session.Values["user_id"] = "Kurva!"
+
+	log.Println("UserDashboardHandler session", session)
+	log.Println("UserDashboardHandler session.Store()", session.Store())
+	log.Println("UserDashboardHandler session.Name()", session.Name())
+	log.Println("UserDashboardHandler session.Values", session.Values)
+
 	// Проверяем, авторизован ли пользователь
 	if session.Values["user_id"] == nil {
 		// Если пользователь не авторизован, перенаправляем на страницу входа
@@ -231,6 +275,13 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Получаем имя пользователя из сессии
 	username := session.Values["user_id"].(string)
+	// username, ok  := session.Values["user_id"].(string)
+	// if !ok {
+	// 	// Если user_id не является строкой, обработайте эту ситуацию
+	// 	// Например, можно сделать перенаправление на страницу входа или отправить ошибку
+	// 	http.Error(w, "Failed to retrieve username from session", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	// Загружаем HTML-шаблон страницы панели управления пользователя
 	link := "web/views/user_dashboard.html"
@@ -245,7 +296,15 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Handling user dashboard request for:", username)
+	// ============================
+	tokenString := ExtractToken(r)
+	nameTes, err := GetUserFromToken(tokenString)
+	// log.Println("Handling user dashboard request for:", session.Name())
+	log.Println("Handling nameTes.Name:", nameTes.Name)
+	log.Println("Handling nameTes:", nameTes)
+	log.Println("Handling username:", username)
+
+	// log.Println("Handling user dashboard request for:", username) // work
 }
 
 // func LoginHandler(w http.ResponseWriter, r *http.Request) {
