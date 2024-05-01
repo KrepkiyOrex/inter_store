@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -38,7 +37,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Извлекаем данные из формы
 	userName := r.Form.Get("username")
 	password := r.Form.Get("password")
-	fmt.Println("Test", userName)
 
 	// Проверяем данные пользователя в базе данных
 	// V Здесь должна быть проверка пароля и другая бизнес-логика аутентификации
@@ -80,7 +78,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// (устанавливает значение "value" для ключа "key" в данных сессии. Можно 
+	// (устанавливает значение "value" для ключа "key" в данных сессии. Можно
 	// установить любые данные, для сохранения в сессию.)
 	// записиваем данные клиента в сессию
 	session.Values["user_id"] = userName
@@ -115,9 +113,6 @@ func authenticateUser(username, password string) (int, error) {
 		// В случае ошибки или неверных учетных данных возвращаем ошибку аутентификации
 		return 0, err
 	}
-
-	log.Println("SELECT storedUsername", storedUsername)
-	log.Println("SELECT username", username)
 
 	// Проверяем соответствие имени пользователя и хэшированного пароля из базы данных с предоставленными данными
 	// Здесь должна быть ваша логика хэширования и проверки пароля
@@ -214,7 +209,6 @@ func GetUserFromToken(tokenString string) (User, error) {
 		Email: claims["email"].(string),
 	}
 
-	// fmt.Println("Test", user.Name, user.ID, user.ID)
 	return user, nil
 }
 
@@ -248,13 +242,6 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// session.Values["user_id"] = "Kurva!"
-
-	log.Println("UserDashboardHandler session", session)
-	log.Println("UserDashboardHandler session.Store()", session.Store())
-	log.Println("UserDashboardHandler session.Name()", session.Name())
-	log.Println("UserDashboardHandler session.Values", session.Values)
-
 	// Проверяем, авторизован ли пользователь
 	if session.Values["user_id"] == nil {
 		// Если пользователь не авторизован, перенаправляем на страницу входа
@@ -285,15 +272,9 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ============================
-	tokenString := ExtractToken(r)
-	nameTes, err := GetUserFromToken(tokenString)
-	// log.Println("Handling user dashboard request for:", session.Name())
-	log.Println("Handling nameTes.Name:", nameTes.Name)
-	log.Println("Handling nameTes:", nameTes)
-	log.Println("Handling username:", username)
+	// log.Println("Handling username:", username)
 
-	// log.Println("Handling user dashboard request for:", username) // work
+	log.Println("Handling user dashboard request for:", username) // work
 }
 
 // func LoginHandler(w http.ResponseWriter, r *http.Request) {
