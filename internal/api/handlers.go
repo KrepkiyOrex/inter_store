@@ -17,7 +17,8 @@ func SetupRoutes() *mux.Router {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", others.GreetHandler)
-	router.HandleFunc("/hello", others.HelloHandler)
+	// router.HandleFunc("/hello", others.HelloHandler)
+	router.HandleFunc("/hello", models.HelloHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
 
 	router.HandleFunc("/products", models.ProductsHandler)

@@ -131,6 +131,62 @@ func addToCart(userID int, productID int) error {
 	return nil
 }
 
+// Обработчик для всех запросов
+func HelloHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		// Если запрос POST, обрабатываем аутентификацию
+		userName := r.FormValue("userName")
+
+		// Создаем новую куку с именем пользователя
+		cookie := http.Cookie{
+			Name:  "userName",
+			Value: userName,
+		}
+
+		// Устанавливаем куку в ответ
+		http.SetCookie(w, &cookie)
+
+		// Перенаправляем пользователя на главную страницу
+		http.Redirect(w, r, "/hello", http.StatusFound)
+	} else {
+		// Если запрос GET, отображаем главную страницу
+		// Получаем значение куки с именем пользователя
+		userNameCookie, err := r.Cookie("userName")
+		if err == nil {
+			// Если куки существует, отображаем имя пользователя на странице
+			userName := userNameCookie.Value
+			// Используем шаблон для вставки имени пользователя на страницу
+			tmpl := template.Must(template.New("index").Parse(`
+                <html>
+                <body>
+                    <p>Привет, {{.UserName}}!</p>
+                    <!-- Форма для аутентификации -->
+                    <form action="/login" method="post">
+                        <input type="text" name="userName">
+                        <input type="submit" value="Войти">
+                    </form>
+                </body>
+                </html>
+            `))
+			tmpl.Execute(w, map[string]interface{}{
+				"UserName": userName,
+			})
+		} else {
+			// Если куки не существует, отображаем страницу без имени пользователя и форму для аутентификации
+			http.ServeFile(w, r, "login.html")
+		}
+	}
+}
+
+func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "View cart page")
+}
+
+func ListHandler(w http.ResponseWriter, r *http.Request) {
+	link := "web/views/list.html"
+	http.ServeFile(w, r, link)
+}
+
 // Обработчик для добавления товара в корзину
 // func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 // 	// Получаем идентификатор товара из запроса (здесь предполагается, что у вас есть идентификатор товара)
@@ -167,12 +223,3 @@ func addToCart(userID int, productID int) error {
 // 	// Перенаправляем пользователя обратно на страницу с товарами
 // 	http.Redirect(w, r, "/products", http.StatusSeeOther)
 // }
-
-func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "View cart page")
-}
-
-func ListHandler(w http.ResponseWriter, r *http.Request) {
-	link := "web/views/list.html"
-	http.ServeFile(w, r, link)
-}

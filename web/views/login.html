@@ -40,8 +40,9 @@
             color: #ffd700; /* Цвет текста при наведении */
         }
     </style>
-</head>
+
 <body>
+    <p>Привет, {{.UserName}}!</p>
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
@@ -58,7 +59,6 @@
         </ul>
     </nav>
 </head>
-<body>
     <h2>User Login</h2>
     <form action="/login" method="post">
         <label for="username">User name:</label><br>
