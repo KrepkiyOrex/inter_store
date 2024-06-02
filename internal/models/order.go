@@ -27,8 +27,9 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Загрузка HTML шаблона
-	link := "web/views/orders.html"
-	tmpl := template.Must(template.ParseFiles(link))
+	link1 := "web/views/orders.html"
+	link2 := "web/css/navigation.html"
+	tmpl := template.Must(template.ParseFiles(link1, link2))
 
 	// Отправка страницы HTML с данными о заказах
 	if err := tmpl.Execute(w, orders); err != nil {

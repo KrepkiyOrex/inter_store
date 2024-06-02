@@ -19,79 +19,129 @@ func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Обработчик для аутентификации пользователя и выдачи токена
+// func LoginHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Проверяем метод запроса
+// 	if r.Method != http.MethodPost && r.Method != http.MethodGet {
+// 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+// 		return
+// 	}
+
+// 	// Получаем данные, отправленные пользователем с формы аутентификации
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		http.Error(w, "Error parsing form data", http.StatusInternalServerError)
+// 		log.Println("Error parsing form data:", err)
+// 		return
+// 	}
+
+// 	// Извлекаем данные из формы
+// 	userName := r.Form.Get("username")
+// 	password := r.Form.Get("password")
+
+// 	// Проверяем данные пользователя в базе данных
+// 	// V Здесь должна быть проверка пароля и другая бизнес-логика аутентификации
+// 	// Если аутентификация проходит успешно, создаем токен для пользователя
+
+// 	// Предположим, что у вас есть функция для проверки пользовательских данных и получения ID пользователя из базы данных
+// 	userID, err := authenticateUser(userName, password)
+// 	if err != nil {
+// 		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+// 		log.Println("Authentication failed:", err)
+// 		return
+// 	}
+
+// 	// Создаем токен для пользователя
+// 	token, err := createToken(userID)
+// 	if err != nil {
+// 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
+// 		log.Println("Failed to create token:", err)
+// 		return
+// 	}
+
+// 	// // Отправляем токен в ответ на запрос
+// 	// w.Header().Set("Content-Type", "application/json")
+// 	// json.NewEncoder(w).Encode(map[string]string{"token": token})
+
+// 	// Устанавливаем токен в HTTP cookie
+// 	http.SetCookie(w, &http.Cookie{
+// 		Name:     "token",
+// 		Value:    token,
+// 		HttpOnly: true,
+// 		// Другие атрибуты, такие как Secure и SameSite, могут быть также установлены в соответствии с вашими требованиями безопасности.
+// 	})
+
+// 	// (получает сессию из хранилища. Если сессия с указанным именем не существует, она будет создана.)
+// 	// Если всё успешно, можно выполнить действия после успешной авторизации, например, установить сессию
+// 	session, err := utils.Store.Get(r, "session-name")
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// (устанавливает значение "value" для ключа "key" в данных сессии. Можно
+// 	// установить любые данные, для сохранения в сессию.)
+// 	// записиваем данные клиента в сессию
+// 	session.Values["user_id"] = userName
+// 	err = session.Save(r, w)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// ==============================================================
+
+// 	// Редирект на другую страницу после успешной аутентификации
+// 	http.Redirect(w, r, "/user-dashboard", http.StatusFound)
+// }
+
+// Обработчик для страницы входа
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	// Проверяем метод запроса
-	if r.Method != http.MethodPost && r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	// При GET запросе отображаем форму входа
+	if r.Method == "GET" {
+		renderTemplate(w, PageData{}, "web/views/login.html")
 		return
 	}
 
-	// Получаем данные, отправленные пользователем с формы аутентификации
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Error parsing form data", http.StatusInternalServerError)
-		log.Println("Error parsing form data:", err)
-		return
+	/* 
+	
+		WARNING! Ты закоментировал предыдущий хендлер, а этот у тебя новый
+		вот и не пашет.
+
+	*/
+
+	// При POST запросе обрабатываем вход пользователя
+	userName := r.FormValue("userName")
+	if userName != "" {
+		// Устанавливаем куку с именем пользователя
+		http.SetCookie(w, &http.Cookie{
+			Name:  "userName",
+			Value: userName,
+			Path:  "/",
+		})
+		// Перенаправляем на главную страницу
+		http.Redirect(w, r, "/", http.StatusFound)
+	} else {
+		// Если имя пользователя не было передано, показываем форму входа снова
+		renderTemplate(w, PageData{}, "web/views/login.html")
 	}
+}
 
-	// Извлекаем данные из формы
-	userName := r.Form.Get("username")
-	password := r.Form.Get("password")
+type PageData struct {
+	UserName string
+}
 
-	// Проверяем данные пользователя в базе данных
-	// V Здесь должна быть проверка пароля и другая бизнес-логика аутентификации
-	// Если аутентификация проходит успешно, создаем токен для пользователя
-
-	// Предположим, что у вас есть функция для проверки пользовательских данных и получения ID пользователя из базы данных
-	userID, err := authenticateUser(userName, password)
-	if err != nil {
-		http.Error(w, "Authentication failed", http.StatusUnauthorized)
-		log.Println("Authentication failed:", err)
-		return
-	}
-
-	// Создаем токен для пользователя
-	token, err := createToken(userID)
-	if err != nil {
-		http.Error(w, "Failed to create token", http.StatusInternalServerError)
-		log.Println("Failed to create token:", err)
-		return
-	}
-
-	// // Отправляем токен в ответ на запрос
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(map[string]string{"token": token})
-
-	// Устанавливаем токен в HTTP cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Value:    token,
-		HttpOnly: true,
-		// Другие атрибуты, такие как Secure и SameSite, могут быть также установлены в соответствии с вашими требованиями безопасности.
-	})
-
-	// (получает сессию из хранилища. Если сессия с указанным именем не существует, она будет создана.)
-	// Если всё успешно, можно выполнить действия после успешной авторизации, например, установить сессию
-	session, err := utils.Store.Get(r, "session-name")
+func renderTemplate(w http.ResponseWriter, data PageData, tmpl ...string) {
+	template, err := template.ParseFiles(tmpl...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// (устанавливает значение "value" для ключа "key" в данных сессии. Можно
-	// установить любые данные, для сохранения в сессию.)
-	// записиваем данные клиента в сессию
-	session.Values["user_id"] = userName
-	err = session.Save(r, w)
+	err = template.Execute(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// ==============================================================
-
-	// Редирект на другую страницу после успешной аутентификации
-	http.Redirect(w, r, "/user-dashboard", http.StatusFound)
 }
 
 // Функция для аутентификации пользователя и получения его идентификатора
@@ -260,8 +310,10 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// Загружаем HTML-шаблон страницы панели управления пользователя
-	link := "web/views/user_dashboard.html"
-	tmpl := template.Must(template.ParseFiles(link))
+	link1 := "web/views/user_dashboard.html"
+	link2 := "web/css/navigation.html"
+	link3 := "web/views/style.html"
+	tmpl := template.Must(template.ParseFiles(link1, link2, link3))
 
 	// Передаем имя пользователя в HTML-шаблон и отправляем его клиенту
 	err = tmpl.Execute(w, map[string]interface{}{
@@ -271,8 +323,6 @@ func UserDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// log.Println("Handling username:", username)
 
 	log.Println("Handling user dashboard request for:", username) // work
 }

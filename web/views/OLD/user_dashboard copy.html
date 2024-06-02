@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products</title>
+    <title>User Dashboard</title>
     <style>
         body {
             background-color: rgb(35, 35, 35); /* Черный фон */
@@ -57,36 +57,12 @@
             <li><a href="/users-orders">Users orders</a></li>
         </ul>
     </nav>
-    <h1>Our Products</h1>
-    <ul>
-        {{range .}}
-        <li>
-            {{.Name}} - ${{.Price}}
-            <button class="add-to-cart" data-product-id="{{.ID}}">Add to Cart</button>
-        </li>
-        {{end}}
-    </ul>
-    <a href="/cart"><button>View Cart</button></a>
+</head>
+<body>
+    
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $(".add-to-cart").click(function() {
-                var productID = $(this).data("product-id");
-                $.ajax({
-                    url: "/add-to-cart",
-                    type: "POST",
-                    data: { product_id: productID },
-                    success: function(response) {
-                        alert("Product added to cart!");
-                        // Обновите часть страницы, если это необходимо
-                    },
-                    error: function(xhr, status, error) {
-                        alert("Error adding product to cart: " + error);
-                    }
-                });
-            });
-        });
-    </script>
+      <h2>User Dashboard</h2>
+    <p>Welcome, {{ .Username }}!</p>
+    <p>This is your dashboard. You can add content here as needed.</p>
 </body>
 </html>

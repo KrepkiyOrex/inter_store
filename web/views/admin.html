@@ -43,8 +43,9 @@
 
     .container {
         display: flex;
+        flex-direction: column; /* Изменить на column для вертикального размещения */
         justify-content: center;
-        align-items: flex-start; /* Выравнивание по верхнему краю */
+        align-items: center;
         margin-top: 20px;
     }
 
@@ -72,31 +73,67 @@
         margin-top: 20px;
     }
     </style>
+
+    <!-- Подключение Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 </head>
 <body>
     <header>
-        <h1>Магазин товаров</h1>
+        <h1>Administrator</h1>
     </header>
     
     {{ template "navigation" . }}
 
     <div class="container">
-        <div class="products-container">
-            {{range .Products}}
-                <div class="product">
-                    <h3>{{.Name}}</h3>
-                    <p>Price: ${{.Price}}</p>
-                    <!-- Дополнительные поля товара, если есть -->
-                    <!-- <p>ID: {{.ID}}</p> -->
-                    <!-- <img src="..." alt="Product Image"> -->
-                    <button class="buy-button">Купить</button>
-                </div>
+        <h1>Таблица "users"</h1>
+        <table border="1">
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Actions</th>
+            </tr>
+            {{range .Users}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td>{{.Username}}</td>
+                <td>{{.Email}}</td>
+                <td>{{.Password}}</td>
+                <td>
+                    <button class="delete-btn" data-id="{{.ID}}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
             {{end}}
-        </div>
+        </table>
     </div>
+
+    <script>
+        // JavaScript для обработки кликов по кнопкам удаления
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                fetch(`/administrator/${userId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to delete user');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
 
     <footer>
         <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
     </footer>
+
 </body>
 </html>

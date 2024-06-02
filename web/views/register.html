@@ -42,23 +42,9 @@
     </style>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/hello">Hello</a></li>
-            <li><a href="/headers">Headers</a></li>
-            <li><a href="/login">Login</a></li>
-            <li><a href="/user-dashboard">User dashboard</a></li>
-            <li><a href="/registration">Registration</a></li>
-            <li><a href="/register">Register</a></li>
-            <li><a href="/products">Products</a></li>
-            <li><a href="/add-to-cart">Add to cart</a></li>
-            <li><a href="/cart">Cart</a></li>
-            <li><a href="/users-orders">Users orders</a></li>
-        </ul>
-    </nav>
-</head>
-<body>
+
+    {{ template "navigation" . }}
+
     <h2>User Registration</h2>
     <form action="/register" method="POST">
         <label for="username">User name:</label><br>
