@@ -27,9 +27,10 @@
         display: block;
         color: rgb(228, 72, 0);
         text-align: center;
-        padding: 14px 16px;
+        padding: 14px 12px;
         text-decoration: none;
         font-weight: bold; /* или другое значение, например, 600 */
+        font-size: 18px;
         }
 
     nav ul li a:hover {
@@ -62,6 +63,8 @@
         border: 1px solid #ccc;
         background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
         text-align: center;
+        /* display: inline-block; */
+        /* box-sizing: border-box; */
     }
 
     .buy-button {

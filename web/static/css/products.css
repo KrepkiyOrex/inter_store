@@ -3,8 +3,8 @@
     margin: 10px;
     padding: 10px;
     border: 1px solid #3f3f3f;
-    display: inline-block;
     vertical-align: top;
+    display: inline-block;
     box-sizing: border-box;
 }
 .product img {
