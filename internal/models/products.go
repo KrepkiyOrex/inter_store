@@ -9,6 +9,7 @@ import (
 
 	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
+	"First_internet_store/internal/utils"
 )
 
 // Функция для получения имени пользователя из куки
@@ -25,54 +26,15 @@ func getUserName(r *http.Request) (string, error) {
 // 	UserName string
 // }
 
-// func renderTemplate(w http.ResponseWriter, data PageData, tmpl ...string) {
-// 	template, err := template.ParseFiles(tmpl...)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = template.Execute(w, data)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
-
-type Product struct {
-	Name  string
-	Price int
-	ID    int
-}
-
-type PageData struct {
-	UserName string
-	Products []Product
-}
-
-func renderTemplate(w http.ResponseWriter, data PageData, tmpl ...string) {
-	template, err := template.ParseFiles(tmpl...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = template.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
 func Account(w http.ResponseWriter, r *http.Request) {
-	data := PageData{
+	data := utils.UserCookie{
 		UserName: "YourUserName", // Замените на имя пользователя
 		// Products: products,
 	}
 
-	renderTemplate(w, data,
-		"web/views/account.html",
-		"web/css/navigation.html")
+	utils.RenderTemplate(w, data,
+		"web/html/account.html",
+		"web/html/navigation.html")
 }
 
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,11 +56,11 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	// Создание списка для хранения товаров
-	var products []Product
+	var products []utils.Product
 
 	// Считывание данных о товарах из результатов запроса
 	for rows.Next() {
-		var product Product
+		var product utils.Product
 		if err := rows.Scan(&product.Name, &product.Price, &product.ID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -112,125 +74,19 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := PageData{
+	data := utils.UserCookie{
 		UserName: "YourUserName", // Замените на имя пользователя
 		Products: products,
 	}
 
-	// renderTemplate(w, data, "web/views/products.html",
 	// 	"web/css/navigation.html", "web/css/style_products.html")
-	renderTemplate(w, data,
-		"web/views/products.html",
-		"web/css/navigation.html",
-		"web/css/style.html")
-	// renderTemplate(w, data, "web/views/products.html")
+	utils.RenderTemplate(w, data,
+		"web/html/products.html",
+		"web/html/navigation.html",
+
+		// "web/css/style.html"
+	)
 }
-
-// Главная страница с товарами
-// func ProductsHandler(w http.ResponseWriter, r *http.Request) {
-// 	// userName, err := getUserName(r)
-// 	// if err != nil {
-// 	// 	// Куки не найдено, показываем форму входа
-// 	// 	// renderTemplate(w, PageData{}, "web/views/*.html")
-// 	// 	renderTemplate(w, PageData{}, "web/views/products.html", "web/views/body.html")
-// 	// 	// http.Redirect(w, r, "/login", http.StatusFound)
-// 	// 	return
-// 	// }
-
-// 	// Connect to the database
-// 	db, err := database.Connect()
-// 	if err != nil {
-// 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-// 		log.Println("Error connecting to the database")
-// 		return
-// 	}
-
-// 	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-// 	rows, err := db.Query("SELECT name, price, id FROM products")
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	defer rows.Close()
-
-// 	// Создание списка для хранения товаров
-// 	var products []struct {
-// 		Name  string
-// 		Price int
-// 		ID    int
-// 	}
-
-// 	// Считывание данных о товарах из результатов запроса
-// 	for rows.Next() {
-// 		var product struct {
-// 			Name  string
-// 			Price int
-// 			ID    int
-// 		}
-// 		if err := rows.Scan(&product.Name, &product.Price, &product.ID); err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-// 		// Добавление продуктов в список
-// 		products = append(products, product)
-// 	}
-
-// 	if err := rows.Err(); err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	/*
-// 		Забей на css! сделай уже через шаблоны и не мучайся
-// 	*/
-
-// 	// Загружаем шаблон страницы товаров и передаем ему данные о товарах
-// 	// link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/products.html"
-// 	// link := "./web/views/products.html"
-// 	link1 := "web/views/products.html"
-// 	link2 := "web/css/navigation.html"
-// 	link3 := "web/css/style.html"
-// 	// link3 := "web/views/style.html"
-
-// 	userName, err := getUserName(r)
-// 	data := PageData{UserName: userName}
-// 	// renderTemplate(w, PageData{}, link1, link2)
-// 	// renderTemplate(w, data, link1, link2)
-
-// 	if err != nil {
-// 		// Куки не найдено, показываем форму входа
-// 		// renderTemplate(w, PageData{}, "template/index.html", "template/body.html") // ParseFiles
-// 		renderTemplate(w, PageData{}, link1, link2, link3) // ParseFiles
-
-// 		// http.Redirect(w, r, "/login", http.StatusFound)
-// 		return
-// 	}
-// 	renderTemplate(w, data, link1, link2, products) // products
-
-// 	// tmpl := template.Must(template.ParseFiles(link1, link2)) // через Must рендж пашет. WTF
-// 	// // tmpl, err := template.ParseFiles(link1, link2) // через Must рендж пашет. WTF
-// 	// // template.ParseFiles(link1, link2) // через Must рендж пашет. WTF
-// 	// err = tmpl.Execute(w, products) // вот из-за чего рендж пашет!
-// 	// if err != nil {
-// 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	// 	return
-// 	// }
-
-// 	/*
-// 		template.Must возможно нехватает
-// 	*/
-
-// 	// data := PageData{UserName: userName}
-// 	// renderTemplate(w, data, "web/views/products.html", "web/views/body.html")
-// 	// renderTemplate(w, data, "web/views/products.html")
-// 	// renderTemplate(w, data, "web/views/body_tmpl.html")
-// 	// renderTemplate(w, data, "web/views/products.html")
-// 	// renderTemplate(w, data, "/web/views/*.html")
-// 	// renderTemplate(w, data, "/views/*.html")
-// 	// renderTemplate(w, data, "views/*.html")
-
-// 	log.Print("Handling request for products")
-// }
 
 // Обработчик для добавления товара в корзину
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -353,12 +209,12 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 	userName, err := getUserName(r)
 	if err != nil {
 		// Куки не найдено, показываем форму входа
-		renderTemplate(w, PageData{}, "web/views/list.html")
+		utils.RenderTemplate(w, utils.UserCookie{}, "web/views/list.html")
 		// http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	data := PageData{UserName: userName}
-	renderTemplate(w, data, "web/views/list.html")
+	data := utils.UserCookie{UserName: userName}
+	utils.RenderTemplate(w, data, "web/views/list.html")
 }
 
 // Обработчик для добавления товара в корзину

@@ -20,7 +20,7 @@ type User struct {
 //     Users []User
 // }
 
-func renderTemplate(w http.ResponseWriter, data PageData, tmpl ...string) {
+func renderTemplate(w http.ResponseWriter, data UsersData, tmpl ...string) {
 	template, err := template.ParseFiles(tmpl...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,14 +58,14 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Выполнение SQL-запроса для удаления пользователя
-    query := "DELETE FROM users WHERE id = $1"
-    log.Println("Executing query:", query, "with userID:", userID)
-    _, err = db.Exec(query, userID)
-    if err != nil {
-        http.Error(w, "Error deleting user", http.StatusInternalServerError)
-        log.Println("Error deleting user:", err)
-        return
-    }
+	query := "DELETE FROM users WHERE id = $1"
+	log.Println("Executing query:", query, "with userID:", userID)
+	_, err = db.Exec(query, userID)
+	if err != nil {
+		http.Error(w, "Error deleting user", http.StatusInternalServerError)
+		log.Println("Error deleting user:", err)
+		return
+	}
 
 	// Успешное удаление
 	w.WriteHeader(http.StatusOK)
@@ -108,15 +108,25 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := PageData{
+	data := UsersData{
 		Users: users,
 	}
+	
+	/* 
+		кажись он тупо не может именно никнеим выгрузить, либо именно список имен с БД.
+		проверь отдельно именно имя без.
 
-	renderTemplate(w, data, "web/views/admin.html",
-		"web/css/navigation.html", "web/css/style.html")
+		может стоит просто вызвать тут второй раз рендертеимплейт, но уже для 
+		никнейма, а html файлы указать просто как ""? тоесть пустые ссылки.
+
+		может стоит просто вызвать тут второй раз рендертеимплейт, но уже для 
+		никнейма, а html файлы указать просто как ""? тоесть пустые ссылки.
+	*/
+
+	renderTemplate(w, data, "web/html/admin.html",
+		"web/html/navigation.html", "web/static/css/style.html")
 }
 
-type PageData struct {
-	// UserName string
+type UsersData struct {
 	Users []User
 }

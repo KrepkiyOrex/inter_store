@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Магазин товаров</title>
-    <style>
-
+ <style>
     body {
         background-color: #292929;
         color: #f05800;
@@ -72,31 +65,3 @@
         margin-top: 20px;
     }
     </style>
-</head>
-<body>
-    <header>
-        <h1>Магазин товаров</h1>
-    </header>
-    
-    {{ template "navigation" . }}
-
-    <div class="container">
-        <div class="products-container">
-            {{range .Products}}
-                <div class="product">
-                    <h3>{{.Name}}</h3>
-                    <p>Price: ${{.Price}}</p>
-                    <!-- Дополнительные поля товара, если есть -->
-                    <!-- <p>ID: {{.ID}}</p> -->
-                    <!-- <img src="..." alt="Product Image"> -->
-                    <button class="buy-button">Купить</button>
-                </div>
-            {{end}}
-        </div>
-    </div>
-
-    <footer>
-        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
-    </footer>
-</body>
-</html>
