@@ -62,6 +62,9 @@ func SetupRoutes() *mux.Router {
 
 	// !!! ИСПРАВЬ косяк с методом "пост" auth.LoginHandler !!!
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")
+	
+	router.HandleFunc("/logout", auth.LogoutHandler) // Exit
+
 	router.HandleFunc("/user-dashboard", auth.UserDashboardHandler) // Страница панели управления пользователя
 	router.HandleFunc("/account", models.Account)                   // profile
 

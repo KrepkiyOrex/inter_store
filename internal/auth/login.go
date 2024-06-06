@@ -43,8 +43,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			Value: userName,
 			Path:  "/",
 		})
-		// Перенаправляем на главную страницу
-		http.Redirect(w, r, "/", http.StatusFound)
+		// Перенаправляем на ЛК страницу
+		http.Redirect(w, r, "/account", http.StatusFound)
 	} else {
 		// Если имя пользователя не было передано, показываем форму входа снова
 		renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
@@ -97,6 +97,20 @@ func authenticateUser(username, password string) (int, error) {
 
 	// Возвращаем идентификатор пользователя, если аутентификация прошла успешно
 	return userID, nil
+}
+
+// Обработчик для выхода из аккаунта
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	// Удаляем куку с именем пользователя
+	http.SetCookie(w, &http.Cookie{
+		Name:   "userName",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1, // Устанавливаем отрицательное время жизни, чтобы кука удалилась
+	})
+
+	// Перенаправляем на главную страницу
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // Функция для создания JWT токена на основе идентификатора пользователя

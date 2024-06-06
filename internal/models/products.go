@@ -23,12 +23,21 @@ func getUserName(r *http.Request) (string, error) {
 }
 
 func Account(w http.ResponseWriter, r *http.Request) {
-	data := utils.UserCookie{
-		UserName: "YourUserName", // Замените на имя пользователя
-		// Products: products,
+	// data := utils.UserCookie{
+	
+	// Извлекаем куку
+	cookie, err := r.Cookie("userName")
+	userName := "Login" // Значение по умолчанию, если кука не установлена
+	if err == nil {
+		userName = cookie.Value
 	}
 
-	utils.RenderTemplate(w, data,
+	data := UserCookie{
+		UserName: userName,
+	}
+
+	// utils.RenderTemplate(w, data,
+	renderTemplate(w, data,
 		"web/html/account.html",
 		"web/html/navigation.html")
 }
