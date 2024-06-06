@@ -9,7 +9,7 @@ type Product struct {
 type UserCookie struct {
 	UserName string
 	Products []Product
-	UsersData UsersData
+	UsersData UsersData // это поле явно линшенее тут!
 }
 
 type User struct {

@@ -15,6 +15,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// fs := http.FileServer(http.Dir("./css/")) // "static" - без этого НЕ пашет CSS! F***!
+// http.Handle("/css/", http.StripPrefix("/css/", fs))
+
+// http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css/"))))
+
+// fileServer := http.FileServer(http.Dir("./web/static/"))
+// router.Handle("/static/", http.StripPrefix("/static", fileServer))
+
+// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+
 // Обработчики HTTP
 func SetupRoutes() *mux.Router {
 	// Создаем маршрутизатор
@@ -24,16 +34,6 @@ func SetupRoutes() *mux.Router {
 	// router.HandleFunc("/hello", others.HelloHandler)
 	router.HandleFunc("/hello", models.HelloHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
-
-	// fs := http.FileServer(http.Dir("./css/")) // "static" - без этого НЕ пашет CSS! F***!
-	// http.Handle("/css/", http.StripPrefix("/css/", fs))
-
-	// http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css/"))))
-
-	// fileServer := http.FileServer(http.Dir("./web/static/"))
-	// router.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	// Настройка обработчика для статических файлов
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

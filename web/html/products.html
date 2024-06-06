@@ -15,13 +15,6 @@
         <h1>Products store</h1>
     </header>
     
-    {{if .UserName}}
-        <p>Привет, {{.UserName}}!</p>
-        <p><a href="/logout">Выйти</a></p>
-    {{else}}
-        <p>Пожалуйста, <a href="/login">войдите</a></p>
-    {{end}}
-    
     {{ template "navigation" . }}
 
     <div class="product-container">

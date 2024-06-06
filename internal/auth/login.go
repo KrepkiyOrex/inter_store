@@ -29,7 +29,8 @@ func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// При GET запросе отображаем форму входа
 	if r.Method == "GET" {
-		utils.RenderTemplate(w, utils.UserCookie{}, "web/html/login.html", "web/html/navigation.html")
+		// utils.RenderTemplate(w, utils.UserCookie{}, "web/html/login.html", "web/html/navigation.html")
+		renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
 		return
 	}
 
@@ -46,15 +47,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 	} else {
 		// Если имя пользователя не было передано, показываем форму входа снова
-		renderTemplate(w, PageData{}, "web/html/login.html", "web/html/navigation.html")
+		renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
 	}
 }
 
-type PageData struct {
+type UserCookie struct {
 	UserName string
 }
 
-func renderTemplate(w http.ResponseWriter, data PageData, tmpl ...string) {
+func renderTemplate(w http.ResponseWriter, data UserCookie, tmpl ...string) {
 	template, err := template.ParseFiles(tmpl...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

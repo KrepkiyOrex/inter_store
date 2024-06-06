@@ -22,10 +22,6 @@ func getUserName(r *http.Request) (string, error) {
 	return cookie.Value, nil
 }
 
-// type PageData struct {
-// 	UserName string
-// }
-
 func Account(w http.ResponseWriter, r *http.Request) {
 	data := utils.UserCookie{
 		UserName: "YourUserName", // Замените на имя пользователя
@@ -56,11 +52,14 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	// Создание списка для хранения товаров
-	var products []utils.Product
+	// var products []utils.Product
+	var products []Product
 
 	// Считывание данных о товарах из результатов запроса
 	for rows.Next() {
-		var product utils.Product
+		// var product utils.Product
+		var product Product
+
 		if err := rows.Scan(&product.Name, &product.Price, &product.ID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -74,18 +73,47 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := utils.UserCookie{
-		UserName: "YourUserName", // Замените на имя пользователя
+	// data := UserCookie{
+	// 	UserName: "userName", // Замените на имя пользователя
+	// }
+
+	// Выгрузка данных продуктов
+	data := ProductsData{
 		Products: products,
 	}
 
-	// 	"web/css/navigation.html", "web/css/style_products.html")
-	utils.RenderTemplate(w, data,
+	renderTemplate(w, data,
 		"web/html/products.html",
 		"web/html/navigation.html",
-
-		// "web/css/style.html"
 	)
+}
+
+type Product struct {
+	ID    int
+	Name  string
+	Price float64
+}
+
+type ProductsData struct {
+	Products []Product
+}
+
+type UserCookie struct {
+	UserName string
+}
+
+func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
+	template, err := template.ParseFiles(tmpl...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = template.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // Обработчик для добавления товара в корзину
@@ -200,6 +228,7 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "View cart page")
 }
 
+// Содержимое вашей корзины
 func ListHandler(w http.ResponseWriter, r *http.Request) {
 	// link := "web/views/list.html"
 	// http.ServeFile(w, r, link)
@@ -209,12 +238,12 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 	userName, err := getUserName(r)
 	if err != nil {
 		// Куки не найдено, показываем форму входа
-		utils.RenderTemplate(w, utils.UserCookie{}, "web/views/list.html")
+		utils.RenderTemplate(w, utils.UserCookie{}, "web/html/list.html")
 		// http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	data := utils.UserCookie{UserName: userName}
-	utils.RenderTemplate(w, data, "web/views/list.html")
+	utils.RenderTemplate(w, data, "web/html/list.html")
 }
 
 // Обработчик для добавления товара в корзину
