@@ -30,9 +30,10 @@ func SetupRoutes() *mux.Router {
 	// Создаем маршрутизатор
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", others.GreetHandler)
+	router.HandleFunc("/", models.ProductsHandler)
+	// router.HandleFunc("/", others.GreetHandler)
 	// router.HandleFunc("/hello", others.HelloHandler)
-	router.HandleFunc("/hello", models.HelloHandler)
+	// router.HandleFunc("/hello", models.HelloHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
 
 	// Настройка обработчика для статических файлов
@@ -46,7 +47,7 @@ func SetupRoutes() *mux.Router {
 		http.ServeFile(w, r, filePath)
 	})))
 
-	router.HandleFunc("/products", models.ProductsHandler)
+	// router.HandleFunc("/products", models.ProductsHandler)
 	router.HandleFunc("/list", models.ListHandler)
 	// router.HandleFunc("/add-to-cart", models.AddToCartHandler)
 	router.HandleFunc("/add-to-cart", models.AddToCartHandler).Methods("POST")
@@ -57,15 +58,14 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
 	router.HandleFunc("/register", auth.RegisterHandler) // Обработчик для страницы регистрации
 
-	// Страница входа и её обработчик
+	// Страница входа и её обработчики
 	router.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
-
-	// !!! ИСПРАВЬ косяк с методом "пост" auth.LoginHandler !!!
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")
-	
+
 	router.HandleFunc("/logout", auth.LogoutHandler) // Exit
 
-	router.HandleFunc("/user-dashboard", auth.UserDashboardHandler) // Страница панели управления пользователя
+	// deprecated из-за ненадобности
+	// router.HandleFunc("/user-dashboard", auth.UserDashboardHandler) // Страница панели управления пользователя
 	router.HandleFunc("/account", models.Account)                   // profile
 
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel

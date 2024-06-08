@@ -130,7 +130,7 @@
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
     }
 
-    .cart, .history, .izbrannoe {
+    .cart, .history, .favorites {
         width: 370px; /* одинаковая ширина для всех элементов */
         height: 220px;
         padding: 15px;

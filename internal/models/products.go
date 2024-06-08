@@ -22,12 +22,11 @@ func getUserName(r *http.Request) (string, error) {
 	return cookie.Value, nil
 }
 
+// user profile
 func Account(w http.ResponseWriter, r *http.Request) {
-	// data := utils.UserCookie{
-	
 	// Извлекаем куку
 	cookie, err := r.Cookie("userName")
-	userName := "Login" // Значение по умолчанию, если кука не установлена
+	userName := "" // Значение по умолчанию, если кука не установлена
 	if err == nil {
 		userName = cookie.Value
 	}

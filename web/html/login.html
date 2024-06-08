@@ -6,30 +6,28 @@
     <title>User Login</title>
 
     <link rel="stylesheet" href="/static/css/main.css">
+</head>
 
 <body>
+    <header>
+        <h1>User Login</h1>
+    </header>
 
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/hello">Hello</a></li>
-            <li><a href="/headers">Headers</a></li>
-            <li><a href="/login">Login</a></li>
-            <li><a href="/user-dashboard">User dashboard</a></li>
-            <li><a href="/registration">Registration</a></li>
-            <li><a href="/register">Register</a></li>
-            <li><a href="/account">Account</a></li>
-            <li><a href="/products">Products</a></li>
-            <li><a href="/cart">Cart</a></li>
-            <li><a href="/users-orders">Users orders</a></li>
-            <li><a href="/administrator">Admin panel</a></li>
-        </ul>
-    </nav>
+    {{if .UserName}}
+        <p>Привет, {{.UserName}}!</p>
+        <p><a href="/logout">Выйти</a></p>
+    {{else}}
+        <p>Пожалуйста, <a href="/login">войдите</a></p>
+    {{end}}
 
-    <h3>* Return template {navigation} ! Пока не разобрался как сделать выгрузку сразу 2 файлов</h3>
-    <h3>* Сама авторизация опять не работает</h3>
+    {{ template "navigation" . }}
 
-    <h2>User Login</h2>
+    <h3>Я молодчина! Я нешел способ и сделал выгрузку 2 файлов сразу!</h3>
+
+    {{if .ErrorMessage}}
+        <div class="error">{{.ErrorMessage}}</div>
+    {{end}}
+
     <form action="/login" method="post">
         <label for="userName">User name:</label><br>
         <input type="text" id="userName" name="userName"><br>

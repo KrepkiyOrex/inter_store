@@ -6,20 +6,19 @@
     <title>Store products</title>
 
     <link rel="stylesheet" href="/static/css/main.css">
- 
-    
 </head>
+
 <body>
     <header>
         <h1>Profile</h1>
     </header>
     
     {{if .UserName}}
-    <p>Привет, {{.UserName}}!</p>
-    <p><a href="/logout">Выйти</a></p>
-{{else}}
-    <p>Пожалуйста, <a href="/login">войдите</a></p>
-{{end}}
+        <p>Привет, {{.UserName}}!</p>
+        <p><a href="/logout">Выйти</a></p>
+    {{else}}
+        <p>Пожалуйста, <a href="/login">войдите</a></p>
+    {{end}}
 
     {{ template "navigation" . }}
 
@@ -55,7 +54,7 @@
                 <button class="buy-button">button</button>
             </div>
 
-            <div class="izbrannoe">
+            <div class="favorites">
                 <h3>Избранное</h3>
                 <h4>Products: no</h4>
                 <button class="buy-button">button</button>
