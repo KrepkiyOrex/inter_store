@@ -140,6 +140,15 @@
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
     }
 
+   /* ===================================== /administrator ========================================== */
+   
+    .table-users {
+        display: flex;
+        flex-direction: column; /* Изменить на column для вертикального размещения */
+        justify-content: center; /* выравнивание элементов по центру */
+        align-items: center;
+        margin-top: 20px;
+    }
 
     /* Стили для подвала */
     footer {

@@ -4,89 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Магазин товаров</title>
-    <style>
 
-    body {
-        background-color: #292929;
-        color: #f05800;
-    }
-
-    /* Стили для навигации и контейнера товаров */
-    nav {
-        background-color: #333;
-        overflow: hidden;
-    }
-
-    nav ul {
-        display: flex;
-        justify-content: center;
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-        }
-
-    nav ul li {
-        float: left;
-    }
-
-    nav ul li a {
-        display: block;
-        color: white;
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-        }
-
-    nav ul li a:hover {
-        background-color: #111;
-    }
-
-    .container {
-        display: flex;
-        flex-direction: column; /* Изменить на column для вертикального размещения */
-        justify-content: center;
-        align-items: center;
-        margin-top: 20px;
-    }
-
-    .products-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        width: 300mm; /* Процентное значение ширины контейнера товаров */
-    }
-
-    .product {
-        width: 200px;
-        height: 170px;
-        margin-bottom: 20px;
-        padding: 15px;
-        border: 1px solid #ccc;
-        text-align: center;
-    }
-
-    /* Стили для подвала */
-    footer {
-        text-align: center;
-        padding: 20px;
-        background-color: #3b3b3b;
-        margin-top: 20px;
-    }
-    </style>
-
+    <link rel="stylesheet" href="/static/css/main.css">
+    
     <!-- Подключение Font Awesome для иконок -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
 </head>
+
 <body>
     <header>
         <h1>Administrator</h1>
     </header>
-
     
     {{ template "navigation" . }}
 
-    <div class="container">
+    <div class="table-users">
         <h1>Таблица "users"</h1>
         <table border="1">
             <tr>

@@ -50,6 +50,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 // Обработчик для отображения HTML-страницы регистрации
 func ShowRegistrationPage(w http.ResponseWriter, r *http.Request) {
-	link := "web/views/register.html"
-	http.ServeFile(w, r, link)
+	// link := "web/html/register.html"
+	// http.ServeFile(w, r, link)
+	
+	renderTemplate(w, UserCookie{}, "web/html/register.html", "web/html/navigation.html")
 }

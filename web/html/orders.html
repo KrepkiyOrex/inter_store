@@ -1,0 +1,26 @@
+<!-- templates/orders.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Orders</title>
+
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <header>
+        <h1>User Orders</h1>
+    </header>
+
+    {{ template "navigation" . }}
+
+    <ul>
+        {{range .}}
+        <li>
+            Order ID: {{.ID}}, Order Date: {{.OrderDate}}
+        </li>
+        {{end}}
+    </ul>
+</body>
+</html>

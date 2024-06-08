@@ -27,8 +27,8 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Загрузка HTML шаблона
-	link1 := "web/views/orders.html"
-	link2 := "web/css/navigation.html"
+	link1 := "web/html/orders.html"
+	link2 := "web/html/navigation.html"
 	tmpl := template.Must(template.ParseFiles(link1, link2))
 
 	// Отправка страницы HTML с данными о заказах
@@ -36,6 +36,15 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	/* 
+		На текущий момент заказов нету в базе вроде т.к. нету технологии добавления заказов
+		неговоря уже о том, кому эти заказы добавлять.
+	*/
+
+	// renderTemplate(w, date, 
+	// "web/html/orders.html",
+	// "web/html/navigation.html")
 }
 
 // Для получения заказов пользователя из базы данных
