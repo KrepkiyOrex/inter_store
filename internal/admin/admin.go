@@ -20,7 +20,7 @@ type User struct {
 //     Users []User
 // }
 
-func renderTemplate(w http.ResponseWriter, data UsersData, tmpl ...string) {
+func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
 	template, err := template.ParseFiles(tmpl...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -108,25 +108,40 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := UsersData{
-		Users: users,
-	}
+	// data := UsersData{
+	// 	Users: users,
+	// }
 	
-	/* 
-		кажись он тупо не может именно никнеим выгрузить, либо именно список имен с БД.
-		проверь отдельно именно имя без.
+	var userName string
 
-		может стоит просто вызвать тут второй раз рендертеимплейт, но уже для 
-		никнейма, а html файлы указать просто как ""? тоесть пустые ссылки.
+	cookie, err := r.Cookie("userName")
+	if err == nil {
+		userName = cookie.Value
+	}
 
-		может стоит просто вызвать тут второй раз рендертеимплейт, но уже для 
-		никнейма, а html файлы указать просто как ""? тоесть пустые ссылки.
-	*/
+	data := PageData{
+		UsersData: UsersData{
+			Users: users,
+		},
+		UserCookie: UserCookie{
+			UserName: userName,
+		},
+	}
 
-	renderTemplate(w, data, "web/html/admin.html",
+	renderTemplate(w, data, 
+		"web/html/admin.html",
 		"web/html/navigation.html"/* , "web/static/css/style.html" */)
+}
+
+type PageData struct {
+	UsersData
+	UserCookie
 }
 
 type UsersData struct {
 	Users []User
+}
+
+type UserCookie struct {
+	UserName string
 }

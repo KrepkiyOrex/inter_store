@@ -86,14 +86,37 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// Выгрузка данных продуктов
-	data := ProductsData{
-		Products: products,
+	// data := ProductsData{
+	// 	Products: products,
+	// }
+
+	// для имени из куки
+	var userName string
+
+	cookie, err := r.Cookie("userName")
+	if err == nil {
+		userName = cookie.Value
+	}
+
+	data := PageData{
+		ProductsData: ProductsData{
+			Products: products,
+		},
+		UserCookie: UserCookie{
+			UserName: userName,
+		},
 	}
 
 	renderTemplate(w, data,
 		"web/html/products.html",
 		"web/html/navigation.html",
 	)
+}
+
+
+type PageData struct {
+	ProductsData
+	UserCookie
 }
 
 type Product struct {
