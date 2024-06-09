@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -72,6 +73,74 @@ func renderTemplate(w http.ResponseWriter, data UserCookie, tmpl ...string) {
 	}
 }
 
+// =====================================================================================================================
+
+// Функция для создания JWT
+func createJWT(user User, secretKey []byte) (string, error) {
+	// Создаем токен
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":   user.ID,                               // Используем ID пользователя как subject
+		"name":  user.Name,                             // Используем имя пользователя
+		"email": user.Email,                            // Используем электронную почту пользователя
+		"exp":   time.Now().Add(time.Hour * 72).Unix(), // Устанавливаем срок действия токена на 72 часа
+	})
+
+	// Подписываем токен
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+// Функция для проверки JWT и конкретных утверждений
+func validateJWT(tokenString string, secretKey []byte, expectedUser User) (bool, error) {
+	// Парсим и проверяем токен
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Проверяем конкретные утверждения
+		if err := validateClaims(claims, expectedUser); err != nil {
+			return false, err
+		}
+
+		fmt.Println("Token valid, claims:", claims)
+		return true, nil
+
+	} else {
+		return false, err
+	}
+}
+
+// Функция для проверки конкретных утверждений
+func validateClaims(claims jwt.MapClaims, expectedUser User) error {
+	// if claims["sub"] != expectedUser.ID {
+	//     return fmt.Errorf("invalid subject claim")
+	// }
+
+	if claims["name"] != expectedUser.Name {
+		return fmt.Errorf("invalid name claim")
+	}
+
+	if claims["email"] != expectedUser.Email {
+		return fmt.Errorf("invalid email claim")
+	}
+
+	return nil
+}
+
+// =====================================================================================================================
+
 // Функция для аутентификации пользователя и получения его идентификатора
 func authenticateUser(username, password string) (int, error) {
 	db, err := database.Connect()
@@ -92,11 +161,55 @@ func authenticateUser(username, password string) (int, error) {
 		return 0, err
 	}
 
-	// Проверяем соответствие имени пользователя и хэшированного пароля из базы данных с предоставленными данными
-	// Здесь должна быть ваша логика хэширования и проверки пароля
-	if storedUsername != username || storedPassword != password {
+	// ------------------------------------------------------------------------------------------------------------------------
+
+	secretKey := []byte("your-256-bit-secret") // Секретный ключ должен быть сильным
+	// и случайным, а также защищен от доступа посторонних лиц.
+	/* Однако важно хранить такие ключи в безопасном месте и не хранить их в открытом виде в
+	исходном коде вашего приложения. Идеальным решением для хранения секретных ключей является
+	использование переменных среды или других методов безопасного хранения конфиденциальной информации. */
+
+	// сохраняем введенные данные пользователя при авторизации
+	userFormValue := User{
+		Name: username,
+		Email: password,
+	}
+
+	// Создаем JWT
+	token, err := createJWT(userFormValue, secretKey)
+	if err != nil {
+		fmt.Println("Error creating token:", err)
+		return 0, err
+	}
+	fmt.Println("Generated JWT:", token)
+
+	// сохраняем данные пользователя, выгруженные с БД
+	userDB := User{
+		Name: storedUsername,
+		Email: storedPassword,
+	}
+
+	// Проверяем JWT
+	valid, err := validateJWT(token, secretKey, userDB)
+	if err != nil {
+		fmt.Println("Error validating token:", err)
+		// return 0, err
 		return 0, errors.New("Invalid username or password")
 	}
+
+	if valid {
+		fmt.Println("Token is valid!")
+	} else {
+		fmt.Println("Token is invalid!")
+	}
+
+	// ------------------------------------------------------------------------------------------------------------------------
+
+	// Проверяем соответствие имени пользователя и хэшированного пароля из базы данных с предоставленными данными
+	// Здесь должна быть ваша логика хэширования и проверки пароля
+	// if storedUsername != username || storedPassword != password {
+	// 	return 0, errors.New("Invalid username or password")
+	// }
 
 	// Возвращаем идентификатор пользователя, если аутентификация прошла успешно
 	return userID, nil
