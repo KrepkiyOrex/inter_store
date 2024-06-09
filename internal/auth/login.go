@@ -59,7 +59,7 @@ type UserCookie struct {
 	ErrorMessage string
 }
 
-func renderTemplate(w http.ResponseWriter, data UserCookie, tmpl ...string) {
+func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
 	template, err := template.ParseFiles(tmpl...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

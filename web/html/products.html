@@ -15,8 +15,7 @@
     </header>
 
     {{if .UserName}}
-        <p>Привет, {{.UserName}}!</p>
-        <p><a href="/logout">Выйти</a></p>
+        <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
     {{else}}
         <p>Пожалуйста, <a href="/login">войдите</a></p>
     {{end}}

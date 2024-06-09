@@ -208,6 +208,8 @@ func addToCart(userID int, productID int) error {
 	return nil
 }
 
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // Обработчик для всех запросов
 func HelloHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {

@@ -130,7 +130,7 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 
 	renderTemplate(w, data, 
 		"web/html/admin.html",
-		"web/html/navigation.html"/* , "web/static/css/style.html" */)
+		"web/html/navigation.html")
 }
 
 type PageData struct {
