@@ -79,10 +79,11 @@ func renderTemplate(w http.ResponseWriter, data UserCookie, tmpl ...string) {
 func createJWT(user User, secretKey []byte) (string, error) {
 	// Создаем токен
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":   user.ID,                               // Используем ID пользователя как subject
-		"name":  user.Name,                             // Используем имя пользователя
-		"email": user.Email,                            // Используем электронную почту пользователя
-		"exp":   time.Now().Add(time.Hour * 72).Unix(), // Устанавливаем срок действия токена на 72 часа
+		"sub":      user.ID,                               // Используем ID пользователя как subject
+		"name":     user.Name,                             // Используем имя пользователя
+		"password": user.Password,                         // Используем пароль пользователя
+		"email":    user.Email,                            // Используем электронную почту пользователя
+		"exp":      time.Now().Add(time.Hour * 72).Unix(), // Устанавливаем срок действия токена на 72 часа
 	})
 
 	// Подписываем токен
@@ -132,8 +133,8 @@ func validateClaims(claims jwt.MapClaims, expectedUser User) error {
 		return fmt.Errorf("invalid name claim")
 	}
 
-	if claims["email"] != expectedUser.Email {
-		return fmt.Errorf("invalid email claim")
+	if claims["password"] != expectedUser.Password {
+		return fmt.Errorf("invalid password claim")
 	}
 
 	return nil
@@ -171,8 +172,8 @@ func authenticateUser(username, password string) (int, error) {
 
 	// сохраняем введенные данные пользователя при авторизации
 	userFormValue := User{
-		Name: username,
-		Email: password,
+		Name:     username,
+		Password: password,
 	}
 
 	// Создаем JWT
@@ -185,16 +186,16 @@ func authenticateUser(username, password string) (int, error) {
 
 	// сохраняем данные пользователя, выгруженные с БД
 	userDB := User{
-		Name: storedUsername,
-		Email: storedPassword,
+		Name:     storedUsername,
+		Password: storedPassword,
 	}
 
 	// Проверяем JWT
 	valid, err := validateJWT(token, secretKey, userDB)
 	if err != nil {
 		fmt.Println("Error validating token:", err)
-		// return 0, err
-		return 0, errors.New("Invalid username or password")
+		return 0, err
+		// return 0, errors.New("Invalid username or password")
 	}
 
 	if valid {
@@ -272,9 +273,10 @@ func ExtractToken(r *http.Request) string {
 }
 
 type User struct {
-	ID    int
-	Name  string
-	Email string
+	ID       int
+	Name     string
+	Password string
+	Email    string
 }
 
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
