@@ -116,6 +116,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // Функция для создания JWT токена на основе идентификатора пользователя
 func createToken(userID int) (string, error) {
 	// Задаем секретный ключ для подписи токена (он должен быть безопасно храниться и не раскрываться)
@@ -142,6 +144,8 @@ func createToken(userID int) (string, error) {
 	return tokenString, nil
 }
 
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // Функция для извлечения токена из заголовка запроса
 func ExtractToken(r *http.Request) string {
 	// Получаем значение заголовка Authorization
@@ -160,6 +164,8 @@ type User struct {
 	Email string
 }
 
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
+// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // Функция для проверки токена и извлечения информации о пользователе
 func GetUserFromToken(tokenString string) (User, error) {
 	// Установка секретного ключа для проверки подписи токена
