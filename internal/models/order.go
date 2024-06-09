@@ -19,19 +19,6 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	// Получение ID пользователя из сессии или запроса в зависимости от вашей логики
 	userID := 1 // Ваша логика получения идентификатора пользователя
 
-	// db, err := database.Connect()
-	// if err != nil {
-	// 	fmt.Println("Error connecting to the database", err)
-	// 	return
-	// }
-	// defer db.Close()
-
-	// err = db.Ping()
-	// if err != nil {
-	// 	fmt.Println("Error pinging the database", err)
-	// 	return
-	// }
-
 	// Получение заказов пользователя с БД
 	orders, err := getOrdersForUser( /* db, */ userID)
 	if err != nil {
@@ -40,14 +27,24 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Загрузка HTML шаблона
-	link := "/home/mrx/Documents/Programm Go/Results/2024.04.19_First_internet_store/First_internet_store/web/views/orders.html"
-	tmpl := template.Must(template.ParseFiles(link))
+	link1 := "web/html/orders.html"
+	link2 := "web/html/navigation.html"
+	tmpl := template.Must(template.ParseFiles(link1, link2))
 
 	// Отправка страницы HTML с данными о заказах
 	if err := tmpl.Execute(w, orders); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	/* 
+		На текущий момент заказов нету в базе вроде т.к. нету технологии добавления заказов
+		неговоря уже о том, кому эти заказы добавлять.
+	*/
+
+	// renderTemplate(w, date, 
+	// "web/html/orders.html",
+	// "web/html/navigation.html")
 }
 
 // Для получения заказов пользователя из базы данных

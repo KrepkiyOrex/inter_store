@@ -1,0 +1,160 @@
+    body {
+        background-color: #292929;
+        color: #e75500;
+    }
+
+    /* ===================================== UI elem ========================================== */
+
+    /* Стили для навигации и контейнера товаров */
+    nav {
+        background-color: #333;
+        overflow: hidden;
+    }
+
+    nav ul {
+        display: flex;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        }
+
+    nav ul li {
+        float: left;
+    }
+
+    nav ul li a {
+        display: block;
+        color: rgb(228, 72, 0);
+        text-align: center;
+        padding: 14px 12px;
+        text-decoration: none;
+        font-weight: bold; /* или другое значение, например, 600 */
+        font-size: 18px;
+        }
+
+    nav ul li a:hover {
+        background-color: #111;
+    }
+
+    /* ===================================== /products ========================================== */
+
+    .product-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        margin-top: 20px;
+        gap: 20px; /* расстояние между элементами */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+    }
+
+    .product-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        width: 300mm; /* Процентное значение ширины контейнера товаров */
+    }
+
+    .product-item {
+        width: 200px;
+        height: 170px;
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        text-align: center;
+        /* display: inline-block; */
+        /* box-sizing: border-box; */
+    }
+
+    .buy-button {
+        display: block;
+        width: 100%;
+        background-color: #089403;
+        color: #fff;
+        text-align: center;
+        padding: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .buy-button:hover {
+        background-color: #0056b3;
+    }
+
+    /* ===================================== /account ========================================== */
+
+    .profile h3, .profile p, .profile h4, .profile h5 {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    .profile-container {
+        max-width: 1200px; /* максимальная ширина центральной части */
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center; /* Выравнивание по верхнему краю */
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+        margin: 0 auto; /* центрирование по горизонтали */
+    }
+
+    .profile-list {
+        display: flex;
+        flex-wrap: wrap; /* позволяет элементам переноситься на следующую строку */
+        gap: 20px; /* расстояние между элементами */
+        justify-content: center; /* выравнивание элементов по центру */
+    }
+
+    .profile {
+        width: 760px; /* одинаковая ширина для всех элементов */
+        height: 220px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    .bonus {
+        width: 370px; /* одинаковая ширина для всех элементов */
+        height: 220px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    .cart, .history, .favorites {
+        width: 370px; /* одинаковая ширина для всех элементов */
+        height: 220px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+   /* ===================================== /administrator ========================================== */
+   
+    .table-users {
+        display: flex;
+        flex-direction: column; /* Изменить на column для вертикального размещения */
+        justify-content: center; /* выравнивание элементов по центру */
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    /* Стили для подвала */
+    footer {
+        text-align: center;
+        padding: 20px;
+        background-color: #3b3b3b;
+        margin-top: 20px;
+    }
+ 

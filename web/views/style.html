@@ -1,0 +1,53 @@
+{{ define "style" }}
+
+   body {
+    background-color: rgb(35, 35, 35);
+    color: white;
+    margin: 20;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+nav {
+    background-color: #333;
+    padding: 10px 0;
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+nav ul li a:hover {
+    color: #ff8800;
+}
+
+/* Добавляем отступы для остального контента */
+.container {
+    padding: 20px; /* Левый и правый отступы */
+    margin-top: 20px; /* Отступ сверху */
+    background-color: #222; /* Цвет фона контейнера */
+    border: 1px solid #444; /* Граница контейнера */
+}
+
+/* Стили для текстового контента */
+.container p {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+
+{{ end }}

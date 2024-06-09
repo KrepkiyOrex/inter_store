@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оформление заказа</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Оформление заказа</h1>
+
+    <h2>Содержимое вашей корзины:</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Название товара</th>
+                <th>Цена</th>
+                <th>Количество</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Товар 1</td>
+                <td>$10.00</td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td>Товар 2</td>
+                <td>$20.00</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>Товар 3</td>
+                <td>$30.00</td>
+                <td>3</td>
+            </tr>
+            <tr>
+                <td>Товар 4</td>
+                <td>$15.00</td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td>Товар 5</td>
+                <td>$25.00</td>
+                <td>1</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Детали заказа:</h2>
+    <!-- Форма для ввода деталей заказа (адреса, способа доставки и оплаты и т. д.) -->
+    <form action="/submit_order" method="post">
+        <label for="address">Адрес доставки:</label><br>
+        <input type="text" id="address" name="address" required><br><br>
+
+        <label for="delivery">Способ доставки:</label><br>
+        <select id="delivery" name="delivery" required>
+            <option value="courier">Курьерская доставка</option>
+            <option value="pickup">Самовывоз</option>
+        </select><br><br>
+
+        <label for="payment">Способ оплаты:</label><br>
+        <select id="payment" name="payment" required>
+            <option value="cash">Наличными при получении</option>
+            <option value="card">Онлайн оплата картой</option>
+            <option value="card">Натурой</option>
+        </select><br><br>
+
+        <input type="submit" value="Оформить заказ">
+    </form>
+</body>
+</html>

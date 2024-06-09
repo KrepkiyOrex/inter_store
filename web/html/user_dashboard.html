@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+  {{ template "style" }}
+</head>
+<body>
+
+  {{ template "navigation" . }}
+
+      <h2>User Dashboard</h2>
+    <p>Welcome, {{ .Username }}!</p>
+    <p>This is your dashboard. You can add content here as needed.</p>
+</body>
+</html>

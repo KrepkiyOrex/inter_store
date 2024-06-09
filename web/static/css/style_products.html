@@ -1,0 +1,116 @@
+{{ define "style_products" }}
+
+    <style>
+        /* Общие стили */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Стили для шапки */
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px; /* Максимальная ширина шапки */
+            margin: 0 auto; /* Центрирование шапки на экране */
+        }
+
+        /* Стили для обертки */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px; /* Максимальная ширина контейнера */
+            margin: 0 auto; /* Центрирование контейнера на экране */
+        }
+
+        /* Стили для центральной части */
+        main {
+            flex-grow: 1; /* Основной контент растягивается на всю доступную ширину */
+            padding: 20px;
+        }
+
+        nav {
+            background-color: #333;
+            padding: 10px 0;
+        }
+
+        nav ul {
+         list-style-type: none;
+         margin: 0;
+         padding: 0;
+         text-align: center;
+        }
+
+        nav ul li {
+         display: inline;
+         margin-right: 20px;
+        }
+
+        .product img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .product h3 {
+            margin-top: 0;
+        }
+
+        .product p {
+            margin-bottom: 0;
+        }
+
+        .buy-button {
+            display: block;
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            padding: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .buy-button:hover {
+            background-color: #0056b3;
+        }
+
+        .products-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        
+        .product {
+            width: calc(23.33% - 80px); /* Учитываем отступы между товарами */
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        
+        @media screen and (max-width: 1200px) {
+            .product {
+                width: calc(50% - 20px); /* На планшетах выводить товары по два в ряд */
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .product {
+                width: calc(100% - 20px); /* На устройствах с маленькими экранами выводить товары по одному в столбец */
+            }
+        }
+        
+
+        /* Стили для подвала */
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+
+{{ end }}

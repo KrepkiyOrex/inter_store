@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оформление заказа</title>
+    <style>
+        table {
+            width: 60%; /* Фиксированная ширина таблицы */
+            max-width: 800px; /* Максимальная ширина таблицы */
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            max-width: 200px; /* Максимальная ширина ячейки */
+            white-space: nowrap; /* Предотвращает перенос текста */
+            overflow: hidden; /* Скрытие части текста, выходящей за пределы ячейки */
+            text-overflow: ellipsis; /* Отображение многоточия в конце текста */
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Оформление заказа</h1>
+
+    <h2>Содержимое вашей корзины:</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50%;">Название товара</th>
+                <th style="width: 20%;">Цена</th>
+                <th style="width: 15%;">Количество</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Товар 1</td>
+                <td>$10.00</td>
+                <td>2</td>
+            </tr>
+            <!-- Дополнительные строки для других товаров -->
+        </tbody>
+    </table>
+
+    <h2>Детали заказа:</h2>
+    <!-- Форма для ввода деталей заказа (адреса, способа доставки и оплаты и т. д.) -->
+    <form action="/submit_order" method="post">
+        <!-- Форма здесь -->
+    </form>
+</body>
+</html>

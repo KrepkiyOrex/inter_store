@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login</title>
+
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+<body>
+    <header>
+        <h1>User Login</h1>
+    </header>
+
+    {{if .UserName}}
+        <p>Привет, {{.UserName}}!</p>
+        <p><a href="/logout">Выйти</a></p>
+    {{else}}
+        <p>Пожалуйста, <a href="/login">войдите</a></p>
+    {{end}}
+
+    {{ template "navigation" . }}
+
+    <h3>Я молодчина! Я нешел способ и сделал выгрузку 2 файлов сразу!</h3>
+
+    {{if .ErrorMessage}}
+        <div class="error">{{.ErrorMessage}}</div>
+    {{end}}
+
+    <form action="/login" method="post">
+        <label for="userName">User name:</label><br>
+        <input type="text" id="userName" name="userName"><br>
+
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password"><br><br>
+
+        <input type="submit" value="Login">
+    </form>
+</body>
+</html>
+
+

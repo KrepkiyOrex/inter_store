@@ -11,9 +11,9 @@ func GreetHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Main page %s", time.Now())
 }
 
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello to the north!")
-}
+// func HelloHandler(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprintf(w, "Hello to the north!")
+// }
 
 func HeadersHandler(w http.ResponseWriter, req *http.Request) {
 	for name, headers := range req.Header {
