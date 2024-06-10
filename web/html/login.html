@@ -13,30 +13,29 @@
         <h1>User Login</h1>
     </header>
 
-    {{if .UserName}}
-        <p>Привет, {{.UserName}}!</p>
-        <p><a href="/logout">Выйти</a></p>
-    {{else}}
-        <p>Пожалуйста, <a href="/login">войдите</a></p>
-    {{end}}
-
     {{ template "navigation" . }}
 
-    <h3>Я молодчина! Я нешел способ и сделал выгрузку 2 файлов сразу!</h3>
+    <div class="page-wrapper">
+        <div class="login-container">
+            <h3>Я молодчина! Я нашел способ и сделал выгрузку 2 файлов сразу!</h3>
+            {{if .ErrorMessage}}
+                <div class="error">{{.ErrorMessage}}</div>
+            {{end}}
+            <form action="/login" method="post">
+                <label for="userName">User name:</label><br>
+                <input type="text" id="userName" name="userName" required><br>
 
-    {{if .ErrorMessage}}
-        <div class="error">{{.ErrorMessage}}</div>
-    {{end}}
+                <label for="password">Password:</label><br>
+                <input type="password" id="password" name="password" required><br><br>
 
-    <form action="/login" method="post">
-        <label for="userName">User name:</label><br>
-        <input type="text" id="userName" name="userName"><br>
+                <input type="submit" value="Login">
+            </form>
+        </div>
+    </div>
 
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password"><br><br>
-
-        <input type="submit" value="Login">
-    </form>
+    <footer>
+        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
+    </footer>
 </body>
 </html>
 
