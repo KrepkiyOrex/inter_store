@@ -3,29 +3,29 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"First_internet_store/internal/database"
+	"First_internet_store/internal/utils"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	// http.ServeFile(w, r, "web/html/login.html")
-	renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
+	utils.RenderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
 }
 
 // Обработчик для страницы входа
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// При GET запросе отображаем форму входа
 	if r.Method == "GET" {
-		// utils.RenderTemplate(w, utils.UserCookie{}, "web/html/login.html", "web/html/navigation.html")
-		renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
-		// return
+		utils.RenderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
+		return
+		// renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
 	}
 
 	// При POST запросе обрабатываем вход пользователя
@@ -40,7 +40,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			ErrorMessage: "Invalid username or password",
 		}
 
-		renderTemplate(w, date, "web/html/login.html", "web/html/navigation.html")
+		utils.RenderTemplate(w, date, "web/html/login.html", "web/html/navigation.html")
 		return
 	}
 
@@ -59,19 +59,19 @@ type UserCookie struct {
 	ErrorMessage string
 }
 
-func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
-	template, err := template.ParseFiles(tmpl...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
+// 	template, err := template.ParseFiles(tmpl...)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	err = template.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
+// 	err = template.Execute(w, data)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
 
 // =====================================================================================================================
 

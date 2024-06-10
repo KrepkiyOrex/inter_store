@@ -13,14 +13,30 @@
         <h1>User Orders</h1>
     </header>
 
+    {{if .UserName}}
+        <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+    {{else}}
+        <p>Пожалуйста, <a href="/login">войдите</a></p>
+    {{end}}
+
     {{ template "navigation" . }}
 
-    <ul>
-        {{range .}}
-        <li>
-            Order ID: {{.ID}}, Order Date: {{.OrderDate}}
-        </li>
-        {{end}}
-    </ul>
+    <div class="page-wrapper">
+        <div class="orders-container">
+            <ul>
+                {{range .Orders}}
+                    <li>
+                        Order ID: {{.ID}}, Order Date: {{.OrderDate}}
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+    </div>
+
+
+    <footer>
+        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
+    </footer>
+
 </body>
 </html>

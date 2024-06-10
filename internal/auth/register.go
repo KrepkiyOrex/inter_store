@@ -2,6 +2,7 @@ package auth
 
 import (
 	"First_internet_store/internal/database"
+	"First_internet_store/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -45,6 +46,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Выводим сообщение о успешной регистрации
 	fmt.Fprintf(w, "User %s successfully registered!", userName)
 
+	// добавь сюда страницу с радостями, что клиент зарегистрировался
+	// добавь сюда страницу с радостями, что клиент зарегистрировался
+	// добавь сюда страницу с радостями, что клиент зарегистрировался
+
 	log.Printf("User %s added to the database", userName)
 }
 
@@ -52,8 +57,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 func ShowRegistrationPage(w http.ResponseWriter, r *http.Request) {
 	// link := "web/html/register.html"
 	// http.ServeFile(w, r, link)
-	
-	renderTemplate(w, UserCookie{}, 
-		"web/html/register.html", 
+
+	utils.RenderTemplate(w, UserCookie{},
+		"web/html/register.html",
 		"web/html/navigation.html")
 }

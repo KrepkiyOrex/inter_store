@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products store</title>
 
-    <!-- <link rel="stylesheet" href="/static/css/main.css"> -->
     <link rel='stylesheet' href='/static/css/main.css'>
    
 </head>
@@ -22,18 +21,20 @@
 
     {{ template "navigation" . }}
 
-    <div class="product-container">
-        <div class="product-list">
-            {{range .Products}}
-                <div class="product-item">
-                    <h3>{{.Name}}</h3>
-                    <p>Price: ${{.Price}}</p>
-                    <!-- Дополнительные поля товара, если есть -->
-                    <!-- <p>ID: {{.ID}}</p> -->
-                    <!-- <img src="..." alt="Product Image"> -->
-                    <button class="buy-button">Купить</button>
-                </div>
-            {{end}}
+    <div class="page-wrapper">
+        <div class="product-container">
+            <div class="product-list">
+                {{range .Products}}
+                    <div class="product-item">
+                        <h3>{{.Name}}</h3>
+                        <p>Price: ${{.Price}}</p>
+                        <!-- Дополнительные поля товара, если есть -->
+                        <!-- <p>ID: {{.ID}}</p> -->
+                        <!-- <img src="..." alt="Product Image"> -->
+                        <button class="buy-button">Купить</button>
+                    </div>
+                {{end}}
+            </div>
         </div>
     </div>
 

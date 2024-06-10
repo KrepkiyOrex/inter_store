@@ -2,17 +2,11 @@ package models
 
 import (
 	"First_internet_store/internal/database"
-	"html/template"
+	"First_internet_store/internal/utils"
 	"log"
 	"net/http"
 	"time"
 )
-
-// Структура для представления заказа
-type Order struct {
-	ID        int
-	OrderDate time.Time
-}
 
 // Заказы пользователя ??????????????????
 func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,25 +21,68 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Загрузка HTML шаблона
-	link1 := "web/html/orders.html"
-	link2 := "web/html/navigation.html"
-	tmpl := template.Must(template.ParseFiles(link1, link2))
+	// link1 := "web/html/orders.html"
+	// link2 := "web/html/navigation.html"
+	// tmpl := template.Must(template.ParseFiles(link1, link2))
 
-	// Отправка страницы HTML с данными о заказах
-	if err := tmpl.Execute(w, orders); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// // Отправка страницы HTML с данными о заказах
+	// if err := tmpl.Execute(w, orders); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 
-	/* 
+	/*
 		На текущий момент заказов нету в базе вроде т.к. нету технологии добавления заказов
 		неговоря уже о том, кому эти заказы добавлять.
 	*/
 
-	// renderTemplate(w, date, 
-	// "web/html/orders.html",
-	// "web/html/navigation.html")
+	// =====================================================================
+	var userName string
+
+	cookie, err := r.Cookie("userName")
+	if err == nil {
+		userName = cookie.Value
+	}
+
+	date := OrderPageDate{
+		OrdersDate: OrdersDate{
+			Orders: orders,
+		},
+		UserCookie: UserCookie{
+			UserName: userName,
+		},
+	}
+
+	utils.RenderTemplate(w, date,
+		"web/html/orders.html",
+		"web/html/navigation.html")
+
+	// =====================================================================
 }
+
+type OrderPageDate struct {
+	OrdersDate
+	UserCookie
+}
+
+// Структура для представления заказа
+type Order struct {
+	ID        int
+	OrderDate time.Time
+}
+
+type OrdersDate struct {
+	Orders []Order
+}
+
+// type PageData struct {
+// 	ProductsData
+// 	UserCookie
+// }
+
+// type UserCookie struct {
+// 	UserName string
+// }
 
 // Для получения заказов пользователя из базы данных
 func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {

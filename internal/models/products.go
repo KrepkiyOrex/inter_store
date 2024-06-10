@@ -35,8 +35,8 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		UserName: userName,
 	}
 
-	// utils.RenderTemplate(w, data,
-	renderTemplate(w, data,
+	utils.RenderTemplate(w, data,
+	// renderTemplate(w, data,
 		"web/html/account.html",
 		"web/html/navigation.html")
 }
@@ -107,12 +107,11 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	renderTemplate(w, data,
+	utils.RenderTemplate(w, data,
 		"web/html/products.html",
 		"web/html/navigation.html",
 	)
 }
-
 
 type PageData struct {
 	ProductsData
@@ -133,19 +132,19 @@ type UserCookie struct {
 	UserName string
 }
 
-func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
-	template, err := template.ParseFiles(tmpl...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
+// 	template, err := template.ParseFiles(tmpl...)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	err = template.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
+// 	err = template.Execute(w, data)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
 
 // Обработчик для добавления товара в корзину
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -271,11 +270,11 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 	userName, err := getUserName(r)
 	if err != nil {
 		// Куки не найдено, показываем форму входа
-		utils.RenderTemplate(w, utils.UserCookie{}, "web/html/list.html")
+		utils.RenderTemplate(w, UserCookie{}, "web/html/list.html")
 		// http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	data := utils.UserCookie{UserName: userName}
+	data := UserCookie{UserName: userName}
 	utils.RenderTemplate(w, data, "web/html/list.html")
 }
 

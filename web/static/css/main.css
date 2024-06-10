@@ -1,6 +1,14 @@
     body {
         background-color: #292929;
         color: #e75500;
+        margin: 0; /* Убирает отступы по умолчанию */
+    }
+
+    .page-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        width: 100%;
     }
 
     /* ===================================== UI elem ========================================== */
@@ -43,9 +51,12 @@
         display: flex;
         justify-content: center;
         align-items: flex-start; /* Выравнивание по верхнему краю */
-        margin-top: 20px;
-        gap: 20px; /* расстояние между элементами */
         flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        width: 1100px;
+        gap: 20px; /* расстояние между элементами */
+        border: 1px solid #d86100;
+        margin-top: 20px;
+        padding-top: 20px; /* Отступ сверху */
     }
 
     .product-list {
@@ -142,12 +153,40 @@
 
    /* ===================================== /administrator ========================================== */
    
+    .admin-container {
+        width: 1100px;
+        min-height: 600px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        margin-top: 20px;
+        gap: 20px; /* расстояние между элементами */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        border: 1px solid #d86100;
+        padding-top: 20px; /* Отступ сверху */
+    }
+
     .table-users {
         display: flex;
         flex-direction: column; /* Изменить на column для вертикального размещения */
         justify-content: center; /* выравнивание элементов по центру */
         align-items: center;
+        margin-bottom: 20px;
+    }
+
+   /* ===================================== /users-orders ========================================== */
+   
+    .orders-container {
+        width: 1100px;
+        min-height: 600px; /* Минимальная высота бокса, но позволить элементу увеличиваться по высоте, если содержимое больше. */
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
         margin-top: 20px;
+        gap: 20px; /* расстояние между элементами */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        border: 1px solid #d86100;
+        padding-top: 20px; /* Отступ сверху */
     }
 
     /* Стили для подвала */

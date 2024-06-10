@@ -24,30 +24,34 @@
     
     {{ template "navigation" . }}
 
-    <div class="table-users">
-        <h1>Таблица "users"</h1>
-        <table border="1">
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Password</th>
-                <th>Actions</th>
-            </tr>
-            {{range .Users}}
-            <tr>
-                <td>{{.ID}}</td>
-                <td>{{.Username}}</td>
-                <td>{{.Email}}</td>
-                <td>{{.Password}}</td>
-                <td>
-                    <button class="delete-btn" data-id="{{.ID}}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-            {{end}}
-        </table>
+    <div class="page-wrapper">
+        <div class="admin-container">
+            <div class="table-users">
+                <h1>Таблица "users"</h1>
+                <table border="1">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                        <th>Actions</th>
+                    </tr>
+                    {{range .Users}}
+                    <tr>
+                        <td>{{.ID}}</td>
+                        <td>{{.Username}}</td>
+                        <td>{{.Email}}</td>
+                        <td>{{.Password}}</td>
+                        <td>
+                            <button class="delete-btn" data-id="{{.ID}}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {{end}}
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>

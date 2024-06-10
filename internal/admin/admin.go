@@ -2,7 +2,7 @@ package admin
 
 import (
 	"First_internet_store/internal/database"
-	"html/template"
+	"First_internet_store/internal/utils"
 	"log"
 	"net/http"
 
@@ -20,19 +20,19 @@ type User struct {
 //     Users []User
 // }
 
-func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
-	template, err := template.ParseFiles(tmpl...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
+// 	template, err := template.ParseFiles(tmpl...)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	err = template.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
+// 	err = template.Execute(w, data)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
@@ -111,7 +111,7 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	// data := UsersData{
 	// 	Users: users,
 	// }
-	
+
 	var userName string
 
 	cookie, err := r.Cookie("userName")
@@ -128,7 +128,7 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	renderTemplate(w, data, 
+	utils.RenderTemplate(w, data,
 		"web/html/admin.html",
 		"web/html/navigation.html")
 }
