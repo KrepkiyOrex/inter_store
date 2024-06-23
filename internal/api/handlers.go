@@ -51,8 +51,11 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/list", models.ListHandler)
 	// router.HandleFunc("/add-to-cart", models.AddToCartHandler)
 	router.HandleFunc("/add-to-cart", models.AddToCartHandler).Methods("POST")
-	router.HandleFunc("/cart", models.ViewCartHandler)
 	router.HandleFunc("/users-orders", models.UserOrdersHandler) // error "driver"
+	
+	
+	router.HandleFunc("/cart", models.ViewCartHandler)
+	router.HandleFunc("/edit", models.EditProduct)
 
 	// Обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
@@ -66,7 +69,7 @@ func SetupRoutes() *mux.Router {
 
 	// deprecated из-за ненадобности
 	// router.HandleFunc("/user-dashboard", auth.UserDashboardHandler) // Страница панели управления пользователя
-	router.HandleFunc("/account", models.Account)                   // profile
+	router.HandleFunc("/account", models.Account) // profile
 
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")

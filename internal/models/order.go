@@ -44,7 +44,7 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		userName = cookie.Value
 	}
 
-	date := OrderPageDate{
+	data := OrderPageDate{
 		OrdersDate: OrdersDate{
 			Orders: orders,
 		},
@@ -53,7 +53,7 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	utils.RenderTemplate(w, date,
+	utils.RenderTemplate(w, data,
 		"web/html/orders.html",
 		"web/html/navigation.html")
 
