@@ -16,14 +16,14 @@ import (
 
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	// http.ServeFile(w, r, "web/html/login.html")
-	utils.RenderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
+	utils.RenderTemplate(w, UserError{}, "web/html/login.html", "web/html/navigation.html")
 }
 
 // Обработчик для страницы входа
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// При GET запросе отображаем форму входа
 	if r.Method == "GET" {
-		utils.RenderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
+		utils.RenderTemplate(w, UserError{}, "web/html/login.html", "web/html/navigation.html")
 		return
 		// renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
 	}
@@ -36,7 +36,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := authenticateUser(userName, password)
 	if err != nil {
 		// Если аутентификация не удалась, показываем форму входа снова с ошибкой
-		date := UserCookie{
+		date := UserError{
 			ErrorMessage: "Invalid username or password",
 		}
 
@@ -54,8 +54,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusFound)
 }
 
-type UserCookie struct {
-	UserName     string
+type UserError struct {
+	// UserName     string
 	ErrorMessage string
 }
 

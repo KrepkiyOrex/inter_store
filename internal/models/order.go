@@ -1,6 +1,7 @@
 package models
 
 import (
+	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
 	"First_internet_store/internal/utils"
 	"log"
@@ -37,12 +38,14 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	// =====================================================================
-	var userName string
+	// var userName string
 
-	cookie, err := r.Cookie("userName")
-	if err == nil {
-		userName = cookie.Value
-	}
+	// cookie, err := r.Cookie("userName")
+	// if err == nil {
+	// 	userName = cookie.Value
+	// }
+
+	userName, _ := auth.GetUserName(r)
 
 	data := OrderPageDate{
 		OrdersDate: OrdersDate{

@@ -12,14 +12,14 @@ import (
 )
 
 // Функция для получения имени пользователя из куки
-func getUserName(r *http.Request) (string, error) {
-	// Получаем значение куки с именем пользователя
-	cookie, err := r.Cookie("userName")
-	if err != nil {
-		return "", err
-	}
-	return cookie.Value, nil
-}
+// func getUserName(r *http.Request) (string, error) {
+// 	// Получаем значение куки с именем пользователя
+// 	cookie, err := r.Cookie("userName")
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return cookie.Value, nil
+// }
 
 // user profile
 func Account(w http.ResponseWriter, r *http.Request) {
@@ -90,12 +90,14 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// для имени из куки
-	var userName string
+	// var userName string
 
-	cookie, err := r.Cookie("userName")
-	if err == nil {
-		userName = cookie.Value
-	}
+	// cookie, err := r.Cookie("userName")
+	// if err == nil {
+	// 	userName = cookie.Value
+	// }
+
+	userName, _ := auth.GetUserName(r)
 
 	data := PageData{
 		ProductsData: ProductsData{
@@ -130,20 +132,6 @@ type ProductsData struct {
 type UserCookie struct {
 	UserName string
 }
-
-// func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
-// 	template, err := template.ParseFiles(tmpl...)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = template.Execute(w, data)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
 
 // Обработчик для добавления товара в корзину
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -284,12 +272,14 @@ func EditProduct(w http.ResponseWriter, r *http.Request) {
 
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	// для имени из куки
-	var userName string
+	// var userName string
 
-	cookie, err := r.Cookie("userName")
-	if err == nil {
-		userName = cookie.Value
-	}
+	// cookie, err := r.Cookie("userName")
+	// if err == nil {
+	// 	userName = cookie.Value
+	// }
+
+	userName, _ := auth.GetUserName(r)
 
 	data := PageData{
 		UserCookie: UserCookie{
@@ -305,7 +295,7 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 
 // Содержимое вашей корзины
 func ListHandler(w http.ResponseWriter, r *http.Request) {
-	userName, err := getUserName(r)
+	userName, err := auth.GetUserName(r)
 	if err != nil {
 		// Куки не найдено, показываем форму входа
 		utils.RenderTemplate(w, UserCookie{},

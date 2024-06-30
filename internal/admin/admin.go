@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
 	"First_internet_store/internal/utils"
 	"log"
@@ -112,12 +113,14 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	// 	Users: users,
 	// }
 
-	var userName string
+	// var userName string
 
-	cookie, err := r.Cookie("userName")
-	if err == nil {
-		userName = cookie.Value
-	}
+	// cookie, err := r.Cookie("userName")
+	// if err == nil {
+	// 	userName = cookie.Value
+	// }
+
+	userName, _ := auth.GetUserName(r)
 
 	data := PageData{
 		UsersData: UsersData{
