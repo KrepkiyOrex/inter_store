@@ -15,6 +15,32 @@
     
     
 
+    /* ====================================== head ============================================ */
+
+    .header {
+        display: flex;
+        align-items: center;
+        height: 100px; /* или любой другой желаемый размер */
+        max-width: 900px; /* максимальная ширина контейнера */
+        margin: 0 auto; /* центрирование контейнера по горизонтали */
+        text-align: center; /* центрирование текста */
+    }
+
+    header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center; /* центрирование текста */
+    }
+
+    .condition-auth {
+        min-width: 200px;
+        height: 100px;
+        padding: 28px;
+        text-align: left;
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
     /* ===================================== UI elem ========================================== */
 
     h1, h3 {

@@ -7,15 +7,18 @@
     <link rel='stylesheet' href='/static/css/main.css'>
 </head>
 <body>
-    <header>
-        <h1>Products store</h1>
-    </header>
-
-    {{if .UserName}}
-        <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
-    {{else}}
-        <p>Пожалуйста, <a href="/login">войдите</a></p>
-    {{end}}
+    <div class="header">
+        <header>
+            <h1>Products store</h1>
+        </header>
+        <div class="condition-auth">
+            {{if .UserName}}
+            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{else}}
+            <p> Пожалуйста, <a href="/login">войдите</a></p>
+            {{end}}
+        </div>
+    </div>
 
     {{ template "navigation" . }}
 
