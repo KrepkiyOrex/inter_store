@@ -21,23 +21,23 @@ import (
 // }
 
 // user profile
-func Account(w http.ResponseWriter, r *http.Request) {
-	// Извлекаем куку
-	cookie, err := r.Cookie("userName")
-	userName := "" // Значение по умолчанию, если кука не установлена
-	if err == nil {
-		userName = cookie.Value
-	}
+// func Account(w http.ResponseWriter, r *http.Request) {
+// 	// Извлекаем куку
+// 	cookie, err := r.Cookie("userName")
+// 	userName := "" // Значение по умолчанию, если кука не установлена
+// 	if err == nil {
+// 		userName = cookie.Value
+// 	}
 
-	data := UserCookie{
-		UserName: userName,
-	}
+// 	data := UserCookie{
+// 		UserName: userName,
+// 	}
 
-	utils.RenderTemplate(w, data,
-		// renderTemplate(w, data,
-		"web/html/account.html",
-		"web/html/navigation.html")
-}
+// 	utils.RenderTemplate(w, data,
+// 		// renderTemplate(w, data,
+// 		"web/html/account.html",
+// 		"web/html/navigation.html")
+// }
 
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// Connect to the database
@@ -96,7 +96,8 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// 	userName = cookie.Value
 	// }
 
-	userName, _ := auth.GetUserName(r)
+	// 12
+	userName, _ := auth.GetUserName(r) // 32
 
 	data := PageData{
 		ProductsData: ProductsData{

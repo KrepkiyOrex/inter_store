@@ -69,7 +69,7 @@ func SetupRoutes() *mux.Router {
 
 	// deprecated из-за ненадобности
 	// router.HandleFunc("/user-dashboard", auth.UserDashboardHandler) // Страница панели управления пользователя
-	router.HandleFunc("/account", models.Account) // profile
+	router.HandleFunc("/account", auth.Account) // profile
 
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")

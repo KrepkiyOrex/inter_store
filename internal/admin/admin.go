@@ -13,8 +13,8 @@ import (
 type User struct {
 	ID       int
 	Username string
-	Email    string
 	Password string
+	Email    string
 }
 
 // type PageData struct {

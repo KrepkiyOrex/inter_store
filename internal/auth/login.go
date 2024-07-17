@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"First_internet_store/internal/database"
@@ -11,6 +13,89 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 )
+
+// user profile
+func Account(w http.ResponseWriter, r *http.Request) {
+	// Извлекаем куку
+	// cookie, err := r.Cookie("userName")
+	// userName := "" // Значение по умолчанию, если кука не установлена
+	// if err == nil {
+	// 	userName = cookie.Value
+	// }
+
+	// -----------------------------------------------------------------
+
+	// Connect to the database
+	db, err := database.Connect()
+	if err != nil {
+		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+		log.Println("Error connecting to the database")
+		return
+	}
+	defer db.Close()
+
+	// Получение ID пользователя из куки
+	cookieID, err := r.Cookie("userID")
+	if err != nil {
+		http.Error(w, "Invalid userID", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(cookieID.Value)
+
+	// Выполнение SQL запроса для выдачи данных пользователя по его ID
+	var user User
+	err = db.QueryRow("SELECT username, password, email, id FROM users WHERE id = $1", userID).Scan(&user.UserName, &user.Password, &user.Email, &user.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "User not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// UserName, _ := GetUserName(r)
+
+	// -----------------------------------------------------------------
+
+	data := UserCookie{
+		ID:       user.ID,
+		UserName: user.UserName,
+		Email:    user.Email,
+	}
+
+	utils.RenderTemplate(w, data,
+		"web/html/account.html",
+		"web/html/navigation.html")
+}
+
+// Set userName and userID in cookie
+func SetCookie(w http.ResponseWriter, name, value string, expires time.Time) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Expires:  expires,
+	})
+}
+
+type User struct {
+	ID       int
+	UserName string
+	Password string
+	Email    string
+}
+
+type UserCookie struct {
+	ID       int
+	UserName string
+	Password string
+	Email    string
+}
 
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	// http.ServeFile(w, r, "web/html/login.html")
@@ -31,7 +116,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	// Аутентифицируем пользователя
-	_, err := authenticateUser(userName, password)
+	userID, err := authenticateUser(userName, password)
 	if err != nil {
 		// Если аутентификация не удалась, показываем форму входа снова с ошибкой
 		date := UserError{
@@ -43,11 +128,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Устанавливаем куку с именем пользователя
-	http.SetCookie(w, &http.Cookie{
-		Name:  "userName",
-		Value: userName,
-		Path:  "/",
-	})
+	// http.SetCookie(w, &http.Cookie{
+	// 	Name:  "userName",
+	// 	Value: userName,
+	// 	Path:  "/",
+	// })
+
+	// ---------------------------------------------------
+
+	SetCookie(w, "userName", userName, time.Now().Add(24*time.Hour))
+
+	SetCookie(w, "userID", strconv.Itoa(userID), time.Now().Add(24*time.Hour))
+
 	// Перенаправляем на ЛК страницу
 	http.Redirect(w, r, "/account", http.StatusFound)
 }
@@ -78,7 +170,7 @@ func createJWT(user User, secretKey []byte) (string, error) {
 	// Создаем токен
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":      user.ID,                               // Используем ID пользователя как subject
-		"name":     user.Name,                             // Используем имя пользователя
+		"name":     user.UserName,                         // Используем имя пользователя
 		"password": user.Password,                         // Используем пароль пользователя
 		"email":    user.Email,                            // Используем электронную почту пользователя
 		"exp":      time.Now().Add(time.Hour * 72).Unix(), // Устанавливаем срок действия токена на 72 часа
@@ -127,7 +219,7 @@ func validateClaims(claims jwt.MapClaims, expectedUser User) error {
 	//     return fmt.Errorf("invalid subject claim")
 	// }
 
-	if claims["name"] != expectedUser.Name {
+	if claims["name"] != expectedUser.UserName {
 		return fmt.Errorf("invalid name claim")
 	}
 
@@ -170,7 +262,7 @@ func authenticateUser(username, password string) (int, error) {
 
 	// сохраняем введенные данные пользователя при авторизации
 	userFormValue := User{
-		Name:     username,
+		UserName: username,
 		Password: password,
 	}
 
@@ -184,7 +276,7 @@ func authenticateUser(username, password string) (int, error) {
 
 	// сохраняем данные пользователя, выгруженные с БД
 	userDB := User{
-		Name:     storedUsername,
+		UserName: storedUsername,
 		Password: storedPassword,
 	}
 
@@ -228,7 +320,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК 
+// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК
 // СДЕЛАЕШЬ АЛЬТЕРНАТИВУ. ЧИТАЙ В ФАЙЛЕ АРХИТЕКТУРА на 92 строчке про это.
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
@@ -258,7 +350,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 // 	return tokenString, nil
 // }
 
-// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК 
+// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК
 // СДЕЛАЕШЬ АЛЬТЕРНАТИВУ. ЧИТАЙ В ФАЙЛЕ АРХИТЕКТУРА на 92 строчке про это.
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
@@ -274,14 +366,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 // 	return ""
 // }
 
-type User struct {
-	ID       int
-	Name     string
-	Password string
-	Email    string
-}
-
-// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК 
+// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК
 // СДЕЛАЕШЬ АЛЬТЕРНАТИВУ. ЧИТАЙ В ФАЙЛЕ АРХИТЕКТУРА на 92 строчке про это.
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
