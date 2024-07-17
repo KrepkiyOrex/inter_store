@@ -1,11 +1,9 @@
 package auth
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"First_internet_store/internal/database"
@@ -146,7 +144,7 @@ func validateClaims(claims jwt.MapClaims, expectedUser User) error {
 func authenticateUser(username, password string) (int, error) {
 	db, err := database.Connect()
 	if err != nil {
-		log.Fatal("Error conecting to the database", err)
+		log.Fatal("Error connecting to the database", err)
 	}
 	defer db.Close()
 
@@ -230,47 +228,51 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК 
+// СДЕЛАЕШЬ АЛЬТЕРНАТИВУ. ЧИТАЙ В ФАЙЛЕ АРХИТЕКТУРА на 92 строчке про это.
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // Функция для создания JWT токена на основе идентификатора пользователя
-func createToken(userID int) (string, error) {
-	// Задаем секретный ключ для подписи токена (он должен быть безопасно храниться и не раскрываться)
-	secretKey := []byte("my_secret_key")
+// func createToken(userID int) (string, error) {
+// 	// Задаем секретный ключ для подписи токена (он должен быть безопасно храниться и не раскрываться)
+// 	secretKey := []byte("my_secret_key")
 
-	// Создаем новый JWT токен
-	token := jwt.New(jwt.SigningMethodHS256)
+// 	// Создаем новый JWT токен
+// 	token := jwt.New(jwt.SigningMethodHS256)
 
-	// Создаем claims для токена, например, указываем идентификатор пользователя в нем
-	claims := token.Claims.(jwt.MapClaims)
-	claims["user_id"] = userID
-	// Добавляем дополнительные поля в claims, если это необходимо
-	// Например: claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+// 	// Создаем claims для токена, например, указываем идентификатор пользователя в нем
+// 	claims := token.Claims.(jwt.MapClaims)
+// 	claims["user_id"] = userID
+// 	// Добавляем дополнительные поля в claims, если это необходимо
+// 	// Например: claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 
-	// Устанавливаем время истечения срока действия токена
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Например, токен действителен 24 часа
+// 	// Устанавливаем время истечения срока действия токена
+// 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Например, токен действителен 24 часа
 
-	// Подписываем токен с использованием секретного ключа
-	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		return "", err
-	}
+// 	// Подписываем токен с использованием секретного ключа
+// 	tokenString, err := token.SignedString(secretKey)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return tokenString, nil
-}
+// 	return tokenString, nil
+// }
 
+// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК 
+// СДЕЛАЕШЬ АЛЬТЕРНАТИВУ. ЧИТАЙ В ФАЙЛЕ АРХИТЕКТУРА на 92 строчке про это.
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // Функция для извлечения токена из заголовка запроса
-func ExtractToken(r *http.Request) string {
-	// Получаем значение заголовка Authorization
-	authHeader := r.Header.Get("Authorization")
-	// Проверяем, что заголовок не пустой и начинается с "Bearer "
-	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-		// Извлекаем токен, убирая "Bearer " из начала строки
-		return strings.TrimPrefix(authHeader, "Bearer ")
-	}
-	return ""
-}
+// func ExtractToken(r *http.Request) string {
+// 	// Получаем значение заголовка Authorization
+// 	authHeader := r.Header.Get("Authorization")
+// 	// Проверяем, что заголовок не пустой и начинается с "Bearer "
+// 	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+// 		// Извлекаем токен, убирая "Bearer " из начала строки
+// 		return strings.TrimPrefix(authHeader, "Bearer ")
+// 	}
+// 	return ""
+// }
 
 type User struct {
 	ID       int
@@ -279,51 +281,53 @@ type User struct {
 	Email    string
 }
 
+// УДАЛИТЬ ДАННУЮ ЗАКОМЕНТИРОВУННУЮ ФУНКУИЮ, ТОЛЬКО ПОСЛЕ ТОГО, КАК 
+// СДЕЛАЕШЬ АЛЬТЕРНАТИВУ. ЧИТАЙ В ФАЙЛЕ АРХИТЕКТУРА на 92 строчке про это.
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
 // Функция для проверки токена и извлечения информации о пользователе
-func GetUserFromToken(tokenString string) (User, error) {
-	// Установка секретного ключа для проверки подписи токена
-	secretKey := []byte("my_secret_key")
+// func GetUserFromToken(tokenString string) (User, error) {
+// 	// Установка секретного ключа для проверки подписи токена
+// 	secretKey := []byte("my_secret_key")
 
-	// Парсим токен из строки, используя секретный ключ
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Возвращаем установленный секретный ключ для проверки подписи токена
-		return secretKey, nil
-	})
+// 	// Парсим токен из строки, используя секретный ключ
+// 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// 		// Возвращаем установленный секретный ключ для проверки подписи токена
+// 		return secretKey, nil
+// 	})
 
-	// Обработка ошибок при парсинге токена
-	if err != nil {
-		return User{}, err
-	}
+// 	// Обработка ошибок при парсинге токена
+// 	if err != nil {
+// 		return User{}, err
+// 	}
 
-	// Проверяем, что токен валиден
-	if !token.Valid {
-		return User{}, errors.New("Invalid token")
-	}
+// 	// Проверяем, что токен валиден
+// 	if !token.Valid {
+// 		return User{}, errors.New("Invalid token")
+// 	}
 
-	// Извлекаем данные о пользователе из токена
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return User{}, errors.New("Failed to parse claims")
-	}
+// 	// Извлекаем данные о пользователе из токена
+// 	claims, ok := token.Claims.(jwt.MapClaims)
+// 	if !ok {
+// 		return User{}, errors.New("Failed to parse claims")
+// 	}
 
-	// Получаем необходимые данные о пользователе из токена
-	userID, ok := claims["user_id"].(int)
-	if !ok {
-		return User{}, errors.New("Failed to parse user ID")
-	}
+// 	// Получаем необходимые данные о пользователе из токена
+// 	userID, ok := claims["user_id"].(int)
+// 	if !ok {
+// 		return User{}, errors.New("Failed to parse user ID")
+// 	}
 
-	// Возвращаем данные о пользователе
-	user := User{
-		ID: userID,
-		// Дополнительные данные о пользователе, которые могут быть в токене
-		Name:  claims["name"].(string),
-		Email: claims["email"].(string),
-	}
+// 	// Возвращаем данные о пользователе
+// 	user := User{
+// 		ID: userID,
+// 		// Дополнительные данные о пользователе, которые могут быть в токене
+// 		Name:  claims["name"].(string),
+// 		Email: claims["email"].(string),
+// 	}
 
-	return user, nil
-}
+// 	return user, nil
+// }
 
 // информация о пользователе (user), которую можно использовать
 // для выполнения нужных действий в обработчике (на будущее пока оставил)

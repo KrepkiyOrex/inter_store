@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
@@ -133,49 +132,54 @@ type UserCookie struct {
 	UserName string
 }
 
+/*
+	Переделай здесь ExtractToken и GetUserFromToken для добавления в корзину, 
+	после того, как сделаешь каждому пользователю ЛК. ЧИТАЙ В ФАЙЛЕ 
+	АРХИТЕКТУРА на 92 строчке про это. 
+ */
 // Обработчик для добавления товара в корзину
-func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
-	// Извлекаем токен из заголовка запроса
-	tokenString := auth.ExtractToken(r)
-	if tokenString == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+// func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Извлекаем токен из заголовка запроса
+// 	tokenString := auth.ExtractToken(r)
+// 	if tokenString == "" {
+// 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 		return
+// 	}
 
-	// Получаем информацию о пользователе из токена
-	user, err := auth.GetUserFromToken(tokenString)
-	if err != nil {
-		http.Error(w, "Failed to get user from token", http.StatusInternalServerError)
-		return
-	}
+// 	// Получаем информацию о пользователе из токена
+// 	user, err := auth.GetUserFromToken(tokenString)
+// 	if err != nil {
+// 		http.Error(w, "Failed to get user from token", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Парсим данные товара из запроса
-	err = r.ParseForm()
-	if err != nil {
-		http.Error(w, "Error parsing form data", http.StatusInternalServerError)
-		return
-	}
-	// productName := r.Form.Get("product_name")
-	// productPrice := r.Form.Get("product_price")
+// 	// Парсим данные товара из запроса
+// 	err = r.ParseForm()
+// 	if err != nil {
+// 		http.Error(w, "Error parsing form data", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	// productName := r.Form.Get("product_name")
+// 	// productPrice := r.Form.Get("product_price")
 
-	productIDStr := r.Form.Get("product_id")
-	productID, err := strconv.Atoi(productIDStr) // Преобразуем строку в целое число
-	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusBadRequest)
-		return
-	}
+// 	productIDStr := r.Form.Get("product_id")
+// 	productID, err := strconv.Atoi(productIDStr) // Преобразуем строку в целое число
+// 	if err != nil {
+// 		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Добавляем товар в корзину пользователя в базе данных
-	// err = addToCart(user.ID, productName, productPrice)
-	err = addToCart(user.ID, productID)
-	if err != nil {
-		http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
-		return
-	}
+// 	// Добавляем товар в корзину пользователя в базе данных
+// 	// err = addToCart(user.ID, productName, productPrice)
+// 	err = addToCart(user.ID, productID)
+// 	if err != nil {
+// 		http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Если все прошло успешно, отправляем клиенту подтверждение
-	fmt.Fprintf(w, "Product %s added to cart successfully!", productIDStr)
-}
+// 	// Если все прошло успешно, отправляем клиенту подтверждение
+// 	fmt.Fprintf(w, "Product %s added to cart successfully!", productIDStr)
+// }
 
 func addToCart(userID int, productID int) error {
 	// Подключаемся к базе данных

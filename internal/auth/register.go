@@ -19,6 +19,23 @@ func GetUserName(r *http.Request) (string, error) {
 	return cookie.Value, nil
 }
 
+// проверка на дупликаты аккаунтов
+func checkDuplicateAccounts(email string) error {
+	db, err := database.Connect()
+	if err != nil {
+		log.Fatal("Error connecting to the database")
+	}
+	defer db.Close()
+
+	err = db.QueryRow("SELECT email FROM users WHERE email = $1").Scan(&email)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// if r.Method == http.MethodGet {
 	// 	utils.RenderTemplate(w, PageData{})
@@ -47,18 +64,19 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
-	// test duplicate
-	// test duplicate
-	// test duplicate
-
-	// validate
+	// field validation
 	if !fieldValidate(userName, email, password, w) {
 		return
 	}
 
+	// test duplicate
+	if checkDuplicateAccounts(email) != nil {
+		fmt.Println("Duplicated!")
+	}
+
 	// Сохраняем данные пользователя в базе данных "users"
 	_, err = db.Exec(
-		"INSERT INTO users (username, email, password)" +
+		"INSERT INTO users (username, email, password)"+
 			"VALUES ($1, $2, $3)",
 		userName, email, password)
 
