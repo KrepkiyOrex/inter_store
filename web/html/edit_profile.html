@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+<body>
+    <div class="header">
+        <header>
+            <h1>Edit Profile</h1>
+        </header>
+        
+        <div class="condition-auth">
+            {{if .UserName}}
+            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{else}}
+            <p> Пожалуйста, <a href="/login">войдите</a></p>
+            {{end}}
+        </div>
+    </div>
+
+    {{ template "navigation" . }}
+
+    <div class="page-wrapper">
+        <div class="account-edit-container">
+            <form method="post" action="/account/edit">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" value="{{.UserName}}" class="short-input" required>
+    
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{.Email}}" class="short-input" required>
+    
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" value="{{.First_name}}" class="short-input" required>
+    
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" value="{{.Last_name}}" class="short-input" required>
+    
+                <label for="middle_name">Middle Name:</label>
+                <input type="text" id="middle_name" name="middle_name" value="{{.Middle_name}}" class="short-input">
+    
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" name="phone" value="{{.Phone}}" class="short-input" required>
+    
+                <button type="submit" class="save-button">Save</button>
+            </form>
+        </div>
+    </div>
+    
+
+    <footer>
+        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
+    </footer>
+</body>
+</html>

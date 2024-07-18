@@ -79,8 +79,8 @@ func Account(w http.ResponseWriter, r *http.Request) {
 	/* 
 		Здесь выполняю 2 разных запроса по отдельности т.к. если вместе сделать через
 		JOIN, то вылазит ошибка на пустые данные БД и страницу на отображает в браузере.
-		person_details изначально же с пустыми данными т.к. после регистрации обычно не 
-		заполняют сразу данные. ХЗ как ошибку убрать 
+		person_details изначально же с пустыми данными т.к. после регистрации пользователи
+		обычно не заполняют сразу данные. ХЗ как ошибку убрать.
 	*/
 	// Выполнение SQL запроса для получения данных пользователя из таблицы users
 	var user User
@@ -190,9 +190,148 @@ type UserCookie struct {
 	Email    string
 }
 
+func EditProfile(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		// Получение данных пользователя для заполнения формы
+		db, err := database.Connect()
+		if err != nil {
+			http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+			log.Println("Error connecting to the database")
+			return
+		}
+		defer db.Close()
+
+		cookieID, err := r.Cookie("userID")
+		if err != nil {
+			http.Error(w, "Invalid userID", http.StatusUnauthorized)
+			return
+		}
+
+		userID, err := strconv.Atoi(cookieID.Value)
+		if err != nil {
+			http.Error(w, "Invalid userID format", http.StatusBadRequest)
+			return
+		}
+
+		var user User
+		err = db.QueryRow("SELECT username, email, user_id FROM users WHERE user_id = $1", userID).Scan(
+			&user.UserName,
+			&user.Email,
+			&user.User_ID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "User not found", http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		var personDetails PersonDetails
+		err = db.QueryRow("SELECT first_name, last_name, middle_name, phone FROM person_details WHERE user_id = $1", userID).Scan(
+			&personDetails.First_name,
+			&personDetails.Last_name,
+			&personDetails.Middle_name,
+			&personDetails.Phone)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				personDetails = PersonDetails{}
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		data := struct {
+			User
+			PersonDetails
+		}{
+			User:          user,
+			PersonDetails: personDetails,
+		}
+
+		utils.RenderTemplate(w, data, 
+			"web/html/edit_profile.html",
+			"web/html/navigation.html")
+
+	} else if r.Method == http.MethodPost {
+		// Обработка данных формы и обновление информации о пользователе
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Unable to parse form", http.StatusBadRequest)
+			return
+		}
+
+		username := r.FormValue("username")
+		email := r.FormValue("email")
+		firstName := r.FormValue("first_name")
+		lastName := r.FormValue("last_name")
+		middleName := r.FormValue("middle_name")
+		phone := r.FormValue("phone")
+
+		db, err := database.Connect()
+		if err != nil {
+			http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+			return
+		}
+		defer db.Close()
+
+		cookieID, err := r.Cookie("userID")
+		if err != nil {
+			http.Error(w, "Invalid userID", http.StatusUnauthorized)
+			return
+		}
+
+		userID, err := strconv.Atoi(cookieID.Value)
+		if err != nil {
+			http.Error(w, "Invalid userID format", http.StatusBadRequest)
+			return
+		}
+
+
+		// Обновление данных пользователя
+		_, err = db.Exec("UPDATE users SET username = $1, email = $2 WHERE user_id = $3",
+			username, email, userID)
+		if err != nil {
+			http.Error(w, "Unable to update user data", http.StatusInternalServerError)
+			return
+		}
+
+		// Проверка наличия записи в таблице person_details
+		var count int
+		err = db.QueryRow("SELECT COUNT(*) FROM person_details WHERE user_id = $1", userID).Scan(&count)
+		if err != nil {
+			http.Error(w, "Unable to check person details", http.StatusInternalServerError)
+			return
+		}
+
+		if count == 0 {
+			// Вставка новой записи, если ее нет
+			_, err = db.Exec("INSERT INTO person_details (first_name, last_name, middle_name, phone, user_id) VALUES ($1, $2, $3, $4, $5)",
+				firstName, lastName, middleName, phone, userID)
+			if err != nil {
+				http.Error(w, "Unable to insert personal details", http.StatusInternalServerError)
+				return
+			}
+		} else {
+			// Обновление существующей записи
+			_, err = db.Exec("UPDATE person_details SET first_name = $1, last_name = $2, middle_name = $3, phone = $4 WHERE user_id = $5",
+				firstName, lastName, middleName, phone, userID)
+			if err != nil {
+				http.Error(w, "Unable to update personal details", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		http.Redirect(w, r, "/account", http.StatusSeeOther)
+	}
+}
+
+
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	// http.ServeFile(w, r, "web/html/login.html")
-	utils.RenderTemplate(w, UserError{}, "web/html/login.html", "web/html/navigation.html")
+	utils.RenderTemplate(w, UserError{}, 
+		"web/html/login.html", 
+		"web/html/navigation.html")
 }
 
 // Обработчик для страницы входа

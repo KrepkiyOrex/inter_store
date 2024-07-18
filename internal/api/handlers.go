@@ -55,7 +55,8 @@ func SetupRoutes() *mux.Router {
 	
 	
 	router.HandleFunc("/cart", models.ViewCartHandler)
-	router.HandleFunc("/edit", models.EditProduct)
+	// router.HandleFunc("/edit", models.EditProduct) // depr???
+	router.HandleFunc("/account/edit", auth.EditProfile)
 
 	// Обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
@@ -68,7 +69,6 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/logout", auth.LogoutHandler) // Exit
 
 	// deprecated из-за ненадобности
-	// router.HandleFunc("/user-dashboard", auth.UserDashboardHandler) // Страница панели управления пользователя
 	router.HandleFunc("/account", auth.Account) // profile
 
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel

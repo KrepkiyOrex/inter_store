@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -134,10 +133,10 @@ type UserCookie struct {
 }
 
 /*
-	Переделай здесь ExtractToken и GetUserFromToken для добавления в корзину, 
-	после того, как сделаешь каждому пользователю ЛК. ЧИТАЙ В ФАЙЛЕ 
-	АРХИТЕКТУРА на 92 строчке про это. 
- */
+	Переделай здесь ExtractToken и GetUserFromToken для добавления в корзину,
+	после того, как сделаешь каждому пользователю ЛК. ЧИТАЙ В ФАЙЛЕ
+	АРХИТЕКТУРА на 92 строчке про это.
+*/
 // Обработчик для добавления товара в корзину
 // func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 // 	// Извлекаем токен из заголовка запроса
@@ -249,31 +248,31 @@ func addToCart(userID int, productID int) error {
 //	}
 //
 
-func EditProduct(w http.ResponseWriter, r *http.Request) {
-	// Проверяем, что метод запроса POST
-	if r.Method != http.MethodPost {
-		http.Error(w, "Метод не разрешен", http.StatusMethodNotAllowed)
-		return
-	}
+// func EditProduct(w http.ResponseWriter, r *http.Request) {
+// 	// Проверяем, что метод запроса POST
+// 	if r.Method != http.MethodPost {
+// 		http.Error(w, "Метод не разрешен", http.StatusMethodNotAllowed)
+// 		return
+// 	}
 
-	// Получаем данные из формы
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+// 	// Получаем данные из формы
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Получаем ID товара и новые данные
-	productID := r.FormValue("product_id")
-	productName := r.FormValue("product_name")
-	productPrice := r.FormValue("product_price")
+// 	// Получаем ID товара и новые данные
+// 	productID := r.FormValue("product_id")
+// 	productName := r.FormValue("product_name")
+// 	productPrice := r.FormValue("product_price")
 
-	// Здесь можно обновить данные товара в базе данных
-	// Например, выполнить SQL-запрос к базе данных и обновить соответствующий товар
+// 	// Здесь можно обновить данные товара в базе данных
+// 	// Например, выполнить SQL-запрос к базе данных и обновить соответствующий товар
 
-	// Выводим сообщение об успешном обновлении (это можно изменить по вашему усмотрению)
-	fmt.Fprintf(w, "Товар с ID %s успешно обновлен. Новое название: %s, новая цена: %s", productID, productName, productPrice)
-}
+// 	// Выводим сообщение об успешном обновлении (это можно изменить по вашему усмотрению)
+// 	fmt.Fprintf(w, "Товар с ID %s успешно обновлен. Новое название: %s, новая цена: %s", productID, productName, productPrice)
+// }
 
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	// для имени из куки
