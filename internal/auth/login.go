@@ -42,27 +42,111 @@ func Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID, err := strconv.Atoi(cookieID.Value)
+	if err != nil {
+		http.Error(w, "Invalid userID format", http.StatusBadRequest)
+		return
+	}
+
+	log.Println("Extracted userID from cookie:", userID)
+
+	// Выполнение SQL запроса для объединения данных из users и person_details по ID пользователя
+	// var data struct {
+	// 	User
+	// 	PersonDetails
+	// }
 
 	// Выполнение SQL запроса для выдачи данных пользователя по его ID
+	// var user User
+	// err = db.QueryRow(
+	// "SELECT username, password, email, user_id FROM users WHERE user_id = $1",
+	// userID).Scan(&user.UserName, &user.Password, &user.Email, &user.ID)
+
+	// Выполнение SQL запроса для выдачи данных пользователя по его ID
+	// err = db.QueryRow(
+	// 	"SELECT u.username, u.password, u.email, u.user_id, p.first_name, p.phone "+
+	// 		"FROM users u "+
+	// 		"JOIN person_details p ON u.user_id = p.user_id "+
+	// 		"WHERE u.user_id = $1", userID).Scan(
+	// 	&data.User.UserName,
+	// 	&data.User.Password,
+	// 	&data.User.Email,
+	// 	&data.User.ID,
+	// 	&data.PersonDetails.First_name,
+	// 	&data.PersonDetails.Phone)
+
+	// ===========================================================================
+	
+	/* 
+		Здесь выполняю 2 разных запроса по отдельности т.к. если вместе сделать через
+		JOIN, то вылазит ошибка на пустые данные БД и страницу на отображает в браузере.
+		person_details изначально же с пустыми данными т.к. после регистрации обычно не 
+		заполняют сразу данные. ХЗ как ошибку убрать 
+	*/
+	// Выполнение SQL запроса для получения данных пользователя из таблицы users
 	var user User
-	err = db.QueryRow("SELECT username, password, email, id FROM users WHERE id = $1", userID).Scan(&user.UserName, &user.Password, &user.Email, &user.ID)
+	err = db.QueryRow("SELECT username, password, email, user_id FROM users WHERE user_id = $1", userID).Scan(
+		&user.UserName,
+		&user.Password,
+		&user.Email,
+		&user.User_ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			log.Println("No user found for userID:", userID)
 			http.Error(w, "User not found", http.StatusNotFound)
 		} else {
+			log.Println("Query error:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		return
 	}
 
+	// Выполнение SQL запроса для получения данных из таблицы person_details
+	var personDetails PersonDetails
+	err = db.QueryRow("SELECT first_name, last_name, middle_name, phone FROM person_details WHERE user_id = $1", userID).Scan(
+		&personDetails.First_name,
+		&personDetails.Last_name,
+		&personDetails.Middle_name,
+		&personDetails.Phone)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("No person details found for userID:", userID)
+			// Если данные не найдены, можно оставить personDetails пустым или установить значения по умолчанию
+			personDetails = PersonDetails{}
+		} else {
+			log.Println("Query error:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	log.Println("Executing query:", "with userID:", userID)
+
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		http.Error(w, "User not found", http.StatusNotFound)
+	// 	} else {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	}
+	// 	return
+	// }
+
 	// UserName, _ := GetUserName(r)
 
 	// -----------------------------------------------------------------
 
-	data := UserCookie{
-		ID:       user.ID,
-		UserName: user.UserName,
-		Email:    user.Email,
+	// data := UserCookie{
+	// 	ID:       user.ID,
+	// 	UserName: user.UserName,
+	// 	Email:    user.Email,
+	// }
+
+	// Создание структуры данных для передачи в шаблон
+	data := struct {
+		User
+		PersonDetails
+	}{
+		User:          user,
+		PersonDetails: personDetails,
 	}
 
 	utils.RenderTemplate(w, data,
@@ -84,10 +168,19 @@ func SetCookie(w http.ResponseWriter, name, value string, expires time.Time) {
 }
 
 type User struct {
-	ID       int
+	User_ID  int
 	UserName string
 	Password string
 	Email    string
+}
+
+type PersonDetails struct {
+	User_id     int
+	First_name  string
+	Last_name   string
+	Middle_name string
+	Address     string
+	Phone       string
 }
 
 type UserCookie struct {
@@ -136,8 +229,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// ---------------------------------------------------
 
+	// устанавливаем ник в куки
 	SetCookie(w, "userName", userName, time.Now().Add(24*time.Hour))
 
+	// устанавливаем ID пользователя в куки
 	SetCookie(w, "userID", strconv.Itoa(userID), time.Now().Add(24*time.Hour))
 
 	// Перенаправляем на ЛК страницу
@@ -169,7 +264,7 @@ type UserError struct {
 func createJWT(user User, secretKey []byte) (string, error) {
 	// Создаем токен
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":      user.ID,                               // Используем ID пользователя как subject
+		"sub":      user.User_ID,                          // Используем ID пользователя как subject
 		"name":     user.UserName,                         // Используем имя пользователя
 		"password": user.Password,                         // Используем пароль пользователя
 		"email":    user.Email,                            // Используем электронную почту пользователя
@@ -244,7 +339,7 @@ func authenticateUser(username, password string) (int, error) {
 	var storedUsername, storedPassword string
 
 	// Выполняем запрос к базе данных для проверки логина и пароля
-	err = db.QueryRow("SELECT id, username, password FROM users WHERE username = $1",
+	err = db.QueryRow("SELECT user_id, username, password FROM users WHERE username = $1",
 		username).Scan(&userID, &storedUsername, &storedPassword)
 
 	if err != nil {

@@ -84,7 +84,7 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 
 	// id | username | email | password
 	// Выполнение SQL запроса для выдачи всех данных из таблицы users
-	rows, err := db.Query("SELECT username, password, email, id FROM users")
+	rows, err := db.Query("SELECT username, password, email, user_id FROM users")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
