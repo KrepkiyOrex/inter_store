@@ -56,6 +56,7 @@ func SetupRoutes() *mux.Router {
 	
 	
 	router.HandleFunc("/cart", models.ViewCartHandler)
+	// router.HandleFunc("/viewcart", models.ViewCartHandler)
 	// router.HandleFunc("/edit", models.EditProduct) // depr???
 	router.HandleFunc("/account/edit", auth.EditProfile)
 

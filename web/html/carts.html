@@ -9,11 +9,11 @@
 <body>
     <div class="header">
         <header>
-            <h1>Cart</h1>
+            <h1>Products store</h1>
         </header>
         <div class="condition-auth">
-            {{if .UserName}}
-            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{if .UserCookie.UserName}}
+            <p>Привет, {{.UserCookie.UserName}}! <a href="/logout">Выйти</a></p>
             {{else}}
             <p> Пожалуйста, <a href="/login">войдите</a></p>
             {{end}}
@@ -23,15 +23,63 @@
     {{ template "navigation" . }}
 
     <div class="page-wrapper">
-        <div class="cart-container">
-            <h1>Ваша корзина товаров</h1>
+        <div class="product-container">
+            <div class="product-list">
+                <h2>Содержимое вашей корзины:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Название продукта</th>
+                            <th>Цена</th>
+                            <th>Количество</th>
+                            <th>Общая стоимость</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .ProductsData.Products}}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td>$ {{.Price}}</td>
+                            <td>{{.Quantity}}</td>
+                            <td>$ {{.TotalPrice}}</td> <!-- Используем поле TotalPrice -->
+                        </tr>
+                        {{end}}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align:right"><strong>Общая сумма:</strong></td>
+                            <td>$ {{.TotalSum}}</td> <!-- Отображаем общую сумму -->
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <h2>Детали заказа:</h2>
+            <!-- Форма для ввода деталей заказа (адреса, способа доставки и оплаты и т. д.) -->
+            <form action="/submit_order" method="post">
+                <label for="address">Адрес доставки:</label><br>
+                <input type="text" id="address" name="address" required><br><br>
 
+                <label for="delivery">Способ доставки:</label><br>
+                <select id="delivery" name="delivery" required>
+                    <option value="courier">Курьерская доставка</option>
+                    <option value="pickup">Самовывоз</option>
+                </select><br><br>
+
+                <label for="payment">Способ оплаты:</label><br>
+                <select id="payment" name="payment" required>
+                    <option value="cash">Наличными при получении</option>
+                    <option value="card">Онлайн оплата картой</option>
+                    <option value="card">Натурой</option>
+                </select><br><br>
+
+                <input type="submit" value="Оформить заказ">
+            </form>
         </div>
     </div>
 
     <footer>
         <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
     </footer>
-
 </body>
 </html>

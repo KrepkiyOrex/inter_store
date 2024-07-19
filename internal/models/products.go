@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
@@ -101,120 +102,77 @@ type PageData struct {
 }
 
 type Product struct {
-	ID    int
-	Name  string
-	Price float64
+	ID         int
+	Name       string
+	Price      float64
+	Quantity   int
+	TotalPrice float64 // Добавляем поле для общей стоимости
 }
 
 type ProductsData struct {
 	Products []Product
+	TotalSum float64 // Добавляем поле для общей суммы
 }
 
 type UserCookie struct {
 	UserName string
 }
 
-/*
-	Переделай здесь ExtractToken и GetUserFromToken для добавления в корзину,
-	после того, как сделаешь каждому пользователю ЛК. ЧИТАЙ В ФАЙЛЕ
-	АРХИТЕКТУРА на 135 строчке про это.
-*/
 // Обработчик для добавления товара в корзину
-// func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
-// 	// Извлекаем токен из заголовка запроса
-// 	tokenString := auth.ExtractToken(r)
-// 	if tokenString == "" {
-// 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-// 		return
-// 	}
-
-// 	// Получаем информацию о пользователе из токена
-// 	user, err := auth.GetUserFromToken(tokenString)
-// 	if err != nil {
-// 		http.Error(w, "Failed to get user from token", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Парсим данные товара из запроса
-// 	err = r.ParseForm()
-// 	if err != nil {
-// 		http.Error(w, "Error parsing form data", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	productIDStr := r.Form.Get("product_id")
-// 	productID, err := strconv.Atoi(productIDStr) // Преобразуем строку в целое число
-// 	if err != nil {
-// 		http.Error(w, "Invalid product ID", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// Добавляем товар в корзину пользователя в базе данных
-// 	// err = addToCart(user.ID, productName, productPrice)
-// 	err = addToCart(user.ID, productID)
-// 	if err != nil {
-// 		http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Если все прошло успешно, отправляем клиенту подтверждение
-// 	fmt.Fprintf(w, "Product %s added to cart successfully!", productIDStr)
-// }
-
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
 
-    db, err := database.Connect()
-    if err != nil {
-        log.Println("Error connecting to the database:", err)
-        http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-        return
-    }
-    defer db.Close()
+	db, err := database.Connect()
+	if err != nil {
+		log.Println("Error connecting to the database:", err)
+		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
 
-    var requestData struct {
-        ProductID int `json:"product_id"`
-        Quantity  int `json:"quantity"`
-    }
-    if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-        log.Println("Invalid request body:", err)
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	var requestData struct {
+		ProductID int `json:"product_id"`
+		Quantity  int `json:"quantity"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		log.Println("Invalid request body:", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    userName, err := auth.GetUserName(r)
-    if err != nil {
-        log.Println("User not authenticated:", err)
-        http.Error(w, "User not authenticated", http.StatusUnauthorized)
-        return
-    }
+	userName, err := auth.GetUserName(r)
+	if err != nil {
+		log.Println("User not authenticated:", err)
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
 
-    var userID int
-    err = db.QueryRow("SELECT user_id FROM users WHERE username = $1", userName).Scan(&userID)
-    if err != nil {
-        log.Println("User not found:", err)
-        http.Error(w, "User not found", http.StatusInternalServerError)
-        return
-    }
+	var userID int
+	err = db.QueryRow("SELECT user_id FROM users WHERE username = $1", userName).Scan(&userID)
+	if err != nil {
+		log.Println("User not found:", err)
+		http.Error(w, "User not found", http.StatusInternalServerError)
+		return
+	}
 
-    _, err = db.Exec(`
+	_, err = db.Exec(`
         INSERT INTO carts (user_id, product_id, quantity) 
         VALUES ($1, $2, $3) 
         ON CONFLICT (user_id, product_id) 
         DO UPDATE SET quantity = carts.quantity + EXCLUDED.quantity`,
-        userID, requestData.ProductID, requestData.Quantity,
-    )
-    if err != nil {
-        log.Println("Error adding product to cart:", err)
-        http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
-        return
-    }
+		userID, requestData.ProductID, requestData.Quantity,
+	)
+	if err != nil {
+		log.Println("Error adding product to cart:", err)
+		http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
 func addToCart(userID int, productID int) error {
@@ -235,26 +193,94 @@ func addToCart(userID int, productID int) error {
 }
 
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
-	// для имени из куки
-	// var userName string
 
-	// cookie, err := r.Cookie("userName")
-	// if err == nil {
-	// 	userName = cookie.Value
-	// }
+	// Подключение к базе данных
+	db, err := database.Connect()
+	if err != nil {
+		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+		log.Println("Error connecting to the database")
+		return
+	}
+	defer db.Close()
 
-	userName, _ := auth.GetUserName(r)
+	// Получение идентификатора пользователя из куки
+	cookie, err := r.Cookie("userID")
+	if err != nil || cookie.Value == "" {
+		http.Error(w, "User ID not found", http.StatusUnauthorized)
+		return
+	}
 
+	userID, err := strconv.Atoi(cookie.Value)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Выполнение SQL запроса для получения данных из корзины и продуктов
+	query := `
+		SELECT p.id, p.name, p.price, c.quantity 
+		FROM carts c
+		JOIN products p ON c.product_id = p.id
+		WHERE c.user_id = $1` // Используем $1 для параметра
+	rows, err := db.Query(query, userID) // Пример с user_id = 59
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Чтение результатов запроса
+	var products []Product
+	var totalSum float64
+	for rows.Next() {
+		var product Product
+		if err := rows.Scan(&product.ID, &product.Name, &product.Price, &product.Quantity); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		product.TotalPrice = product.Price * float64(product.Quantity) // Приведение Quantity к float64
+		products = append(products, product)
+		totalSum += product.TotalPrice // Суммируем общую стоимость каждого продукта
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Получение имени пользователя (пример)
+	userName, _ := auth.GetUserName(r) // Пример получения имени пользователя
+
+	// Подготовка данных для шаблона
 	data := PageData{
+		ProductsData: ProductsData{
+			Products: products,
+			TotalSum: totalSum, // Передаем общую сумму в шаблон
+		},
 		UserCookie: UserCookie{
 			UserName: userName,
 		},
 	}
 
+	// Рендеринг шаблона
 	utils.RenderTemplate(w, data,
 		"web/html/carts.html",
 		"web/html/navigation.html",
 	)
+
+	// ---------------------------------------------------------------
+	// userName, _ := auth.GetUserName(r)
+
+	// data := PageData{
+	// 	UserCookie: UserCookie{
+	// 		UserName: userName,
+	// 	},
+	// }
+
+	// utils.RenderTemplate(w, data,
+	// 	"web/html/carts.html",
+	// 	"web/html/navigation.html",
+	// )
 }
 
 // Содержимое вашей корзины
