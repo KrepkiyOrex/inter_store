@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -57,12 +58,10 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	// Создание списка для хранения товаров
-	// var products []utils.Product
 	var products []Product
 
 	// Считывание данных о товарах из результатов запроса
 	for rows.Next() {
-		// var product utils.Product
 		var product Product
 
 		if err := rows.Scan(&product.Name, &product.Price, &product.ID); err != nil {
@@ -77,23 +76,6 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// data := UserCookie{
-	// 	UserName: "userName", // Замените на имя пользователя
-	// }
-
-	// Выгрузка данных продуктов
-	// data := ProductsData{
-	// 	Products: products,
-	// }
-
-	// для имени из куки
-	// var userName string
-
-	// cookie, err := r.Cookie("userName")
-	// if err == nil {
-	// 	userName = cookie.Value
-	// }
 
 	// 12
 	userName, _ := auth.GetUserName(r) // 32
@@ -135,7 +117,7 @@ type UserCookie struct {
 /*
 	Переделай здесь ExtractToken и GetUserFromToken для добавления в корзину,
 	после того, как сделаешь каждому пользователю ЛК. ЧИТАЙ В ФАЙЛЕ
-	АРХИТЕКТУРА на 92 строчке про это.
+	АРХИТЕКТУРА на 135 строчке про это.
 */
 // Обработчик для добавления товара в корзину
 // func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -159,8 +141,6 @@ type UserCookie struct {
 // 		http.Error(w, "Error parsing form data", http.StatusInternalServerError)
 // 		return
 // 	}
-// 	// productName := r.Form.Get("product_name")
-// 	// productPrice := r.Form.Get("product_price")
 
 // 	productIDStr := r.Form.Get("product_id")
 // 	productID, err := strconv.Atoi(productIDStr) // Преобразуем строку в целое число
@@ -181,6 +161,62 @@ type UserCookie struct {
 // 	fmt.Fprintf(w, "Product %s added to cart successfully!", productIDStr)
 // }
 
+func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
+
+    db, err := database.Connect()
+    if err != nil {
+        log.Println("Error connecting to the database:", err)
+        http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+        return
+    }
+    defer db.Close()
+
+    var requestData struct {
+        ProductID int `json:"product_id"`
+        Quantity  int `json:"quantity"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+        log.Println("Invalid request body:", err)
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    userName, err := auth.GetUserName(r)
+    if err != nil {
+        log.Println("User not authenticated:", err)
+        http.Error(w, "User not authenticated", http.StatusUnauthorized)
+        return
+    }
+
+    var userID int
+    err = db.QueryRow("SELECT user_id FROM users WHERE username = $1", userName).Scan(&userID)
+    if err != nil {
+        log.Println("User not found:", err)
+        http.Error(w, "User not found", http.StatusInternalServerError)
+        return
+    }
+
+    _, err = db.Exec(`
+        INSERT INTO carts (user_id, product_id, quantity) 
+        VALUES ($1, $2, $3) 
+        ON CONFLICT (user_id, product_id) 
+        DO UPDATE SET quantity = carts.quantity + EXCLUDED.quantity`,
+        userID, requestData.ProductID, requestData.Quantity,
+    )
+    if err != nil {
+        log.Println("Error adding product to cart:", err)
+        http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
 func addToCart(userID int, productID int) error {
 	// Подключаемся к базе данных
 	db, err := database.Connect()
@@ -197,82 +233,6 @@ func addToCart(userID int, productID int) error {
 
 	return nil
 }
-
-// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
-// DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED? // DEPRECATED?
-// Обработчик для всех запросов
-// func HelloHandler(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method == "POST" {
-// 		// Если запрос POST, обрабатываем аутентификацию
-// 		userName := r.FormValue("userName")
-
-// 		// Создаем новую куку с именем пользователя
-// 		cookie := http.Cookie{
-// 			Name:  "userName",
-// 			Value: userName,
-// 		}
-
-// 		// Устанавливаем куку в ответ
-// 		http.SetCookie(w, &cookie)
-
-//			// Перенаправляем пользователя на главную страницу
-//			http.Redirect(w, r, "/hello", http.StatusFound)
-//		} else {
-//			// Если запрос GET, отображаем главную страницу
-//			// Получаем значение куки с именем пользователя
-//			userNameCookie, err := r.Cookie("userName")
-//			if err == nil {
-//				// Если куки существует, отображаем имя пользователя на странице
-//				userName := userNameCookie.Value
-//				// Используем шаблон для вставки имени пользователя на страницу
-//				tmpl := template.Must(template.New("index").Parse(`
-//	                <html>
-//	                <body>
-//	                    <p>Привет, test {{.UserName}}!</p>
-//	                    <!-- Форма для аутентификации -->
-//	                    <form action="/login" method="post">
-//	                        <input type="text" name="userName">
-//	                        <input type="submit" value="Войти">
-//	                    </form>
-//	                </body>
-//	                </html>
-//	            `))
-//				tmpl.Execute(w, map[string]interface{}{
-//					"UserName": userName,
-//				})
-//			} else {
-//				// Если куки не существует, отображаем страницу без имени пользователя и форму для аутентификации
-//				http.ServeFile(w, r, "login.html")
-//			}
-//		}
-//	}
-//
-
-// func EditProduct(w http.ResponseWriter, r *http.Request) {
-// 	// Проверяем, что метод запроса POST
-// 	if r.Method != http.MethodPost {
-// 		http.Error(w, "Метод не разрешен", http.StatusMethodNotAllowed)
-// 		return
-// 	}
-
-// 	// Получаем данные из формы
-// 	err := r.ParseForm()
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// Получаем ID товара и новые данные
-// 	productID := r.FormValue("product_id")
-// 	productName := r.FormValue("product_name")
-// 	productPrice := r.FormValue("product_price")
-
-// 	// Здесь можно обновить данные товара в базе данных
-// 	// Например, выполнить SQL-запрос к базе данных и обновить соответствующий товар
-
-// 	// Выводим сообщение об успешном обновлении (это можно изменить по вашему усмотрению)
-// 	fmt.Fprintf(w, "Товар с ID %s успешно обновлен. Новое название: %s, новая цена: %s", productID, productName, productPrice)
-// }
 
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	// для имени из куки
@@ -292,7 +252,7 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RenderTemplate(w, data,
-		"web/html/cart.html",
+		"web/html/carts.html",
 		"web/html/navigation.html",
 	)
 }

@@ -4,9 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products store</title>
-
     <link rel='stylesheet' href='/static/css/main.css'>
-   
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('.buy-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.target.dataset.productId, 10);  // ensure it's an integer
+                    const quantity = parseInt(e.target.previousElementSibling.value, 10);  // ensure it's an integer
+
+                    fetch('/add-to-cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ product_id: productId, quantity: quantity })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Товар добавлен в корзину!');
+                        } else {
+                            alert('Ошибка при добавлении товара в корзину.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ошибка при добавлении товара в корзину.');
+                    });
+                });
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="header">
@@ -14,14 +42,13 @@
             <h1>Products store </h1>
         </header>
         <div class="condition-auth">
-            {{if .UserName}}
-            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{if .UserCookie.UserName}}
+            <p>Привет, {{.UserCookie.UserName}}! <a href="/logout">Выйти</a></p>
             {{else}}
             <p> Пожалуйста, <a href="/login">войдите</a></p>
             {{end}}
         </div>
     </div>
-
 
     {{ template "navigation" . }}
 
@@ -32,10 +59,8 @@
                     <div class="product-item">
                         <h3>{{.Name}}</h3>
                         <p>Price: ${{.Price}}</p>
-                        <!-- Дополнительные поля товара, если есть -->
-                        <!-- <p>ID: {{.ID}}</p> -->
-                        <!-- <img src="..." alt="Product Image"> -->
-                        <button class="buy-button">Купить</button>
+                        <input type="number" value="1" min="1" class="quantity-input">
+                        <button class="buy-button" data-product-id="{{.ID}}">Купить</button>
                     </div>
                 {{end}}
             </div>
