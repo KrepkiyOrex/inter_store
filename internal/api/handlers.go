@@ -50,10 +50,11 @@ func SetupRoutes() *mux.Router {
 	// router.HandleFunc("/products", models.ProductsHandler)
 	router.HandleFunc("/list", models.ListHandler)
 
+	// для добавления товара в корзину
 	router.HandleFunc("/add-to-cart", models.AddToCartHandler)
-	// router.HandleFunc("/add-to-cart", models.AddToCartHandler).Methods("POST")
-	router.HandleFunc("/users-orders", models.UserOrdersHandler) // error "driver"
+	router.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
 	
+	router.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
 	
 	router.HandleFunc("/cart", models.ViewCartHandler)
 	// router.HandleFunc("/viewcart", models.ViewCartHandler)
@@ -70,7 +71,6 @@ func SetupRoutes() *mux.Router {
 
 	router.HandleFunc("/logout", auth.LogoutHandler) // Exit
 
-	// deprecated из-за ненадобности
 	router.HandleFunc("/account", auth.Account) // profile
 
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel

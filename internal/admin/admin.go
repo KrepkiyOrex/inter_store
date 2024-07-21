@@ -72,6 +72,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Admin dashboard
 func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	// Connect to the database
 	db, err := database.Connect()

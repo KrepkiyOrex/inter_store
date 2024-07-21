@@ -29,7 +29,11 @@
             <ul>
                 {{range .Orders}}
                     <li>
-                        Order ID: {{.ID}}, Order Date: {{.OrderDate}}
+                        User ID: {{.UserID}}, 
+                        Total Amount: $ {{.TotalAmount}},
+                        Order Date: {{.OrderDate}},
+                        Payment status: {{.PaymentStatus}},
+                        Shipping Address: {{.ShippingAddress}}
                     </li>
                 {{end}}
             </ul>

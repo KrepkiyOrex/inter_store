@@ -175,22 +175,22 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
-func addToCart(userID int, productID int) error {
-	// Подключаемся к базе данных
-	db, err := database.Connect()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
+// func addToCart(userID int, productID int) error {
+// 	// Подключаемся к базе данных
+// 	db, err := database.Connect()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer db.Close()
 
-	// Выполняем запрос для добавления товара в корзину
-	_, err = db.Exec("INSERT INTO order_items (user_id, product_id) VALUES ($1, $2)", userID, productID)
-	if err != nil {
-		return err
-	}
+// 	// Выполняем запрос для добавления товара в корзину
+// 	_, err = db.Exec("INSERT INTO order_items (user_id, product_id) VALUES ($1, $2)", userID, productID)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 
