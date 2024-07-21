@@ -1,12 +1,36 @@
-<!-- templates/orders.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Orders</title>
-
     <link rel="stylesheet" href="/static/css/main.css">
+    <style>
+        .orders-container {
+            border-top: 1px solid #ccc; /* Разделительная полоса сверху */
+            padding-top: 16px; /* Отступ сверху для визуального разделения */
+        }
+        .order-header {
+            margin-bottom: 16px; /* Отступ снизу для заголовка */
+        }
+        .order-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #ccc; /* Разделительная полоса снизу */
+        }
+        .order-item:last-child {
+            border-bottom: none; /* Убираем полосу у последнего элемента */
+        }
+        .order-details {
+            margin: 0;
+            padding: 0;
+            list-style-type: none; /* Убирает маркеры у списка */
+        }
+        .order-details li {
+            margin: 0;
+            display: inline; /* Выравнивание элементов в одну строку */
+            margin-right: 16px; /* Отступы между элементами */
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -26,24 +50,27 @@
 
     <div class="page-wrapper">
         <div class="orders-container">
-            <ul>
-                {{range .Orders}}
-                    <li>
-                        User ID: {{.UserID}}, 
-                        Total Amount: $ {{.TotalAmount}},
-                        Order Date: {{.OrderDate}},
-                        Payment status: {{.PaymentStatus}},
-                        Shipping Address: {{.ShippingAddress}}
-                    </li>
-                {{end}}
-            </ul>
+            <!-- Заголовок для User ID -->
+            <h2 class="order-header">Orders for User ID: {{(index .Orders 0).UserID}}</h2>
+            <div></div>
+            <div></div>
+              
+            <!-- Список заказов -->
+            {{range .Orders}}
+            <div class="order-item">
+                <ul class="order-details">
+                    <li><strong>Total Amount:</strong> ${{.TotalAmount}}</li>
+                    <li><strong>Order Date:</strong> {{.FormattedOrderDate}}</li>
+                    <li><strong>Payment Status:</strong> {{.PaymentStatus}}</li>
+                    <li><strong>Shipping Address:</strong> {{.ShippingAddress}}</li>
+                </ul>
+            </div>
+            {{end}}
         </div>
     </div>
-
 
     <footer>
         <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
     </footer>
-
 </body>
 </html>

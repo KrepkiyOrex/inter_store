@@ -76,6 +76,7 @@ type Order struct {
 	UserID      int
 	TotalAmount float32
 	OrderDate   time.Time
+	FormattedOrderDate string // Добавьте это поле для форматированной даты
 	PaymentStatus string
 	ShippingAddress string
 }
@@ -133,6 +134,10 @@ func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {
 			&order.ShippingAddress); err != nil {
 			return nil, err
 		}
+		
+		// Форматирование даты и времени
+		order.FormattedOrderDate = order.OrderDate.Format("2006-01-02 15:04:05")
+
 		// Добавление заказа в список
 		orders = append(orders, order)
 	}
