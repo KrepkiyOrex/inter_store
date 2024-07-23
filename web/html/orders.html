@@ -51,21 +51,27 @@
     <div class="page-wrapper">
         <div class="orders-container">
             <!-- Заголовок для User ID -->
-            <h2 class="order-header">Orders for User ID: {{(index .Orders 0).UserID}}</h2>
-            <div></div>
-            <div></div>
-              
-            <!-- Список заказов -->
-            {{range .Orders}}
-            <div class="order-item">
-                <ul class="order-details">
-                    <li><strong>Total Amount:</strong> ${{.TotalAmount}}</li>
-                    <li><strong>Order Date:</strong> {{.FormattedOrderDate}}</li>
-                    <li><strong>Payment Status:</strong> {{.PaymentStatus}}</li>
-                    <li><strong>Shipping Address:</strong> {{.ShippingAddress}}</li>
-                </ul>
-            </div>
-            {{end}}
+            <h1>Orders for User ID: {{ .UserCookie.UserID }}</h1>
+            {{ if gt (len .OrdersDate.Orders) 0 }}
+              <table>
+                <tr>
+                  <th>Order Date</th>
+                  <th>Total Amount</th>
+                  <th>Payment Status</th>
+                  <th>Shipping Address</th>
+                </tr>
+                {{ range .OrdersDate.Orders }}
+                <tr>
+                  <td>{{ .FormattedOrderDate }}</td>
+                  <td>{{ .TotalAmount }}</td>
+                  <td>{{ .PaymentStatus }}</td>
+                  <td>{{ .ShippingAddress }}</td>
+                </tr>
+                {{ end }}
+              </table>
+            {{ else }}
+              <p>No orders found.</p>
+            {{ end }}
         </div>
     </div>
 

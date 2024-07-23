@@ -59,7 +59,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Выполнение SQL-запроса для удаления пользователя
-	query := "DELETE FROM users WHERE id = $1"
+	query := "DELETE FROM users WHERE user_id = $1"
 	log.Println("Executing query:", query, "with userID:", userID)
 	_, err = db.Exec(query, userID)
 	if err != nil {
@@ -83,7 +83,6 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	// id | username | email | password
 	// Выполнение SQL запроса для выдачи всех данных из таблицы users
 	rows, err := db.Query("SELECT username, password, email, user_id FROM users")
 	if err != nil {
@@ -110,20 +109,28 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// data := UsersData{
-	// 	Users: users,
-	// }
-
-	// var userName string
-
-	// cookie, err := r.Cookie("userName")
-	// if err == nil {
-	// 	userName = cookie.Value
-	// }
-
 	userName, _ := auth.GetUserName(r)
 
-	data := PageData{
+	// data := PageData{
+	// 	UsersData: UsersData{
+	// 		Users: users,
+	// 	},
+	// 	UserCookie: UserCookie{
+	// 		UserName: userName,
+	// 	},
+	// }
+
+	// отображение информации о пользователе, а также любую ошибку
+	data := PageData{}.newPageData(users, userName)
+
+	utils.RenderTemplate(w, data,
+		"web/html/admin.html",
+		"web/html/navigation.html")
+}
+
+// отображение информации о пользователе, а также любую ошибку
+func (pd PageData) newPageData(users []User, userName string) PageData {
+	return PageData{
 		UsersData: UsersData{
 			Users: users,
 		},
@@ -131,10 +138,6 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 			UserName: userName,
 		},
 	}
-
-	utils.RenderTemplate(w, data,
-		"web/html/admin.html",
-		"web/html/navigation.html")
 }
 
 type PageData struct {

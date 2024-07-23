@@ -19,9 +19,9 @@
 
     <div class="page-wrapper">
         <div class="login-container">
-            {{if .ErrorMessage}}
-                <div class="error">{{.ErrorMessage}}</div>
-            {{end}}
+            {{ if .UserError.ErrorMessage }}
+                <p style="color: red;">{{ .UserError.ErrorMessage }}</p>
+            {{ end }}
             <form action="/login" method="post">
                 <label for="userName">User name:</label><br>
                 <input type="text" id="userName" name="userName" required><br>

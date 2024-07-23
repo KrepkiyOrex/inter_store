@@ -65,6 +65,9 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
 	router.HandleFunc("/register", auth.RegisterHandler) // Обработчик для страницы регистрации
 
+	// Добавляем обработчик для страницы приветствия
+	router.HandleFunc("/welcome", auth.WelcomeHandler).Methods("GET")
+
 	// Страница входа и её обработчики
 	router.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")

@@ -14,30 +14,32 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+/*
+	Здесь выполняю 2 разных запроса по отдельности т.к. если вместе сделать через
+	JOIN, то вылазит ошибка на пустые данные БД и страницу на отображает в браузере.
+	person_details изначально же с пустыми данными т.к. после регистрации пользователи
+	обычно не заполняют сразу данные. ХЗ как ошибку убрать.
+*/
+// user profile
 // user profile
 func Account(w http.ResponseWriter, r *http.Request) {
-	// Извлекаем куку
-	// cookie, err := r.Cookie("userName")
-	// userName := "" // Значение по умолчанию, если кука не установлена
-	// if err == nil {
-	// 	userName = cookie.Value
-	// }
-
-	// -----------------------------------------------------------------
-
-	// Connect to the database
+	// Подключаемся к базе данных
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-		log.Println("Error connecting to the database")
+		log.Println("Error connecting to the database:", err)
 		return
 	}
 	defer db.Close()
 
-	// Получение ID пользователя из куки
+	// Получаем ID пользователя из куки
 	cookieID, err := r.Cookie("userID")
 	if err != nil {
-		http.Error(w, "Invalid userID", http.StatusUnauthorized)
+		if err == http.ErrNoCookie {
+			http.Error(w, "User not authenticated", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, "Error retrieving userID", http.StatusInternalServerError)
 		return
 	}
 
@@ -49,44 +51,10 @@ func Account(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Extracted userID from cookie:", userID)
 
-	// Выполнение SQL запроса для объединения данных из users и person_details по ID пользователя
-	// var data struct {
-	// 	User
-	// 	PersonDetails
-	// }
-
-	// Выполнение SQL запроса для выдачи данных пользователя по его ID
-	// var user User
-	// err = db.QueryRow(
-	// "SELECT username, password, email, user_id FROM users WHERE user_id = $1",
-	// userID).Scan(&user.UserName, &user.Password, &user.Email, &user.ID)
-
-	// Выполнение SQL запроса для выдачи данных пользователя по его ID
-	// err = db.QueryRow(
-	// 	"SELECT u.username, u.password, u.email, u.user_id, p.first_name, p.phone "+
-	// 		"FROM users u "+
-	// 		"JOIN person_details p ON u.user_id = p.user_id "+
-	// 		"WHERE u.user_id = $1", userID).Scan(
-	// 	&data.User.UserName,
-	// 	&data.User.Password,
-	// 	&data.User.Email,
-	// 	&data.User.ID,
-	// 	&data.PersonDetails.First_name,
-	// 	&data.PersonDetails.Phone)
-
-	// ===========================================================================
-	
-	/* 
-		Здесь выполняю 2 разных запроса по отдельности т.к. если вместе сделать через
-		JOIN, то вылазит ошибка на пустые данные БД и страницу на отображает в браузере.
-		person_details изначально же с пустыми данными т.к. после регистрации пользователи
-		обычно не заполняют сразу данные. ХЗ как ошибку убрать.
-	*/
-	// Выполнение SQL запроса для получения данных пользователя из таблицы users
+	// Выполняем SQL запрос для получения данных пользователя из таблицы users
 	var user User
-	err = db.QueryRow("SELECT username, password, email, user_id FROM users WHERE user_id = $1", userID).Scan(
+	err = db.QueryRow("SELECT username, email, user_id FROM users WHERE user_id = $1", userID).Scan(
 		&user.UserName,
-		&user.Password,
 		&user.Email,
 		&user.User_ID)
 	if err != nil {
@@ -94,13 +62,13 @@ func Account(w http.ResponseWriter, r *http.Request) {
 			log.Println("No user found for userID:", userID)
 			http.Error(w, "User not found", http.StatusNotFound)
 		} else {
-			log.Println("Query error:", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Println("Error querying user:", err)
+			http.Error(w, "Error retrieving user data", http.StatusInternalServerError)
 		}
 		return
 	}
 
-	// Выполнение SQL запроса для получения данных из таблицы person_details
+	// Выполняем SQL запрос для получения данных из таблицы person_details
 	var personDetails PersonDetails
 	err = db.QueryRow("SELECT first_name, last_name, middle_name, phone FROM person_details WHERE user_id = $1", userID).Scan(
 		&personDetails.First_name,
@@ -109,38 +77,16 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		&personDetails.Phone)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Println("No person details found for userID:", userID)
-			// Если данные не найдены, можно оставить personDetails пустым или установить значения по умолчанию
+			log.Printf("No person details found for userID: %v, UserName: %s", userID, user.UserName)
 			personDetails = PersonDetails{}
 		} else {
-			log.Println("Query error:", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Println("Error querying person details:", err)
+			http.Error(w, "Error retrieving person details", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	log.Println("Executing query:", "with userID:", userID)
-
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		http.Error(w, "User not found", http.StatusNotFound)
-	// 	} else {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	}
-	// 	return
-	// }
-
-	// UserName, _ := GetUserName(r)
-
-	// -----------------------------------------------------------------
-
-	// data := UserCookie{
-	// 	ID:       user.ID,
-	// 	UserName: user.UserName,
-	// 	Email:    user.Email,
-	// }
-
-	// Создание структуры данных для передачи в шаблон
+	// Создаем структуру данных для передачи в шаблон
 	data := struct {
 		User
 		PersonDetails
@@ -149,10 +95,13 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		PersonDetails: personDetails,
 	}
 
+	// Рендерим шаблон с данными пользователя
 	utils.RenderTemplate(w, data,
 		"web/html/account.html",
 		"web/html/navigation.html")
 }
+
+
 
 // Set userName and userID in cookie
 func SetCookie(w http.ResponseWriter, name, value string, expires time.Time) {
@@ -250,7 +199,7 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 			PersonDetails: personDetails,
 		}
 
-		utils.RenderTemplate(w, data, 
+		utils.RenderTemplate(w, data,
 			"web/html/edit_profile.html",
 			"web/html/navigation.html")
 
@@ -287,7 +236,6 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid userID format", http.StatusBadRequest)
 			return
 		}
-
 
 		// Обновление данных пользователя
 		_, err = db.Exec("UPDATE users SET username = $1, email = $2 WHERE user_id = $3",
@@ -327,10 +275,9 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	utils.RenderTemplate(w, UserError{}, 
-		"web/html/login.html", 
+	utils.RenderTemplate(w, PageData{},
+		"web/html/login.html",
 		"web/html/navigation.html")
 }
 
@@ -338,7 +285,7 @@ func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// При GET запросе отображаем форму входа
 	if r.Method == "GET" {
-		utils.RenderTemplate(w, UserError{}, "web/html/login.html", "web/html/navigation.html")
+		utils.RenderTemplate(w, PageData{}, "web/html/login.html", "web/html/navigation.html")
 		return
 		// renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
 	}
@@ -351,22 +298,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := authenticateUser(userName, password)
 	if err != nil {
 		// Если аутентификация не удалась, показываем форму входа снова с ошибкой
-		date := UserError{
-			ErrorMessage: "Invalid username or password",
-		}
+		data := PageData{}.newPageData(userName, "", "Invalid username or password")
 
-		utils.RenderTemplate(w, date, "web/html/login.html", "web/html/navigation.html")
+		// data := PageData{
+		// 	Username: userName,
+		// 	UserError: UserError{ErrorMessage: "Invalid username or password"},
+		// }
+
+		utils.RenderTemplate(w, data, "web/html/login.html", "web/html/navigation.html")
 		return
 	}
-
-	// Устанавливаем куку с именем пользователя
-	// http.SetCookie(w, &http.Cookie{
-	// 	Name:  "userName",
-	// 	Value: userName,
-	// 	Path:  "/",
-	// })
-
-	// ---------------------------------------------------
 
 	// устанавливаем ник в куки
 	SetCookie(w, "userName", userName, time.Now().Add(24*time.Hour))
@@ -378,26 +319,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusFound)
 }
 
+// 123
 type UserError struct {
-	// UserName     string
 	ErrorMessage string
 }
-
-// func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
-// 	template, err := template.ParseFiles(tmpl...)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = template.Execute(w, data)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
-
-// =====================================================================================================================
 
 // Функция для создания JWT
 func createJWT(user User, secretKey []byte) (string, error) {
@@ -449,10 +374,6 @@ func validateJWT(tokenString string, secretKey []byte, expectedUser User) (bool,
 
 // Функция для проверки конкретных утверждений
 func validateClaims(claims jwt.MapClaims, expectedUser User) error {
-	// if claims["sub"] != expectedUser.ID {
-	//     return fmt.Errorf("invalid subject claim")
-	// }
-
 	if claims["name"] != expectedUser.UserName {
 		return fmt.Errorf("invalid name claim")
 	}
@@ -463,8 +384,6 @@ func validateClaims(claims jwt.MapClaims, expectedUser User) error {
 
 	return nil
 }
-
-// =====================================================================================================================
 
 // Функция для аутентификации пользователя и получения его идентификатора
 func authenticateUser(username, password string) (int, error) {
@@ -527,14 +446,6 @@ func authenticateUser(username, password string) (int, error) {
 	} else {
 		fmt.Println("Token is invalid!")
 	}
-
-	// ------------------------------------------------------------------------------------------------------------------------
-
-	// Проверяем соответствие имени пользователя и хэшированного пароля из базы данных с предоставленными данными
-	// Здесь должна быть ваша логика хэширования и проверки пароля
-	// if storedUsername != username || storedPassword != password {
-	// 	return 0, errors.New("Invalid username or password")
-	// }
 
 	// Возвращаем идентификатор пользователя, если аутентификация прошла успешно
 	return userID, nil

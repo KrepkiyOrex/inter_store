@@ -10,60 +10,49 @@ import (
 	"time"
 )
 
-// Заказы пользователя ??????????????????
+// Ваша функция для рендеринга шаблона
 func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	// Получение ID пользователя из куки
-	cookieID, err := r.Cookie("userID")
-	if err != nil {
-		http.Error(w, "Invalid userID", http.StatusUnauthorized)
-		return
-	}
+    // Получение ID пользователя из куки
+    cookieID, err := r.Cookie("userID")
+    if err != nil {
+        http.Error(w, "Invalid userID", http.StatusUnauthorized)
+        return
+    }
 
-	userID, err := strconv.Atoi(cookieID.Value)
-	if err != nil {
-		http.Error(w, "Invalid userID format", http.StatusBadRequest)
-		return
-	}
+    userID, err := strconv.Atoi(cookieID.Value)
+    if err != nil {
+        http.Error(w, "Invalid userID format", http.StatusBadRequest)
+        return
+    }
 
-	log.Println("Extracted userID from cookie:", userID)
+    log.Println("Extracted userID from cookie:", userID)
 
-	// Получение заказов пользователя с БД
-	orders, err := getOrdersForUser(userID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    // Получение заказов пользователя с БД
+    orders, err := getOrdersForUser(userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
-	/*
-		(уже есть купленые!)
-		На текущий момент заказов нету в базе вроде т.к. нету технологии добавления заказов
-		неговоря уже о том, кому эти заказы добавлять.
-	*/
+    if orders == nil {
+        orders = []Order{} // Инициализация пустого списка заказов, если nil
+    }
 
-	// =====================================================================
-	// var userName string
+    userName, _ := auth.GetUserName(r)
 
-	// cookie, err := r.Cookie("userName")
-	// if err == nil {
-	// 	userName = cookie.Value
-	// }
+    data := OrderPageDate{
+        OrdersDate: OrdersDate{
+            Orders: orders,
+        },
+        UserCookie: UserCookie{
+            UserID:   userID,   // Добавьте поле UserID сюда
+            UserName: userName,
+        },
+    }
 
-	userName, _ := auth.GetUserName(r)
-
-	data := OrderPageDate{
-		OrdersDate: OrdersDate{
-			Orders: orders,
-		},
-		UserCookie: UserCookie{
-			UserName: userName,
-		},
-	}
-
-	utils.RenderTemplate(w, data,
-		"web/html/orders.html",
-		"web/html/navigation.html")
-
-	// =====================================================================
+    utils.RenderTemplate(w, data,
+        "web/html/orders.html",
+        "web/html/navigation.html")
 }
 
 type OrderPageDate struct {
@@ -84,15 +73,6 @@ type Order struct {
 type OrdersDate struct {
 	Orders []Order
 }
-
-// type PageData struct {
-// 	ProductsData
-// 	UserCookie
-// }
-
-// type UserCookie struct {
-// 	UserName string
-// }
 
 // Для получения купленых заказов пользователя из БД orders
 func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {

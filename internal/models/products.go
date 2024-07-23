@@ -115,7 +115,8 @@ type ProductsData struct {
 }
 
 type UserCookie struct {
-	UserName string
+    UserID   int
+    UserName string
 }
 
 // Обработчик для добавления товара в корзину
