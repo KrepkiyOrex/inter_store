@@ -176,25 +176,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
-// func addToCart(userID int, productID int) error {
-// 	// Подключаемся к базе данных
-// 	db, err := database.Connect()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer db.Close()
-
-// 	// Выполняем запрос для добавления товара в корзину
-// 	_, err = db.Exec("INSERT INTO order_items (user_id, product_id) VALUES ($1, $2)", userID, productID)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
-
 	// Подключение к базе данных
 	db, err := database.Connect()
 	if err != nil {
@@ -265,23 +247,9 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Рендеринг шаблона
 	utils.RenderTemplate(w, data,
-		"web/html/carts.html",
+		"web/html/cart.html",
 		"web/html/navigation.html",
 	)
-
-	// ---------------------------------------------------------------
-	// userName, _ := auth.GetUserName(r)
-
-	// data := PageData{
-	// 	UserCookie: UserCookie{
-	// 		UserName: userName,
-	// 	},
-	// }
-
-	// utils.RenderTemplate(w, data,
-	// 	"web/html/carts.html",
-	// 	"web/html/navigation.html",
-	// )
 }
 
 // Содержимое вашей корзины
@@ -292,7 +260,6 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RenderTemplate(w, UserCookie{},
 			"web/html/list.html",
 			"web/html/navigation.html")
-		// http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 

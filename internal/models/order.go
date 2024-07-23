@@ -129,7 +129,7 @@ func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {
 	return orders, nil
 }
 
-// Перенос с корзины отложеных заказов, в историю оплаченых заказов
+// Перенос с добавленых в корзину заказов, в историю оплаченых заказов
 func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 	// Подключение к базе данных
 	db, err := database.Connect()

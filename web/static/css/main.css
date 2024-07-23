@@ -353,10 +353,18 @@
         justify-content: center;
         align-items: center; /* Выравнивание по центру */
         padding: 20px;
-        background-color: #333; /* Фоновый цвет контейнера */
         border: 1px solid #d86100;
         border-radius: 8px; /* Скругление углов */
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для контейнера */
+    }
+
+    #address {
+        background-color: #3a3a3a; /* Цвет фона */
+        color: #000000; /* Цвет текста */
+        border: 1px solid #d86100; /* Цвет рамки */
+        border-radius: 4px; /* Скругленные углы */
+        padding: 10px; /* Внутренний отступ */
+        font-size: 16px; /* Размер шрифта */
     }
 
    /* ===================================== other ========================================== */

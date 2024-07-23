@@ -23,39 +23,36 @@
     {{ template "navigation" . }}
 
     <div class="page-wrapper">
-        <div class="product-container">
-            <div class="product-list">
-                <h2>Содержимое вашей корзины:</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Название продукта</th>
-                            <th>Цена</th>
-                            <th>Количество</th>
-                            <th>Общая стоимость</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{range .ProductsData.Products}}
-                        <tr>
-                            <td>{{.Name}}</td>
-                            <td>$ {{.Price}}</td>
-                            <td>{{.Quantity}}</td>
-                            <td>$ {{.TotalPrice}}</td> <!-- Используем поле TotalPrice -->
-                        </tr>
-                        {{end}}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="3" style="text-align:right"><strong>Общая сумма:</strong></td>
-                            <td>$ {{.TotalSum}}</td> <!-- Отображаем общую сумму -->
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            
+        <div class="cart-container">
+            <h2>Your Cart Contents:</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .ProductsData.Products}}
+                    <tr>
+                        <td>{{.Name}}</td>
+                        <td>$ {{.Price}}</td>
+                        <td>{{.Quantity}}</td>
+                        <td>$ {{.TotalPrice}}</td> <!-- Используем поле TotalPrice -->
+                    </tr>
+                    {{end}}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="text-align:right"><strong>Total Amount:</strong></td>
+                        <td>$ {{.TotalSum}}</td> <!-- Отображаем общую сумму -->
+                    </tr>
+                </tfoot>
+            </table>
+
             <h2>Детали заказа:</h2>
-            
             <!-- Форма для ввода деталей заказа (адреса, способа доставки и оплаты и т. д.) -->
             <form action="/submit_order" method="post">
                 <label for="address">Адрес доставки:</label><br>
@@ -71,7 +68,7 @@
                 <select id="payment" name="payment" required>
                     <option value="cash">Наличными при получении</option>
                     <option value="card">Онлайн оплата картой</option>
-                    <option value="natural">Натурой</option>
+                    <option value="card">Натурой</option>
                 </select><br><br>
 
                 <input type="submit" value="Оформить заказ">
