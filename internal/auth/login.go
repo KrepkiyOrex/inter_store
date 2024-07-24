@@ -38,9 +38,6 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		if err == http.ErrNoCookie {
 			http.Error(w, "User not authenticated", http.StatusUnauthorized)
 			return
-			// fmt.Println("User not authenticated")
-			// http.Redirect(w, r, "/login", http.StatusFound)
-			// return
 		}
 		http.Error(w, "Error retrieving userID", http.StatusInternalServerError)
 		return
@@ -71,9 +68,15 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Выполняем SQL запрос для получения данных из таблицы person_details
+	
+	// Выполняем SQL запрос для получения персональных данных из таблицы person_details
+	query := `SELECT first_name, last_name, middle_name, phone 
+			FROM person_details 
+			WHERE user_id = $1`
+
 	var personDetails PersonDetails
-	err = db.QueryRow("SELECT first_name, last_name, middle_name, phone FROM person_details WHERE user_id = $1", userID).Scan(
+
+	err = db.QueryRow(query, userID).Scan(
 		&personDetails.First_name,
 		&personDetails.Last_name,
 		&personDetails.Middle_name,
@@ -90,6 +93,7 @@ func Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Создаем структуру данных для передачи в шаблон
+	// data := struct {}.ne
 	data := struct {
 		User
 		PersonDetails
@@ -452,7 +456,8 @@ func authenticateUser(username, password string) (int, error) {
 	return userID, nil
 }
 
-// Обработчик для выхода из аккаунта
+// обработчик для выхода из аккаунта. Удаляет куки с информацией о пользователе
+// и перенаправляет на главную страницу
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Удаляем куку с именем пользователя
 	http.SetCookie(w, &http.Cookie{

@@ -63,7 +63,7 @@
                 {{ range .OrdersDate.Orders }}
                 <tr>
                   <td>{{ .FormattedOrderDate }}</td>
-                  <td>{{ .TotalAmount }}</td>
+                  <td>$ {{ .TotalAmount }}</td>
                   <td>{{ .PaymentStatus }}</td>
                   <td>{{ .ShippingAddress }}</td>
                 </tr>

@@ -17,24 +17,7 @@ type User struct {
 	Email    string
 }
 
-// type PageData struct {
-//     Users []User
-// }
-
-// func renderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
-// 	template, err := template.ParseFiles(tmpl...)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = template.Execute(w, data)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
-
+// удаление юзера из списка БД
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)

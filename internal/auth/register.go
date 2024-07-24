@@ -97,31 +97,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		Проблема явно тут с кукой у тебя! на странице аккаунта ты авторизован, а на других уже нет
-		Проблема явно тут с кукой у тебя! на странице аккаунта ты авторизован, а на других уже нет
-		Проблема явно тут с кукой у тебя! на странице аккаунта ты авторизован, а на других уже нет
-
-		Он НЕ сохраняет авторизацию на других страницах или что?
-		Он НЕ сохраняет авторизацию на других страницах или что?
-		Он НЕ сохраняет авторизацию на других страницах или что?
-
-
-		
-		Починил. осталось с этим разобраться на странице заказов:
-		Orders for User ID: template: orders.html:54:60: executing "orders.html" at : error calling index: reflect: slice index out of range 
-		Orders for User ID: template: orders.html:54:60: executing "orders.html" at : error calling index: reflect: slice index out of range 
-		Orders for User ID: template: orders.html:54:60: executing "orders.html" at : error calling index: reflect: slice index out of range 
-	*/
-
-	// Устанавливаем куку с userID
-	// http.SetCookie(w, &http.Cookie{
-	// 	Name:     "userID",
-	// 	Value:    strconv.Itoa(userID),
-	// 	HttpOnly: true, // Для безопасности
-	// 	Path:     "/",  // Делает куку доступной для всех путей
-	// })
-
 	// устанавливаем ник в куки
 	SetCookie(w, "userName", userName, time.Now().Add(24*time.Hour))
 
@@ -156,6 +131,24 @@ type PageData struct {
 	Email     string
 	UserError UserError
 }
+
+
+
+
+/* ПРОТЕСТИРУЙ и потом сохрани сперва, перед рефакторингом.
+
+	сноси нахер все поля в пейлд дейт и ставь User и поле для ошибок
+	далее уже переделаешь сам метод newPageData и подкоректируешь 
+	функ validateAndRender. Напиши копию заранее и все, потом удалишь старую
+
+	что до структур с логин.го то там в User закидывай структ Персоналок.
+	Далее у тебя будят универсальная структура и метод для регистра.го и логина.го
+*/
+
+
+
+
+
 
 // проверка на пустые поля при регистрации
 func fieldValidate(userName, email, password string, w http.ResponseWriter) bool {

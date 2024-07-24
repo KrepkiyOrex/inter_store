@@ -12,47 +12,47 @@ import (
 
 // Ваша функция для рендеринга шаблона
 func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
-    // Получение ID пользователя из куки
-    cookieID, err := r.Cookie("userID")
-    if err != nil {
-        http.Error(w, "Invalid userID", http.StatusUnauthorized)
-        return
-    }
+	// Получение ID пользователя из куки
+	cookieID, err := r.Cookie("userID")
+	if err != nil {
+		http.Error(w, "Invalid userID", http.StatusUnauthorized)
+		return
+	}
 
-    userID, err := strconv.Atoi(cookieID.Value)
-    if err != nil {
-        http.Error(w, "Invalid userID format", http.StatusBadRequest)
-        return
-    }
+	userID, err := strconv.Atoi(cookieID.Value)
+	if err != nil {
+		http.Error(w, "Invalid userID format", http.StatusBadRequest)
+		return
+	}
 
-    log.Println("Extracted userID from cookie:", userID)
+	log.Println("Extracted userID from cookie:", userID)
 
-    // Получение заказов пользователя с БД
-    orders, err := getOrdersForUser(userID)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	// Получение заказов пользователя с БД
+	orders, err := getOrdersForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    if orders == nil {
-        orders = []Order{} // Инициализация пустого списка заказов, если nil
-    }
+	if orders == nil {
+		orders = []Order{} // Инициализация пустого списка заказов, если nil
+	}
 
-    userName, _ := auth.GetUserName(r)
+	userName, _ := auth.GetUserName(r)
 
-    data := OrderPageDate{
-        OrdersDate: OrdersDate{
-            Orders: orders,
-        },
-        UserCookie: UserCookie{
-            UserID:   userID,   // Добавьте поле UserID сюда
-            UserName: userName,
-        },
-    }
+	data := OrderPageDate{
+		OrdersDate: OrdersDate{
+			Orders: orders,
+		},
+		UserCookie: UserCookie{
+			UserID:   userID, // Добавьте поле UserID сюда
+			UserName: userName,
+		},
+	}
 
-    utils.RenderTemplate(w, data,
-        "web/html/orders.html",
-        "web/html/navigation.html")
+	utils.RenderTemplate(w, data,
+		"web/html/orders.html",
+		"web/html/navigation.html")
 }
 
 type OrderPageDate struct {
@@ -62,12 +62,12 @@ type OrderPageDate struct {
 
 // Структура для предоставления заказа
 type Order struct {
-	UserID      int
-	TotalAmount float32
-	OrderDate   time.Time
+	UserID             int
+	TotalAmount        float32
+	OrderDate          time.Time
 	FormattedOrderDate string // Добавьте это поле для форматированной даты
-	PaymentStatus string
-	ShippingAddress string
+	PaymentStatus      string
+	ShippingAddress    string
 }
 
 type OrdersDate struct {
@@ -114,7 +114,7 @@ func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {
 			&order.ShippingAddress); err != nil {
 			return nil, err
 		}
-		
+
 		// Форматирование даты и времени
 		order.FormattedOrderDate = order.OrderDate.Format("2006-01-02 15:04:05")
 
@@ -167,7 +167,10 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	var cartItems []CartItem
 
-	query := `SELECT cart_id, user_id, product_id, quantity, date_added FROM carts WHERE user_id = $1`
+	query := `SELECT cart_id, user_id, product_id, quantity, date_added 
+			FROM carts 
+			WHERE user_id = $1`
+
 	rows, err := db.Query(query, userID)
 	if err != nil {
 		http.Error(w, "Error fetching cart items", http.StatusInternalServerError)
@@ -206,8 +209,10 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 		totalAmount += price * float64(item.Quantity)
 	}
 
-	orderQuery := `INSERT INTO orders (user_id, order_date, total_amount, shipping_address, payment_status) 
-                   VALUES ($1, $2, $3, $4, $5) RETURNING order_id`
+	orderQuery := `INSERT INTO orders 
+				(user_id, order_date, total_amount, shipping_address, payment_status) 
+            	VALUES ($1, $2, $3, $4, $5) RETURNING order_id`
+
 	var orderID int
 	err = db.QueryRow(orderQuery, userID, time.Now(), totalAmount, address, payment).Scan(&orderID)
 	if err != nil {
@@ -218,6 +223,7 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Очистка таблицы carts пользователя, после оплаыт
 	deleteQuery := `DELETE FROM carts WHERE user_id = $1`
+	
 	_, err = db.Exec(deleteQuery, userID)
 	if err != nil {
 		http.Error(w, "Error clearing cart", http.StatusInternalServerError)

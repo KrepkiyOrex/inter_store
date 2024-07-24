@@ -206,6 +206,7 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 		FROM carts c
 		JOIN products p ON c.product_id = p.id
 		WHERE c.user_id = $1` // Используем $1 для параметра
+
 	rows, err := db.Query(query, userID) // Пример с user_id = 59
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -269,40 +270,3 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 		"web/html/list.html",
 		"web/html/navigation.html")
 }
-
-// Обработчик для добавления товара в корзину
-// func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
-// 	// Получаем идентификатор товара из запроса (здесь предполагается, что у вас есть идентификатор товара)
-// 	productID, err := strconv.Atoi(r.FormValue("product_id"))
-// 	if err != nil {
-// 		http.Error(w, "Invalid error ID", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// Получаем сессию пользователя
-// 	session, err := utils.Store.Get(r, "session-name")
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Получаем или создаем массив для товаров в корзине
-// 	cart, ok := session.Values["cart"].([]string)
-// 	if !ok {
-// 		cart = []string{}
-// 	}
-
-// 	// Добавляем идентификатор товара в корзину
-// 	cart = append(cart, strconv.Itoa(productID))
-
-// 	// Сохраняем обновленную корзину в сессии
-// 	session.Values["cart"] = cart
-// 	err = session.Save(r, w)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Перенаправляем пользователя обратно на страницу с товарами
-// 	http.Redirect(w, r, "/products", http.StatusSeeOther)
-// }
