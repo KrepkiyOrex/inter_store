@@ -80,6 +80,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	if duplicate {
 		data := PageData{}.newPageData(userName, email, "Email already registered")
+
 		utils.RenderTemplate(w, data,
 			"web/html/register.html",
 			"web/html/navigation.html")
@@ -109,46 +110,39 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusSeeOther)
 }
 
-// // Обработчик для страницы приветствия
-// func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
-// 	utils.RenderTemplate(w, PageData{},
-// 		"web/html/welcome.html",
-// 		"web/html/navigation.html")
-// }
+type PageData struct {
+	User          User
+	PersonDetails PersonDetails
+	UserError     UserError
+}
 
 // отображение информации о пользователе, а также любую ошибку
 func (pd PageData) newPageData(userName, email, errMsg string) PageData {
 	return PageData{
-		Username:  userName,
-		Email:     email,
+		User: User{
+			UserName: userName,
+			Email:    email,
+		},
 		UserError: UserError{ErrorMessage: errMsg},
 	}
 }
 
 // выгрузка данных для страницы
-type PageData struct {
-	Username  string
-	Email     string
-	UserError UserError
-}
-
-
-
+// type PageData struct {
+// 	Username  string
+// 	Email     string
+// 	UserError UserError
+// }
 
 /* ПРОТЕСТИРУЙ и потом сохрани сперва, перед рефакторингом.
 
-	сноси нахер все поля в пейлд дейт и ставь User и поле для ошибок
-	далее уже переделаешь сам метод newPageData и подкоректируешь 
-	функ validateAndRender. Напиши копию заранее и все, потом удалишь старую
+сноси нахер все поля в пейлд дейт и ставь User и поле для ошибок
+далее уже переделаешь сам метод newPageData и подкоректируешь
+функ validateAndRender. Напиши копию заранее и все, потом удалишь старую
 
-	что до структур с логин.го то там в User закидывай структ Персоналок.
-	Далее у тебя будят универсальная структура и метод для регистра.го и логина.го
+что до структур с логин.го то там в User закидывай структ Персоналок.
+Далее у тебя будят универсальная структура и метод для регистра.го и логина.го
 */
-
-
-
-
-
 
 // проверка на пустые поля при регистрации
 func fieldValidate(userName, email, password string, w http.ResponseWriter) bool {
@@ -164,18 +158,31 @@ func fieldValidate(userName, email, password string, w http.ResponseWriter) bool
 	return true
 }
 
-// проверка на пустые поля при регистрации
 func validateAndRender(w http.ResponseWriter, field, fieldName, userName, email string) bool {
 	if strings.TrimSpace(field) == "" {
 		utils.RenderTemplate(w, PageData{
+			User: User{
+				UserName: userName,
+				Email:    email},
 			UserError: UserError{ErrorMessage: fieldName + " cannot be empty"},
-			Username:  userName,
-			Email:     email,
 		}, "web/html/register.html", "web/html/navigation.html")
 		return false
 	}
 	return true
 }
+
+// проверка на пустые поля при регистрации
+// func validateAndRender(w http.ResponseWriter, field, fieldName, userName, email string) bool {
+// 	if strings.TrimSpace(field) == "" {
+// 		utils.RenderTemplate(w, PageData{
+// 			UserError: UserError{ErrorMessage: fieldName + " cannot be empty"},
+// 			Username:  userName,
+// 			Email:     email,
+// 		}, "web/html/register.html", "web/html/navigation.html")
+// 		return false
+// 	}
+// 	return true
+// }
 
 // Обработчик для отображения HTML-страницы регистрации
 func ShowRegistrationPage(w http.ResponseWriter, r *http.Request) {

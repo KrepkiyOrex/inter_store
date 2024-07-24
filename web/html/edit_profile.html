@@ -15,8 +15,8 @@
         </header>
         
         <div class="condition-auth">
-            {{if .UserName}}
-            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{if .User.UserName}}
+            <p>Привет, {{.User.UserName}}! <a href="/logout">Выйти</a></p>
             {{else}}
             <p> Пожалуйста, <a href="/login">войдите</a></p>
             {{end}}
@@ -29,25 +29,26 @@
         <div class="account-edit-container">
             <form method="post" action="/account/edit">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" value="{{.UserName}}" class="short-input" required>
-    
+                <input type="text" id="username" name="username" value="{{.User.UserName}}" class="short-input" required>
+            
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" value="{{.Email}}" class="short-input" required>
-    
+                <input type="email" id="email" name="email" value="{{.User.Email}}" class="short-input" required>
+            
                 <label for="first_name">First Name:</label>
-                <input type="text" id="first_name" name="first_name" value="{{.First_name}}" class="short-input" required>
-    
+                <input type="text" id="first_name" name="first_name" value="{{.User.PersonDetails.First_name}}" class="short-input" required>
+            
                 <label for="last_name">Last Name:</label>
-                <input type="text" id="last_name" name="last_name" value="{{.Last_name}}" class="short-input" required>
-    
+                <input type="text" id="last_name" name="last_name" value="{{.User.PersonDetails.Last_name}}" class="short-input" required>
+            
                 <label for="middle_name">Middle Name:</label>
-                <input type="text" id="middle_name" name="middle_name" value="{{.Middle_name}}" class="short-input">
-    
+                <input type="text" id="middle_name" name="middle_name" value="{{.User.PersonDetails.Middle_name}}" class="short-input">
+            
                 <label for="phone">Phone:</label>
-                <input type="text" id="phone" name="phone" value="{{.Phone}}" class="short-input" required>
-    
+                <input type="text" id="phone" name="phone" value="{{.User.PersonDetails.Phone}}" class="short-input" required>
+            
                 <button type="submit" class="save-button">Save</button>
             </form>
+            
         </div>
     </div>
     

@@ -68,23 +68,22 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	// Выполняем SQL запрос для получения персональных данных из таблицы person_details
 	query := `SELECT first_name, last_name, middle_name, phone 
 			FROM person_details 
 			WHERE user_id = $1`
 
-	var personDetails PersonDetails
+	// var personDetails PersonDetails
 
 	err = db.QueryRow(query, userID).Scan(
-		&personDetails.First_name,
-		&personDetails.Last_name,
-		&personDetails.Middle_name,
-		&personDetails.Phone)
+		&user.PersonDetails.First_name,
+		&user.PersonDetails.Last_name,
+		&user.PersonDetails.Middle_name,
+		&user.PersonDetails.Phone)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("No person details found for userID: %v, UserName: %s", userID, user.UserName)
-			personDetails = PersonDetails{}
+			user.PersonDetails = PersonDetails{}
 		} else {
 			log.Println("Error querying person details:", err)
 			http.Error(w, "Error retrieving person details", http.StatusInternalServerError)
@@ -93,19 +92,29 @@ func Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Создаем структуру данных для передачи в шаблон
-	// data := struct {}.ne
-	data := struct {
-		User
-		PersonDetails
-	}{
-		User:          user,
-		PersonDetails: personDetails,
-	}
+	data := PageData{User: user}
 
 	// Рендерим шаблон с данными пользователя
 	utils.RenderTemplate(w, data,
 		"web/html/account.html",
 		"web/html/navigation.html")
+}
+
+type User struct {
+	User_ID       int
+	UserName      string
+	Password      string
+	Email         string
+	PersonDetails PersonDetails
+}
+
+type PersonDetails struct {
+	User_id     int
+	First_name  string
+	Last_name   string
+	Middle_name string
+	Address     string
+	Phone       string
 }
 
 // Set userName and userID in cookie
@@ -119,22 +128,6 @@ func SetCookie(w http.ResponseWriter, name, value string, expires time.Time) {
 		SameSite: http.SameSiteStrictMode,
 		Expires:  expires,
 	})
-}
-
-type User struct {
-	User_ID  int
-	UserName string
-	Password string
-	Email    string
-}
-
-type PersonDetails struct {
-	User_id     int
-	First_name  string
-	Last_name   string
-	Middle_name string
-	Address     string
-	Phone       string
 }
 
 type UserCookie struct {
@@ -168,7 +161,10 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var user User
-		err = db.QueryRow("SELECT username, email, user_id FROM users WHERE user_id = $1", userID).Scan(
+		queryUsers := `SELECT username, email, user_id 
+						FROM users 
+						WHERE user_id = $1`
+		err = db.QueryRow(queryUsers, userID).Scan(
 			&user.UserName,
 			&user.Email,
 			&user.User_ID)
@@ -181,28 +177,24 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var personDetails PersonDetails
-		err = db.QueryRow("SELECT first_name, last_name, middle_name, phone FROM person_details WHERE user_id = $1", userID).Scan(
-			&personDetails.First_name,
-			&personDetails.Last_name,
-			&personDetails.Middle_name,
-			&personDetails.Phone)
+		queryPD := `SELECT first_name, last_name, middle_name, phone 
+						FROM person_details 
+						WHERE user_id = $1`
+		err = db.QueryRow(queryPD, userID).Scan(
+			&user.PersonDetails.First_name,
+			&user.PersonDetails.Last_name,
+			&user.PersonDetails.Middle_name,
+			&user.PersonDetails.Phone)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				personDetails = PersonDetails{}
+				user.PersonDetails = PersonDetails{}
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		}
 
-		data := struct {
-			User
-			PersonDetails
-		}{
-			User:          user,
-			PersonDetails: personDetails,
-		}
+		data := PageData{User: user}
 
 		utils.RenderTemplate(w, data,
 			"web/html/edit_profile.html",
@@ -242,33 +234,46 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		log.Println("Updating user data:", username, email, userID)
+
 		// Обновление данных пользователя
-		_, err = db.Exec("UPDATE users SET username = $1, email = $2 WHERE user_id = $3",
+		_, err = db.Exec(`
+				UPDATE users 
+					SET username = $1, email = $2 
+					WHERE user_id = $3`,
 			username, email, userID)
 		if err != nil {
 			http.Error(w, "Unable to update user data", http.StatusInternalServerError)
 			return
 		}
 
-		// Проверка наличия записи в таблице person_details
+		log.Println("Checking if personal details exist for user:", userID)
 		var count int
-		err = db.QueryRow("SELECT COUNT(*) FROM person_details WHERE user_id = $1", userID).Scan(&count)
+		err = db.QueryRow(`
+				SELECT COUNT(*) 
+					FROM person_details 
+					WHERE user_id = $1`,
+			userID).Scan(&count)
 		if err != nil {
 			http.Error(w, "Unable to check person details", http.StatusInternalServerError)
 			return
 		}
 
 		if count == 0 {
-			// Вставка новой записи, если ее нет
-			_, err = db.Exec("INSERT INTO person_details (first_name, last_name, middle_name, phone, user_id) VALUES ($1, $2, $3, $4, $5)",
+			_, err = db.Exec(`
+					INSERT INTO person_details 
+						(first_name, last_name, middle_name, phone, user_id) 
+						VALUES ($1, $2, $3, $4, $5)`,
 				firstName, lastName, middleName, phone, userID)
 			if err != nil {
 				http.Error(w, "Unable to insert personal details", http.StatusInternalServerError)
 				return
 			}
 		} else {
-			// Обновление существующей записи
-			_, err = db.Exec("UPDATE person_details SET first_name = $1, last_name = $2, middle_name = $3, phone = $4 WHERE user_id = $5",
+			_, err = db.Exec(`
+					UPDATE person_details 
+						SET first_name = $1, last_name = $2, middle_name = $3, phone = $4 
+						WHERE user_id = $5`, 
 				firstName, lastName, middleName, phone, userID)
 			if err != nil {
 				http.Error(w, "Unable to update personal details", http.StatusInternalServerError)
@@ -292,7 +297,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		utils.RenderTemplate(w, PageData{}, "web/html/login.html", "web/html/navigation.html")
 		return
-		// renderTemplate(w, UserCookie{}, "web/html/login.html", "web/html/navigation.html")
 	}
 
 	// При POST запросе обрабатываем вход пользователя
@@ -304,11 +308,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Если аутентификация не удалась, показываем форму входа снова с ошибкой
 		data := PageData{}.newPageData(userName, "", "Invalid username or password")
-
-		// data := PageData{
-		// 	Username: userName,
-		// 	UserError: UserError{ErrorMessage: "Invalid username or password"},
-		// }
 
 		utils.RenderTemplate(w, data, "web/html/login.html", "web/html/navigation.html")
 		return
@@ -402,7 +401,10 @@ func authenticateUser(username, password string) (int, error) {
 	var storedUsername, storedPassword string
 
 	// Выполняем запрос к базе данных для проверки логина и пароля
-	err = db.QueryRow("SELECT user_id, username, password FROM users WHERE username = $1",
+	err = db.QueryRow(`
+			SELECT user_id, username, password 
+				FROM users 
+				WHERE username = $1`,
 		username).Scan(&userID, &storedUsername, &storedPassword)
 
 	if err != nil {

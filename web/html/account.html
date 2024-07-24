@@ -15,8 +15,8 @@
             <h1>Profile</h1>
         </header>
         <div class="condition-auth">
-            {{if .UserName}}
-            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{if .User.UserName}}
+            <p>Привет, {{.User.UserName}}! <a href="/logout">Выйти</a></p>
             {{else}}
             <p> Пожалуйста, <a href="/login">войдите</a></p>
             {{end}}
@@ -34,11 +34,11 @@
                 <div class="profile">
                     <h3>Profile</h3>
                     <p>Fiz face</p>
-                    <h5>ID: {{.User_ID}}</h5>
-                    <h4>Name: {{.UserName}}</h4>
-                    <h5>Email: {{.Email}}</h5>
-                    <h4>F.L.M. name: {{.First_name}} {{.Last_name}} {{.Middle_name}}</h4>
-                    <h5>Phone: {{.Phone}}</h5>
+                    <h5>ID: {{.User.User_ID}}</h5>
+                    <h4>Name: {{.User.UserName}}</h4>
+                    <h5>Email: {{.User.Email}}</h5>
+                    <h4>F.L.M. name: {{.User.PersonDetails.First_name}} {{.User.PersonDetails.Last_name}} {{.User.PersonDetails.Middle_name}}</h4>
+                    <h5>Phone: {{.User.PersonDetails.Phone}}</h5>
                     <button class="buy-button" onclick="window.location.href='/account/edit'">Edit</button>
                 </div>
             
