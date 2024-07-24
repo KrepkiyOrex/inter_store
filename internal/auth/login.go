@@ -20,7 +20,7 @@ import (
 	person_details изначально же с пустыми данными т.к. после регистрации пользователи
 	обычно не заполняют сразу данные. ХЗ как ошибку убрать.
 */
-// user profile
+
 // user profile
 func Account(w http.ResponseWriter, r *http.Request) {
 	// Подключаемся к базе данных
@@ -38,6 +38,9 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		if err == http.ErrNoCookie {
 			http.Error(w, "User not authenticated", http.StatusUnauthorized)
 			return
+			// fmt.Println("User not authenticated")
+			// http.Redirect(w, r, "/login", http.StatusFound)
+			// return
 		}
 		http.Error(w, "Error retrieving userID", http.StatusInternalServerError)
 		return
@@ -100,8 +103,6 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		"web/html/account.html",
 		"web/html/navigation.html")
 }
-
-
 
 // Set userName and userID in cookie
 func SetCookie(w http.ResponseWriter, name, value string, expires time.Time) {
@@ -459,6 +460,14 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:  "",
 		Path:   "/",
 		MaxAge: -1, // Устанавливаем отрицательное время жизни, чтобы кука удалилась
+	})
+
+	// удаляем ID пользователя
+	http.SetCookie(w, &http.Cookie{
+		Name:   "userID",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
 	})
 
 	// Перенаправляем на главную страницу

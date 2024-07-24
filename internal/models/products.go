@@ -176,6 +176,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
+// корзина добавленых заказов, перед оплатой
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	// Подключение к базе данных
 	db, err := database.Connect()

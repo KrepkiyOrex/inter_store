@@ -134,12 +134,12 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusSeeOther)
 }
 
-// Обработчик для страницы приветствия
-func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
-	utils.RenderTemplate(w, PageData{},
-		"web/html/welcome.html",
-		"web/html/navigation.html")
-}
+// // Обработчик для страницы приветствия
+// func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
+// 	utils.RenderTemplate(w, PageData{},
+// 		"web/html/welcome.html",
+// 		"web/html/navigation.html")
+// }
 
 // отображение информации о пользователе, а также любую ошибку
 func (pd PageData) newPageData(userName, email, errMsg string) PageData {

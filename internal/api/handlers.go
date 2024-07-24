@@ -2,10 +2,7 @@ package api
 
 import (
 	"log"
-	"mime"
 	"net/http"
-	"path/filepath"
-	"strings"
 
 	"First_internet_store/internal/admin"
 	"First_internet_store/internal/auth"
@@ -25,6 +22,18 @@ import (
 
 // router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
+// AuthMiddleware проверяет, авторизован ли пользователь
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookieID, err := r.Cookie("userID")
+		if err != nil || cookieID.Value == "" {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		next.ServeHTTP(w, r) // передать управление следующему хендлеру
+	})
+}
+
 // Обработчики HTTP
 func SetupRoutes() *mux.Router {
 	// Создаем маршрутизатор
@@ -35,49 +44,48 @@ func SetupRoutes() *mux.Router {
 	// router.HandleFunc("/hello", others.HelloHandler)
 	// router.HandleFunc("/hello", models.HelloHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
-
-	// Настройка обработчика для статических файлов
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		filePath := filepath.Join(".", "web", "static", strings.TrimPrefix(r.URL.Path, "/static/"))
-		ext := filepath.Ext(filePath)
-		mimeType := mime.TypeByExtension(ext)
-		if mimeType != "" {
-			w.Header().Set("Content-Type", mimeType)
-		}
-		http.ServeFile(w, r, filePath)
-	})))
-
-	// router.HandleFunc("/products", models.ProductsHandler)
 	router.HandleFunc("/list", models.ListHandler)
-
-	// для добавления товара в корзину
-	router.HandleFunc("/add-to-cart", models.AddToCartHandler)
-	router.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
-	
-	router.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
-	
-	router.HandleFunc("/cart", models.ViewCartHandler)
-	// router.HandleFunc("/viewcart", models.ViewCartHandler)
-	// router.HandleFunc("/edit", models.EditProduct) // depr???
-	router.HandleFunc("/account/edit", auth.EditProfile)
 
 	// Обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
 	router.HandleFunc("/register", auth.RegisterHandler) // Обработчик для страницы регистрации
 
 	// Добавляем обработчик для страницы приветствия
-	router.HandleFunc("/welcome", auth.WelcomeHandler).Methods("GET")
+	// router.HandleFunc("/welcome", auth.WelcomeHandler).Methods("GET")
 
 	// Страница входа и её обработчики
 	router.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")
-
-	router.HandleFunc("/logout", auth.LogoutHandler) // Exit
-
-	router.HandleFunc("/account", auth.Account) // profile
-
+	router.HandleFunc("/logout", auth.LogoutHandler)      // Exit
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")
+
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+
+	// ==========================
+	authRoutes := router.PathPrefix("/").Subrouter()
+	authRoutes.Use(AuthMiddleware)
+
+	// группа маршрутов, требующих авторизации
+	authRoutes.HandleFunc("/account", auth.Account)                  // profile
+	authRoutes.HandleFunc("/add-to-cart", models.AddToCartHandler)   // для добавления товара в корзину
+	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
+	authRoutes.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
+	authRoutes.HandleFunc("/cart", models.ViewCartHandler)
+	// router.HandleFunc("/viewcart", models.ViewCartHandler)
+	// router.HandleFunc("/edit", models.EditProduct) // depr???
+	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
+
+	// Настройка обработчика для статических файлов
+	// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	filePath := filepath.Join(".", "web", "static", strings.TrimPrefix(r.URL.Path, "/static/"))
+	// 	ext := filepath.Ext(filePath)
+	// 	mimeType := mime.TypeByExtension(ext)
+	// 	if mimeType != "" {
+	// 		w.Header().Set("Content-Type", mimeType)
+	// 	}
+	// 	http.ServeFile(w, r, filePath)
+	// })))
 
 	return router
 }
