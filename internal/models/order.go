@@ -40,22 +40,27 @@ func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	userName, _ := auth.GetUserName(r)
 
-	data := OrderPageDate{
-		OrdersDate: OrdersDate{
-			Orders: orders,
-		},
-		UserCookie: UserCookie{
-			UserID:   userID, // Добавьте поле UserID сюда
-			UserName: userName,
-		},
-	}
+	data := OrderPageData{}.newOrderPageData(orders, userID, userName)
 
 	utils.RenderTemplate(w, data,
 		"web/html/orders.html",
 		"web/html/navigation.html")
 }
 
-type OrderPageDate struct {
+// создание данных для страницы продуктов и куки пользователя
+func (opd OrderPageData) newOrderPageData(orders []Order, userID int, userName string) OrderPageData {
+	return OrderPageData{
+		OrdersDate: OrdersDate{
+			Orders: orders,
+		},
+		UserCookie: UserCookie{
+			UserID: userID,
+			UserName: userName,
+		},
+	}
+}
+
+type OrderPageData struct {
 	OrdersDate
 	UserCookie
 }
@@ -83,14 +88,12 @@ func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {
 	}
 	defer db.Close()
 
-	// подготовка SQL запроса
 	query := `
 		SELECT user_id, total_amount, order_date, 
 		payment_status, shipping_address
 		FROM orders
 		WHERE user_id = $1
 	`
-
 	// Выполнение запроса к базе данных
 	rows, err := db.Query(query, userId)
 	if err != nil {

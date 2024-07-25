@@ -11,9 +11,8 @@ import (
 	"time"
 )
 
-// Функция для получения имени пользователя из куки
+// для получения имени пользователя из куки
 func GetUserName(r *http.Request) (string, error) {
-	// Получаем значение куки с именем пользователя
 	cookie, err := r.Cookie("userName")
 	if err != nil {
 		return "", err
@@ -34,7 +33,6 @@ func checkDuplicateAccounts(db *database.DB, email string) (bool, error) {
 }
 
 // регистрирует пользователя
-// регистрирует пользователя
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		utils.RenderTemplate(w, PageData{},
@@ -43,7 +41,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Подключаемся к базе данных PostgreSQL
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
@@ -60,12 +57,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Извлекаем данные из формы
+	// извлекаем данные из формы
 	userName := r.Form.Get("username")
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
-	// Field validation
 	if !fieldValidate(userName, email, password, w) {
 		return
 	}
@@ -89,8 +85,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Сохраняем данные пользователя в базе данных "users"
 	var userID int
-	err = db.QueryRow(
-		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING user_id",
+	err = db.QueryRow(`
+		INSERT INTO users (username, email, password) 
+			VALUES ($1, $2, $3) 
+			RETURNING user_id`,
 		userName, email, password).Scan(&userID)
 	if err != nil {
 		http.Error(w, "Error saving user data to the database", http.StatusInternalServerError)
@@ -127,23 +125,6 @@ func (pd PageData) newPageData(userName, email, errMsg string) PageData {
 	}
 }
 
-// выгрузка данных для страницы
-// type PageData struct {
-// 	Username  string
-// 	Email     string
-// 	UserError UserError
-// }
-
-/* ПРОТЕСТИРУЙ и потом сохрани сперва, перед рефакторингом.
-
-сноси нахер все поля в пейлд дейт и ставь User и поле для ошибок
-далее уже переделаешь сам метод newPageData и подкоректируешь
-функ validateAndRender. Напиши копию заранее и все, потом удалишь старую
-
-что до структур с логин.го то там в User закидывай структ Персоналок.
-Далее у тебя будят универсальная структура и метод для регистра.го и логина.го
-*/
-
 // проверка на пустые поля при регистрации
 func fieldValidate(userName, email, password string, w http.ResponseWriter) bool {
 	if !validateAndRender(w, userName, "Username", userName, email) {
@@ -170,19 +151,6 @@ func validateAndRender(w http.ResponseWriter, field, fieldName, userName, email 
 	}
 	return true
 }
-
-// проверка на пустые поля при регистрации
-// func validateAndRender(w http.ResponseWriter, field, fieldName, userName, email string) bool {
-// 	if strings.TrimSpace(field) == "" {
-// 		utils.RenderTemplate(w, PageData{
-// 			UserError: UserError{ErrorMessage: fieldName + " cannot be empty"},
-// 			Username:  userName,
-// 			Email:     email,
-// 		}, "web/html/register.html", "web/html/navigation.html")
-// 		return false
-// 	}
-// 	return true
-// }
 
 // Обработчик для отображения HTML-страницы регистрации
 func ShowRegistrationPage(w http.ResponseWriter, r *http.Request) {

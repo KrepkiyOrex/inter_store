@@ -11,35 +11,7 @@ import (
 	"First_internet_store/internal/utils"
 )
 
-// Функция для получения имени пользователя из куки
-// func getUserName(r *http.Request) (string, error) {
-// 	// Получаем значение куки с именем пользователя
-// 	cookie, err := r.Cookie("userName")
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return cookie.Value, nil
-// }
-
-// user profile
-// func Account(w http.ResponseWriter, r *http.Request) {
-// 	// Извлекаем куку
-// 	cookie, err := r.Cookie("userName")
-// 	userName := "" // Значение по умолчанию, если кука не установлена
-// 	if err == nil {
-// 		userName = cookie.Value
-// 	}
-
-// 	data := UserCookie{
-// 		UserName: userName,
-// 	}
-
-// 	utils.RenderTemplate(w, data,
-// 		// renderTemplate(w, data,
-// 		"web/html/account.html",
-// 		"web/html/navigation.html")
-// }
-
+// главная страница с товарами
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// Connect to the database
 	db, err := database.Connect()
@@ -51,7 +23,8 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-	rows, err := db.Query("SELECT name, price, id FROM products")
+	query := "SELECT name, price, id FROM products"
+	rows, err := db.Query(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -78,22 +51,24 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 12
-	userName, _ := auth.GetUserName(r) // 32
+	userName, _ := auth.GetUserName(r)
 
-	data := PageData{
+	data := PageData{}.newPageDataProd(products, userName)
+
+	utils.RenderTemplate(w, data,
+		"web/html/main.html",
+		"web/html/navigation.html",
+	)
+}
+
+// создание данных для страницы продуктов и куки пользователя
+func (pd PageData) newPageDataProd(products []Product, userName string) PageData {
+	return PageData{
 		ProductsData: ProductsData{
 			Products: products,
 		},
-		UserCookie: UserCookie{
-			UserName: userName,
-		},
+		UserCookie: UserCookie{UserName: userName},
 	}
-
-	utils.RenderTemplate(w, data,
-		"web/html/products.html",
-		"web/html/navigation.html",
-	)
 }
 
 type PageData struct {
@@ -106,12 +81,12 @@ type Product struct {
 	Name       string
 	Price      float64
 	Quantity   int
-	TotalPrice float64 // Добавляем поле для общей стоимости
+	TotalPrice float64 // общая стоимость
 }
 
 type ProductsData struct {
 	Products []Product
-	TotalSum float64 // Добавляем поле для общей суммы
+	TotalSum float64 // общая сумма
 }
 
 type UserCookie struct {
@@ -161,9 +136,9 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.Exec(`
         INSERT INTO carts (user_id, product_id, quantity) 
-        VALUES ($1, $2, $3) 
-        ON CONFLICT (user_id, product_id) 
-        DO UPDATE SET quantity = carts.quantity + EXCLUDED.quantity`,
+        	VALUES ($1, $2, $3) 
+       		ON CONFLICT (user_id, product_id) 
+        	DO UPDATE SET quantity = carts.quantity + EXCLUDED.quantity`,
 		userID, requestData.ProductID, requestData.Quantity,
 	)
 	if err != nil {

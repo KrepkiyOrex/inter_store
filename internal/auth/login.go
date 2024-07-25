@@ -32,7 +32,7 @@ func Account(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	// Получаем ID пользователя из куки
+	// получаем ID пользователя из куки
 	cookieID, err := r.Cookie("userID")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -51,9 +51,12 @@ func Account(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Extracted userID from cookie:", userID)
 
-	// Выполняем SQL запрос для получения данных пользователя из таблицы users
+	// запрос для получения данных пользователя из таблицы users
+	userQuery := `SELECT username, email, user_id 
+					FROM users 
+					WHERE user_id = $1`
 	var user User
-	err = db.QueryRow("SELECT username, email, user_id FROM users WHERE user_id = $1", userID).Scan(
+	err = db.QueryRow(userQuery, userID).Scan(
 		&user.UserName,
 		&user.Email,
 		&user.User_ID)
@@ -68,14 +71,11 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Выполняем SQL запрос для получения персональных данных из таблицы person_details
-	query := `SELECT first_name, last_name, middle_name, phone 
-			FROM person_details 
-			WHERE user_id = $1`
-
-	// var personDetails PersonDetails
-
-	err = db.QueryRow(query, userID).Scan(
+	// запрос для получения персональных данных из таблицы person_details
+	pdQuery := `SELECT first_name, last_name, middle_name, phone 
+					FROM person_details 
+					WHERE user_id = $1`
+	err = db.QueryRow(pdQuery, userID).Scan(
 		&user.PersonDetails.First_name,
 		&user.PersonDetails.Last_name,
 		&user.PersonDetails.Middle_name,
@@ -137,6 +137,7 @@ type UserCookie struct {
 	Email    string
 }
 
+// редактор персональных данных пользователя в ЛК
 func EditProfile(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		// Получение данных пользователя для заполнения формы
@@ -273,7 +274,7 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 			_, err = db.Exec(`
 					UPDATE person_details 
 						SET first_name = $1, last_name = $2, middle_name = $3, phone = $4 
-						WHERE user_id = $5`, 
+						WHERE user_id = $5`,
 				firstName, lastName, middleName, phone, userID)
 			if err != nil {
 				http.Error(w, "Unable to update personal details", http.StatusInternalServerError)
@@ -295,7 +296,9 @@ func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// При GET запросе отображаем форму входа
 	if r.Method == "GET" {
-		utils.RenderTemplate(w, PageData{}, "web/html/login.html", "web/html/navigation.html")
+		utils.RenderTemplate(w, PageData{}, 
+			"web/html/login.html", 
+			"web/html/navigation.html")
 		return
 	}
 
@@ -309,7 +312,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		// Если аутентификация не удалась, показываем форму входа снова с ошибкой
 		data := PageData{}.newPageData(userName, "", "Invalid username or password")
 
-		utils.RenderTemplate(w, data, "web/html/login.html", "web/html/navigation.html")
+		utils.RenderTemplate(w, data, 
+			"web/html/login.html", 
+			"web/html/navigation.html")
 		return
 	}
 
@@ -323,7 +328,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/account", http.StatusFound)
 }
 
-// 123
+// для вывода ошибок для пользователя
 type UserError struct {
 	ErrorMessage string
 }
@@ -376,7 +381,7 @@ func validateJWT(tokenString string, secretKey []byte, expectedUser User) (bool,
 	}
 }
 
-// Функция для проверки конкретных утверждений
+// для проверки конкретных утверждений
 func validateClaims(claims jwt.MapClaims, expectedUser User) error {
 	if claims["name"] != expectedUser.UserName {
 		return fmt.Errorf("invalid name claim")
@@ -389,7 +394,7 @@ func validateClaims(claims jwt.MapClaims, expectedUser User) error {
 	return nil
 }
 
-// Функция для аутентификации пользователя и получения его идентификатора
+// аутентификация пользователя и получения его идентификатора
 func authenticateUser(username, password string) (int, error) {
 	db, err := database.Connect()
 	if err != nil {
@@ -411,8 +416,6 @@ func authenticateUser(username, password string) (int, error) {
 		// В случае ошибки или неверных учетных данных возвращаем ошибку аутентификации
 		return 0, err
 	}
-
-	// ------------------------------------------------------------------------------------------------------------------------
 
 	secretKey := []byte("your-256-bit-secret") // Секретный ключ должен быть сильным
 	// и случайным, а также защищен от доступа посторонних лиц.

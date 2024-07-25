@@ -82,40 +82,43 @@
     /* ===================================== /products ========================================== */
 
     .product-container {
-        display: flex;
-        justify-content: center;
-        align-items: flex-start; /* Выравнивание по верхнему краю */
-        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
         width: 1100px;
-        gap: 20px; /* расстояние между элементами */
+        padding: 20px 20px; /* Отступы сверху и снизу */
         border: 1px solid #d86100;
-        margin-top: 20px;
-        padding-top: 20px; /* Отступ сверху */
-        border-radius: 8px; /* Скругление углов */
+        border-radius: 8px;
+        box-sizing: border-box; /* Учитывает padding и border в ширину */
     }
-
+    
     .product-list {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-around;
-        width: 300mm; /* Процентное значение ширины контейнера товаров */
+        gap: 20px; /* Расстояние между карточками */
     }
-
+    
     .product-item {
-        width: 200px;
-        height: 170px;
+        flex: 1 1 200px; /* Занимает одну часть доступного пространства с минимальной шириной 200px */
+        max-width: 250px; /* Максимальная ширина карточки */
         margin-bottom: 20px;
         padding: 15px;
         border: 1px solid #ccc;
-        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        background-color: #333;
         text-align: center;
-        /* display: inline-block; */
-        /* box-sizing: border-box; */
+        box-sizing: border-box;
     }
-
+    
+    .product-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+    }
+    
+    .quantity-input {
+        width: 50px;
+        text-align: center;
+    }
+    
     .buy-button {
-        display: block;
-        width: 100%;
         background-color: #089403;
         color: #fff;
         text-align: center;
@@ -124,11 +127,13 @@
         border-radius: 4px;
         cursor: pointer;
         text-decoration: none;
+        width: calc(100% - 60px); /* Ширина кнопки за вычетом ширины input и отступа */
     }
-
+    
     .buy-button:hover {
         background-color: #0056b3;
     }
+    
 
     /* ===================================== /account ========================================== */
 
