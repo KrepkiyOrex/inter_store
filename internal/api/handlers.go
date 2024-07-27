@@ -8,6 +8,7 @@ import (
 	"First_internet_store/internal/auth"
 	"First_internet_store/internal/models"
 	"First_internet_store/internal/others"
+	"First_internet_store/internal/database"
 
 	"github.com/gorilla/mux"
 )
@@ -38,6 +39,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func SetupRoutes() *mux.Router {
 	// Создаем маршрутизатор
 	router := mux.NewRouter()
+
+	database.InitRedis("localhost:6379", "", 0) // initialization redis
 
 	router.HandleFunc("/", models.ProductsHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)

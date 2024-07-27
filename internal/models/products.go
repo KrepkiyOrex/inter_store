@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
 	"First_internet_store/internal/utils"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type PageData struct {
@@ -37,52 +40,93 @@ type UserCookie struct {
 
 // главная страница с товарами
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
-	// Connect to the database
-	db, err := database.Connect()
-	if err != nil {
-		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-		log.Println("Error connecting to the database")
-		return
-	}
-	defer db.Close()
+	cacheKey := "products_list"
+	cachedData, err := database.Rdb.Get(database.Rdb.Context(), cacheKey).Result()
 
-	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-	query := `SELECT name, price, id, image_url FROM products`
-	rows, err := db.Query(query)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+	// ключ не найден в кэше, выполняем запрос к основной БД
+	if err == redis.Nil {
+		// Connect to the database
+		db, err := database.Connect()
+		if err != nil {
+			http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+			log.Println("Error connecting to the database")
+			return
+		}
+		defer db.Close()
 
-	// Создание списка для хранения товаров
-	var products []Product
-
-	// Считывание данных о товарах из результатов запроса
-	for rows.Next() {
-		var product Product
-
-		if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL); err != nil {
+		// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
+		query := `SELECT name, price, id, image_url FROM products`
+		rows, err := db.Query(query)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// Добавление продуктов в список
-		products = append(products, product)
+		defer rows.Close()
+
+		// Создание списка для хранения товаров
+		var products []Product
+
+		// Считывание данных о товарах из результатов запроса
+		for rows.Next() {
+			var product Product
+
+			if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			// Добавление продуктов в список
+			products = append(products, product)
+		}
+
+		if err := rows.Err(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// сохраняем данные в Redis
+		productsJSON, err := json.Marshal(products)
+		if err != nil {
+			http.Error(w, "Error marshaling products data", http.StatusInternalServerError)
+			return
+		}
+		err = database.Rdb.Set(database.Rdb.Context(), cacheKey, productsJSON, 10*time.Second).Err()
+		if err != nil {
+			log.Printf("Failed to save data in Redis: %v", err)
+		}
+
+		userName, _ := auth.GetUserName(r)
+		data := PageData{}.newPageDataProd(products, userName)
+
+		utils.RenderTemplate(w, data,
+			"web/html/main.html",
+			"web/html/navigation.html",
+		)
+
+		log.Println("Данных нету в Redis. Загружаем с БД portgres.")
+
+	} else if err != nil {
+		http.Error(w, "Error fetching data from Redis: %v", http.StatusInternalServerError)
+		log.Printf("Failed to get data from Redis: %v", err)
+
+		log.Println("Что то пошло не так с Редисом")
+	} else {
+		// данные кеша есть в Редисе
+		var products []Product
+		if err = json.Unmarshal([]byte(cachedData), &products); err != nil {
+			http.Error(w, "Error marshaling products data", http.StatusInternalServerError)
+			return
+		}
+
+		userName, _ := auth.GetUserName(r)
+		data := PageData{}.newPageDataProd(products, userName)
+
+		utils.RenderTemplate(w, data,
+			"web/html/main.html",
+			"web/html/navigation.html",
+		)
+
+		log.Println("Данные с Redis!")
 	}
-
-	if err := rows.Err(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	userName, _ := auth.GetUserName(r)
-
-	data := PageData{}.newPageDataProd(products, userName)
-
-	utils.RenderTemplate(w, data,
-		"web/html/main.html",
-		"web/html/navigation.html",
-	)
 }
 
 // создание данных для страницы продуктов и куки пользователя
