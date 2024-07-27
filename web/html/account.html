@@ -15,8 +15,8 @@
             <h1>Profile</h1>
         </header>
         <div class="condition-auth">
-            {{if .User.UserName}}
-            <p>Привет, {{.User.UserName}}! <a href="/logout">Выйти</a></p>
+            {{if .UserCookie.UserName}}
+            <p>Привет, {{.UserCookie.UserName}}! <a href="/logout">Выйти</a></p>
             {{else}}
             <p> Пожалуйста, <a href="/login">войдите</a></p>
             {{end}}

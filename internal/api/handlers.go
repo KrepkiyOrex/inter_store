@@ -40,19 +40,12 @@ func SetupRoutes() *mux.Router {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", models.ProductsHandler)
-	// router.HandleFunc("/", others.GreetHandler)
-	// router.HandleFunc("/hello", others.HelloHandler)
-	// router.HandleFunc("/hello", models.HelloHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
 	router.HandleFunc("/list", models.ListHandler)
 
 	// Обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
 	router.HandleFunc("/register", auth.RegisterHandler) // Обработчик для страницы регистрации
-
-	// Добавляем обработчик для страницы приветствия
-	// router.HandleFunc("/welcome", auth.WelcomeHandler).Methods("GET")
-
 	// Страница входа и её обработчики
 	router.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")
@@ -67,13 +60,11 @@ func SetupRoutes() *mux.Router {
 	authRoutes.Use(AuthMiddleware)
 
 	// группа маршрутов, требующих авторизации
-	authRoutes.HandleFunc("/account", auth.Account)                  // profile
+	authRoutes.HandleFunc("/account", models.Account)                // profile
 	authRoutes.HandleFunc("/add-to-cart", models.AddToCartHandler)   // для добавления товара в корзину
 	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
 	authRoutes.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
 	authRoutes.HandleFunc("/cart", models.ViewCartHandler)
-	// router.HandleFunc("/viewcart", models.ViewCartHandler)
-	// router.HandleFunc("/edit", models.EditProduct) // depr???
 	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
 
 	// Настройка обработчика для статических файлов
@@ -98,11 +89,4 @@ func StartServer() {
 	if err != nil {
 		log.Fatal("Listen and Server:", err)
 	}
-
-	/*
-			Это более короткий способ?
-
-			// Запускаем сервер
-		    log.Fatal(http.ListenAndServe(":8080", nil))
-	*/
 }

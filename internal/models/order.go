@@ -54,7 +54,7 @@ func (opd OrderPageData) newOrderPageData(orders []Order, userID int, userName s
 			Orders: orders,
 		},
 		UserCookie: UserCookie{
-			UserID: userID,
+			UserID:   userID,
 			UserName: userName,
 		},
 	}
@@ -77,6 +77,101 @@ type Order struct {
 
 type OrdersDate struct {
 	Orders []Order
+}
+
+// корзина добавленых заказов, перед оплатой
+func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
+	// Подключение к базе данных
+	db, err := database.Connect()
+	if err != nil {
+		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+		log.Println("Error connecting to the database")
+		return
+	}
+	defer db.Close()
+
+	// Получение идентификатора пользователя из куки
+	cookie, err := r.Cookie("userID")
+	if err != nil || cookie.Value == "" {
+		http.Error(w, "User ID not found", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(cookie.Value)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Выполнение SQL запроса для получения данных из корзины и продуктов
+	query := `
+		SELECT p.id, p.name, p.price, c.quantity 
+		FROM carts c
+		JOIN products p ON c.product_id = p.id
+		WHERE c.user_id = $1` // Используем $1 для параметра
+
+	rows, err := db.Query(query, userID) // Пример с user_id = 59
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Чтение результатов запроса
+	var products []Product
+	var totalSum float64
+	for rows.Next() {
+		var product Product
+		if err := rows.Scan(&product.ID, &product.Name, &product.Price, &product.Quantity); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		product.TotalPrice = product.Price * float64(product.Quantity) // Приведение Quantity к float64
+		products = append(products, product)
+		totalSum += product.TotalPrice // Суммируем общую стоимость каждого продукта
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Получение имени пользователя (пример)
+	userName, _ := auth.GetUserName(r) // Пример получения имени пользователя
+
+	// Подготовка данных для шаблона
+	data := PageData{
+		ProductsData: ProductsData{
+			Products: products,
+			TotalSum: totalSum, // Передаем общую сумму в шаблон
+		},
+		UserCookie: UserCookie{
+			UserName: userName,
+		},
+	}
+
+	// Рендеринг шаблона
+	utils.RenderTemplate(w, data,
+		"web/html/cart.html",
+		"web/html/navigation.html",
+	)
+}
+
+// Содержимое вашей корзины
+func ListHandler(w http.ResponseWriter, r *http.Request) {
+	userName, err := auth.GetUserName(r)
+	if err != nil {
+		// Куки не найдено, показываем форму входа
+		utils.RenderTemplate(w, UserCookie{},
+			"web/html/list.html",
+			"web/html/navigation.html")
+		return
+	}
+
+	data := UserCookie{UserName: userName}
+	utils.RenderTemplate(w, data,
+		"web/html/list.html",
+		"web/html/navigation.html")
 }
 
 // Для получения купленых заказов пользователя из БД orders
@@ -226,7 +321,7 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Очистка таблицы carts пользователя, после оплаыт
 	deleteQuery := `DELETE FROM carts WHERE user_id = $1`
-	
+
 	_, err = db.Exec(deleteQuery, userID)
 	if err != nil {
 		http.Error(w, "Error clearing cart", http.StatusInternalServerError)

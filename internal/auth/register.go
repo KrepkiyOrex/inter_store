@@ -114,6 +114,11 @@ type PageData struct {
 	UserError     UserError
 }
 
+// для вывода ошибок для пользователя
+type UserError struct {
+	ErrorMessage string
+}
+
 // отображение информации о пользователе, а также любую ошибку
 func (pd PageData) newPageData(userName, email, errMsg string) PageData {
 	return PageData{

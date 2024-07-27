@@ -17,6 +17,19 @@ type User struct {
 	Email    string
 }
 
+type PageData struct {
+	UsersData
+	UserCookie
+}
+
+type UsersData struct {
+	Users []User
+}
+
+type UserCookie struct {
+	UserName string
+}
+
 // удаление юзера из списка БД
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
@@ -94,15 +107,6 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 
 	userName, _ := auth.GetUserName(r)
 
-	// data := PageData{
-	// 	UsersData: UsersData{
-	// 		Users: users,
-	// 	},
-	// 	UserCookie: UserCookie{
-	// 		UserName: userName,
-	// 	},
-	// }
-
 	// отображение информации о пользователе, а также любую ошибку
 	data := PageData{}.newPageData(users, userName)
 
@@ -123,15 +127,3 @@ func (pd PageData) newPageData(users []User, userName string) PageData {
 	}
 }
 
-type PageData struct {
-	UsersData
-	UserCookie
-}
-
-type UsersData struct {
-	Users []User
-}
-
-type UserCookie struct {
-	UserName string
-}
