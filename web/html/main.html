@@ -59,14 +59,15 @@
         <div class="product-container">
             <div class="product-list">
                 {{range .Products}}
-                    <div class="product-item">
-                        <h3>{{.Name}}</h3>
-                        <p>Price: ${{.Price}}</p>
-                        <div class="product-details">
-                            <button class="buy-button" data-product-id="{{.ID}}">Купить</button>
-                            <input type="number" value="1" min="1" class="quantity-input">
-                        </div>
+                <div class="product-item">
+                    <img src="/{{.ImageURL}}" alt="{{.Name}}" class="product-image">
+                    <h3>{{.Name}}</h3>
+                    <p>Price: ${{.Price}}</p>
+                    <div class="product-details">
+                        <button class="buy-button" data-product-id="{{.ID}}">Купить</button>
+                        <input type="number" value="1" min="1" class="quantity-input">
                     </div>
+                </div>
                 {{end}}
             </div>
         </div>

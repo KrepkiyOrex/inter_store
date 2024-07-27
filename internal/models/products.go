@@ -10,6 +10,31 @@ import (
 	"First_internet_store/internal/utils"
 )
 
+type PageData struct {
+	User
+	ProductsData
+	UserCookie
+}
+
+type Product struct {
+	ID         int
+	Name       string
+	Price      float64
+	ImageURL   string
+	Quantity   int
+	TotalPrice float64 // общая стоимость
+}
+
+type ProductsData struct {
+	Products []Product
+	TotalSum float64 // общая сумма
+}
+
+type UserCookie struct {
+	UserID   int
+	UserName string
+}
+
 // главная страница с товарами
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	// Connect to the database
@@ -22,7 +47,7 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-	query := "SELECT name, price, id FROM products"
+	query := `SELECT name, price, id, image_url FROM products`
 	rows, err := db.Query(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -37,7 +62,7 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var product Product
 
-		if err := rows.Scan(&product.Name, &product.Price, &product.ID); err != nil {
+		if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -68,30 +93,6 @@ func (pd PageData) newPageDataProd(products []Product, userName string) PageData
 		},
 		UserCookie: UserCookie{UserName: userName},
 	}
-}
-
-type PageData struct {
-	User
-	ProductsData
-	UserCookie
-}
-
-type Product struct {
-	ID         int
-	Name       string
-	Price      float64
-	Quantity   int
-	TotalPrice float64 // общая стоимость
-}
-
-type ProductsData struct {
-	Products []Product
-	TotalSum float64 // общая сумма
-}
-
-type UserCookie struct {
-	UserID   int
-	UserName string
 }
 
 // Обработчик для добавления товара в корзину

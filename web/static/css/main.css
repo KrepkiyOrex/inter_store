@@ -79,6 +79,12 @@
         background-color: #111;
     }
 
+    .product-image {
+        width: 200px; /* Задайте нужную ширину */
+        height: 200px;
+        object-fit: cover; /* Обеспечивает, что изображение будет хорошо выглядеть в отведенном пространстве */
+    }
+
     /* ===================================== /products ========================================== */
 
     .product-container {
@@ -98,9 +104,7 @@
     .product-item {
         flex: 1 1 200px; /* Занимает одну часть доступного пространства с минимальной шириной 200px */
         max-width: 250px; /* Максимальная ширина карточки */
-        margin-bottom: 20px;
-        padding: 15px;
-        border: 1px solid #ccc;
+        max-height: 400px;
         background-color: #333;
         text-align: center;
         box-sizing: border-box;
