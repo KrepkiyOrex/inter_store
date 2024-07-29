@@ -40,7 +40,7 @@ func SetupRoutes() *mux.Router {
 	// Создаем маршрутизатор
 	router := mux.NewRouter()
 
-	database.InitRedis("localhost:6379", "", 0) // initialization redis
+	database.InitRedis() // initialization redis
 
 	router.HandleFunc("/", models.ProductsHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
@@ -67,7 +67,8 @@ func SetupRoutes() *mux.Router {
 	authRoutes.HandleFunc("/add-to-cart", models.AddToCartHandler)   // для добавления товара в корзину
 	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
 	authRoutes.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
-	authRoutes.HandleFunc("/cart", models.ViewCartHandler)
+	authRoutes.HandleFunc("/update_cart", models.UpdateCartHandler).Methods("POST")
+	authRoutes.HandleFunc("/cart", models.ViewCartHandler).Methods("GET")
 	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
 
 	// Настройка обработчика для статических файлов

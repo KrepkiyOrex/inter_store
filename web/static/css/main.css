@@ -85,6 +85,31 @@
         object-fit: cover; /* Обеспечивает, что изображение будет хорошо выглядеть в отведенном пространстве */
     }
 
+    /* стили для числового инпута */
+    .quantity-input {
+        background-color: transparent; /* Прозрачный фон */
+        border: none; /* Убираем границу */
+        text-align: center; /* Центрируем текст */
+        width: 50px; /* Фиксированная ширина */
+        outline: none; /* Убираем выделение при фокусе */
+        font-size: 16px; /* Размер шрифта */
+    }
+
+    /* стили для числового инпута в WebKit-браузерах (например, Chrome, Safari) */
+    .quantity-input::-webkit-outer-spin-button,
+    .quantity-input::-webkit-inner-spin-button {
+        -webkit-appearance: inner-spin-button; /* Сохраняем стрелки */
+    }
+
+    /* настраиваем внешний вид стрелок (опционально) */
+    .quantity-input::-webkit-inner-spin-button {
+        cursor: pointer;
+        color: #21cf21; /* Можно настроить цвет стрелок */
+        width: 20px; /* Настройка ширины стрелок */
+    }
+
+
+
     /* ===================================== /products ========================================== */
 
     .product-container {
