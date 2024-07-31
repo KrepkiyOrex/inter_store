@@ -247,6 +247,107 @@
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
     }
 
+    /* ===================================== Редактор товаров ========================================== */
+
+    .img-item {
+        width: 400px; /* одинаковая ширина для всех элементов */
+        height: 500px;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    .product-description {
+        width: 350px; /* одинаковая ширина для всех элементов */
+        height: 500px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    .pay-box {
+        width: 300px; /* одинаковая ширина для всех элементов */
+        height: 500px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+        border-radius: 15px; /* Радиус скругления углов */
+    }
+
+    .description {
+        width: 1100px; /* одинаковая ширина для всех элементов */
+        height: 800px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    /* Специфические стили для таблицы с классом .custom-table */
+    .custom-table {
+        width: 300px;
+        border-collapse: collapse;
+    }
+
+    /* Удалены стили с чередованием фона */
+    .custom-table tr.custom-row {
+        border-bottom: 1px solid #969696; /* Граница снизу для разделения */
+    }
+
+    .custom-table td.custom-cell {
+        padding: 10px;
+        border: none; /* Убираем границы ячеек */
+    }
+
+    /* Убираем нижнюю границу у последней строки */
+    .custom-table tr.custom-row:last-child {
+        border-bottom: none;
+    }
+
+    /* Стили применяются только к элементам внутри .specific-container */
+    .specific-container h3, .specific-container p {
+        margin: 0; /* Сброс отступов */
+        padding: 0; /* Сброс полей */
+    }
+
+    .specific-container h3 {
+        margin-bottom: 10px; /* Отступ снизу */
+    }
+
+    .specific-container p {
+        margin-top: 0;
+        margin-bottom: 10px; /* Отступ снизу */
+    }
+
+    .item-image {
+        width: 400px; /* Задайте нужную ширину */
+        height: 500px;
+        object-fit: cover; /* Обеспечивает, что изображение будет хорошо выглядеть в отведенном пространстве */
+        border-radius: 15px; /* Радиус скругления углов */
+    }
+
+
+
+
+
+    .table-container {
+        display: flex; /* Включаем Flexbox */
+        flex-direction: row; /* Располагаем таблицы в строку */
+        gap: 20px; /* Расстояние между таблицами, при необходимости измените значение */
+        margin-top: 20px; /* Отступ сверху, если нужен, измените значение */
+    }
+    
+    .custom-table {
+        flex: 1; /* Устанавливаем таблицам одинаковую ширину и возможность растягиваться */
+        border-collapse: collapse; /* Убираем двойные линии между ячейками */
+    }
+    
+
    /* ===================================== /administrator ========================================== */
    
     .admin-container {
@@ -394,7 +495,7 @@
 
     #address {
         background-color: #3a3a3a; /* Цвет фона */
-        color: #000000; /* Цвет текста */
+        color: #d86100; /* Цвет текста */
         border: 1px solid #d86100; /* Цвет рамки */
         border-radius: 4px; /* Скругленные углы */
         padding: 10px; /* Внутренний отступ */

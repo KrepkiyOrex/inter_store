@@ -41,6 +41,9 @@ func SetupRoutes() *mux.Router {
 	router := mux.NewRouter()
 
 	database.InitRedis() // initialization redis
+	database.InitMongo() // initialization mongo
+
+	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.MongoHandler)  // используем маршрут с параметром id
 
 	router.HandleFunc("/", models.ProductsHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
@@ -48,7 +51,7 @@ func SetupRoutes() *mux.Router {
 
 	// Обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
-	router.HandleFunc("/register", auth.RegisterHandler) // Обработчик для страницы регистрации
+	router.HandleFunc("/register", auth.RegisterHandler) // обработчик для страницы регистрации
 	// Страница входа и её обработчики
 	router.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")

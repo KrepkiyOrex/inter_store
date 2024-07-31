@@ -159,74 +159,65 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 
 // обновление счетчика в корзине во время оформления
 func UpdateCartHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
 
-    // Парсим форму
-    if err := r.ParseForm(); err != nil {
-        http.Error(w, "Failed to parse form: " + err.Error(), http.StatusBadRequest)
-        return
-    }
+	// Парсим форму
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
-    // Получаем userID из куки
-    userID, err := getUserIDFromCookie(r)
-    if err != nil {
-        http.Error(w, "User ID not found: " + err.Error(), http.StatusUnauthorized)
-        return
-    }
+	// Получаем userID из куки
+	userID, err := utils.GetUserIDFromCookie(r)
+	if err != nil {
+		http.Error(w, "User ID not found: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
 
-    // Получаем productID и quantity из формы
-    productIDStr := r.FormValue("product_id")
-    quantityStr := r.FormValue("quantity")
-    if productIDStr == "" || quantityStr == "" {
-        http.Error(w, "Product ID or quantity missing", http.StatusBadRequest)
-        return
-    }
+	// Получаем productID и quantity из формы
+	productIDStr := r.FormValue("product_id")
+	quantityStr := r.FormValue("quantity")
+	if productIDStr == "" || quantityStr == "" {
+		http.Error(w, "Product ID or quantity missing", http.StatusBadRequest)
+		return
+	}
 
-    productID, err := strconv.Atoi(productIDStr)
-    if err != nil {
-        http.Error(w, "Invalid product ID: " + err.Error(), http.StatusBadRequest)
-        return
-    }
+	productID, err := strconv.Atoi(productIDStr)
+	if err != nil {
+		http.Error(w, "Invalid product ID: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
-    quantity, err := strconv.Atoi(quantityStr)
-    if err != nil {
-        http.Error(w, "Invalid quantity: " + err.Error(), http.StatusBadRequest)
-        return
-    }
+	quantity, err := strconv.Atoi(quantityStr)
+	if err != nil {
+		http.Error(w, "Invalid quantity: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
-    // Обновляем количество товара в базе данных
-    db, err := database.Connect()
-    if err != nil {
-        http.Error(w, "Error connecting to the database: " + err.Error(), http.StatusInternalServerError)
-        return
-    }
-    defer db.Close()
+	// Обновляем количество товара в базе данных
+	db, err := database.Connect()
+	if err != nil {
+		http.Error(w, "Error connecting to the database: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
 
-    _, err = db.Exec(`
+	_, err = db.Exec(`
         INSERT INTO carts (user_id, product_id, quantity)
         VALUES ($1, $2, $3)
         ON CONFLICT (user_id, product_id)
         DO UPDATE SET quantity = EXCLUDED.quantity
     `, userID, productID, quantity)
-    
-    if err != nil {
-        http.Error(w, "Database update failed: " + err.Error(), http.StatusInternalServerError)
-        return
-    }
 
-    w.WriteHeader(http.StatusOK)
-}
+	if err != nil {
+		http.Error(w, "Database update failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// Утильная функция для получения userID из куки
-func getUserIDFromCookie(r *http.Request) (int, error) {
-    cookie, err := r.Cookie("userID")
-    if err != nil || cookie.Value == "" {
-        return 0, err
-    }
-    return strconv.Atoi(cookie.Value)
+	w.WriteHeader(http.StatusOK)
 }
 
 // depr

@@ -102,7 +102,7 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 			"web/html/navigation.html",
 		)
 
-		log.Println("Данных нету в Redis. Загружаем с БД portgres.")
+		log.Println("[Redis] The data is not in Redis. Load from portgres database.")
 
 	} else if err != nil {
 		http.Error(w, "Error fetching data from Redis: %v", http.StatusInternalServerError)
@@ -125,7 +125,7 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 			"web/html/navigation.html",
 		)
 
-		log.Println("Данные с Redis!")
+		log.Println("[Redis] The data from Redis has been uploaded!")
 	}
 }
 
