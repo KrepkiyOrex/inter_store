@@ -9,7 +9,7 @@
 <body>
     <div class="header">
         <header>
-            <h1>Order registration</h1>
+            <h1>Create item</h1>
         </header>
         <div class="condition-auth">
             {{if .UserName}}
@@ -37,8 +37,8 @@
  
 
                         <div class="Name-item">
-                            <h2>Новый компот</h2>
-                            <h4>⭐️4,5 - 924 отзыва 🛣 18 вопросов</h4>
+                            <h2>{{.Item.Name}}</h2>
+                            <h4>⭐️4,7 - 924 отзыва 🛣 18 вопросов</h4>
                         </div>
                         <table class="custom-table">
                             <tr class="custom-row">
@@ -70,12 +70,14 @@
                             </tr>
                         </table>
                     </div>
+
                     <div class="pay-box">
-                        <h3>4560$</h3>
+                        <h3>{{.Item.Price}} $</h3>
                         <button class="buy-button">Добавить в корзину</button>
                         <h3></h3>
                         <button class="buy-button">Купить в один клик</button>
                     </div>
+
                     <div class="description">
                         <div class="specific-container">
                             <h3>Описание</h3>

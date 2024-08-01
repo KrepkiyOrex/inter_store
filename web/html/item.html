@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оформление заказа</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+
+</head>
+<body>
+    <div class="header">
+        <header>
+            <h1>Create item</h1>
+        </header>
+        <div class="condition-auth">
+            {{if .UserName}}
+            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{else}}
+            <p> Пожалуйста, <a href="/login">войдите</a></p>
+            {{end}}
+        </div>
+    </div>
+
+    {{ template "navigation" . }}
+
+    <div class="page-wrapper">
+        <div class="list-container">
+            <h2>Создание товара:</h2>
+
+            <div class="profile-list">
+                <div class="img-item">
+                    <img src="/static/img/plac1.webp" alt="plac1" class="item-image">
+                </div>
+                <div class="product-description">
+                    <div class="Name-item">
+                        <h2>{{.Item.Name}}</h2>
+                        <h4>⭐️4,7 - 924 отзыва 🛣 18 вопросов</h4>
+                    </div>
+
+                    <table id="product-table" class="custom-table">
+                        <tr class="custom-row">
+                            <td class="custom-cell">О товаре</td>
+                            <td class="custom-cell">Перейти к описанию > </td>
+                        </tr>
+                        <tr class="custom-row">
+                            <td class="custom-cell">Позиция 1</td>
+                            <td class="custom-cell">{{.Item.AboutTheProducts.Position1}}</td>
+                        </tr>
+                        <tr class="custom-row">
+                            <td class="custom-cell">Позиция 2</td>
+                            <td class="custom-cell">{{.Item.AboutTheProducts.Position2}}</td>
+                        </tr>
+                        <tr class="custom-row">
+                            <td class="custom-cell">Позиция 3</td>
+                            <td class="custom-cell">{{.Item.AboutTheProducts.Position3}}</td>
+                        </tr>
+                        <tr class="custom-row">
+                            <td class="custom-cell">Позиция 4</td>
+                            <td class="custom-cell">{{.Item.AboutTheProducts.Position4}}</td>
+                        </tr>
+                        <tr class="custom-row">
+                            <td class="custom-cell">Позиция 5</td>
+                            <td class="custom-cell">{{.Item.AboutTheProducts.Position5}}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="pay-box">
+
+
+                    <h3>$ {{.Item.Price}}</h3>
+                    <button class="buy-button">Добавить в корзину</button>
+                    <h3></h3>
+                    <button class="buy-button">Купить в один клик</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
+    </footer>
+
+</body>
+</html>

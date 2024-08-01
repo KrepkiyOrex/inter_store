@@ -4,6 +4,7 @@ import (
 	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
 	"First_internet_store/internal/utils"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -158,26 +159,25 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // обновление счетчика в корзине во время оформления
+
+// обновление счетчика в корзине во время оформления
 func UpdateCartHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Парсим форму
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Получаем userID из куки
 	userID, err := utils.GetUserIDFromCookie(r)
 	if err != nil {
 		http.Error(w, "User ID not found: "+err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	// Получаем productID и quantity из формы
 	productIDStr := r.FormValue("product_id")
 	quantityStr := r.FormValue("quantity")
 	if productIDStr == "" || quantityStr == "" {
@@ -197,7 +197,6 @@ func UpdateCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Обновляем количество товара в базе данных
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database: "+err.Error(), http.StatusInternalServerError)
@@ -217,7 +216,9 @@ func UpdateCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
 // depr

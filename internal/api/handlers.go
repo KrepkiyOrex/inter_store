@@ -6,22 +6,12 @@ import (
 
 	"First_internet_store/internal/admin"
 	"First_internet_store/internal/auth"
+	"First_internet_store/internal/database"
 	"First_internet_store/internal/models"
 	"First_internet_store/internal/others"
-	"First_internet_store/internal/database"
 
 	"github.com/gorilla/mux"
 )
-
-// fs := http.FileServer(http.Dir("./css/")) // "static" - без этого НЕ пашет CSS! F***!
-// http.Handle("/css/", http.StripPrefix("/css/", fs))
-
-// http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css/"))))
-
-// fileServer := http.FileServer(http.Dir("./web/static/"))
-// router.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 // AuthMiddleware проверяет, авторизован ли пользователь
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -43,7 +33,11 @@ func SetupRoutes() *mux.Router {
 	database.InitRedis() // initialization redis
 	database.InitMongo() // initialization mongo
 
-	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.MongoHandler)  // используем маршрут с параметром id
+	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.HandlerItemRequest) // используем маршрут с параметром id
+
+	router.HandleFunc("/create-new-item", models.CreateNewItemHandler).Methods("POST")
+	router.HandleFunc("/edit-item/{id:[0-9a-fA-F]{24}}", models.EditItemHandler).Methods("GET")
+	router.HandleFunc("/update-item/{id:[0-9a-fA-F]{24}}", models.UpdateItemHandler).Methods("POST")
 
 	router.HandleFunc("/", models.ProductsHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
