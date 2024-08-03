@@ -71,7 +71,7 @@ type Order struct {
 	UserID             int
 	TotalAmount        float32
 	OrderDate          time.Time
-	FormattedOrderDate string // Добавьте это поле для форматированной даты
+	FormattedOrderDate string // поле для форматированной даты
 	PaymentStatus      string
 	ShippingAddress    string
 }

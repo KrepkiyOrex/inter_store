@@ -6,8 +6,8 @@ import (
 	"First_internet_store/internal/utils"
 	"context"
 	"fmt"
+	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,9 +34,10 @@ type Review struct {
 // Item представляет структуру товара
 type Item struct {
 	ID               primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	User_ID          int                `json:"user_id"`
 	Name             string             `json:"name"`
-	Category         string             `json:"category"`
 	Price            float64            `json:"price"`
+	// Category         string             `json:"category"`
 	Specifications   Specification      `json:"specifications"`
 	Reviews          []Review           `json:"reviews"`
 	AboutTheProducts AboutTheProduct    `json:"aboutTheProducts"`
@@ -98,24 +99,32 @@ func HandlerItemRequest(w http.ResponseWriter, r *http.Request) {
 
 // create new item
 func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := utils.GetUserIDFromCookie(r)
+	if err != nil {
+		http.Error(w, "User ID not found: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	// Создание нового пустого товара
 	newItem := Item{
-		ID: primitive.NewObjectID(),
-		// Начальные значения можно задать пустыми строками или дефолтными значениями
-		Name:     "",
-		Category: "",
+		ID:       primitive.NewObjectID(),
+		User_ID:  userID,
+		Name:     "Edit item",
 		Price:    0.0,
+		// Category: "",
 	}
+
+	log.Printf("Item: %v", newItem)
 
 	// Сохранение товара в MongoDB
 	collection := database.Client.Database("myDatabase").Collection("products")
-	_, err := collection.InsertOne(context.Background(), newItem)
+	_, err = collection.InsertOne(context.Background(), newItem)
 	if err != nil {
 		http.Error(w, "Error saving to database", http.StatusInternalServerError)
 		return
 	}
 
-	// Перенаправление на страницу редактирования нового товара
+	// перенаправление на страницу редактирования нового товара
 	http.Redirect(w, r, fmt.Sprintf("/edit-item/%s", newItem.ID.Hex()), http.StatusSeeOther)
 }
 
@@ -131,24 +140,34 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// data := Template{
+    //     Item: item,
+    // }
+
 	// Отправляем данные на страницу редактирования
 	utils.RenderTemplate(w, item,
 		"web/html/edit_item.html",
 		"web/html/navigation.html")
+}
+type Template struct {
+    Item Item
 }
 
 func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// Парсинг данных из формы
-	name := r.FormValue("name")
-	category := r.FormValue("category")
-	priceStr := r.FormValue("price")
-	price, err := strconv.ParseFloat(priceStr, 64)
-	if err != nil {
-		http.Error(w, "Invalid price format", http.StatusBadRequest)
-		return
+	// Получаем все данные формы
+	r.ParseForm()
+	fieldNames := r.Form["field-name"]
+	fieldValues := r.Form["field-value"]
+
+	// Преобразуем данные формы в динамическую карту
+	updateFields := make(map[string]interface{})
+	for i, name := range fieldNames {
+		if i < len(fieldValues) {
+			updateFields[name] = fieldValues[i]
+		}
 	}
 
 	// Обновление товара в базе данных
@@ -160,11 +179,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	update := bson.M{
-		"$set": bson.M{
-			"name":     name,
-			"Category": category,
-			"price":    price,
-		},
+		"$set": updateFields,
 	}
 	_, err = collection.UpdateOne(context.Background(), bson.M{"_id": oid}, update)
 	if err != nil {

@@ -237,7 +237,7 @@
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
     }
 
-    .cart, .history, .favorites {
+    .cart, .history, .favorites, .my-items, .place {
         width: 300px; /* одинаковая ширина для всех элементов */
         height: 220px;
         padding: 15px;
@@ -247,7 +247,7 @@
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
     }
 
-    /* ===================================== Редактор товаров ========================================== */
+    /* ===================================== /edit-item ========================================== */
 
     .img-item {
         width: 400px; /* одинаковая ширина для всех элементов */
@@ -348,6 +348,17 @@
     }
     
 
+
+
+    input[type="about"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d86100;
+        border-radius: 4px;
+        background-color: #292929;
+        color: #e75500;
+    }
+
    /* ===================================== /administrator ========================================== */
    
     .admin-container {
@@ -421,7 +432,7 @@
 
     input[type="submit"] {
         padding: 10px;
-        margin: 20px 0;
+        margin: 10px 0;
         border: 1px solid #d86100;
         background-color: #e75500;
         color: #fff;
