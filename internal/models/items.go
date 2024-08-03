@@ -34,28 +34,16 @@ type Review struct {
 
 // Item представляет структуру товара
 type Item struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	User_ID int                `json:"user_id"`
-	Name    string             `json:"name"`
-	Price   float64            `json:"price"`
-	// Category         string             `json:"category"`
-	// Specifications   Specification      `json:"specifications"`
-	// Reviews          []Review        `json:"reviews"`
-	// AboutTheProducts AboutTheProduct `json:"aboutTheProducts"`
-	Fields map[string]string `json:"fields"` // предполагаемое поле для динамических данных
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	User_ID       int                `json:"user_id"`
+	Name          string             `json:"name"`
+	Price         float64            `json:"price"`
+	DynamicFields []DynamicField     `json:"dynamic_fields"`
 }
 
-type AboutTheProduct struct {
-	Position1 string `json:"position1"`
-	Position2 string `json:"position2"`
-	Position3 string `json:"position3"`
-	Position4 string `json:"position4"`
-	Position5 string `json:"position5"`
-}
-
-type Field struct {
-	Name  string `json:"field_name"`
-	Value string `json:"field_value"`
+type DynamicField struct {
+	FieldName  string `json:"field_name"`
+	FieldValue string `json:"field_value"`
 }
 
 // getItemByID получает документ товара из MongoDB по ObjectID
@@ -75,21 +63,14 @@ func getItemByID(id string) (Item, error) {
 	return item, nil
 }
 
-func getItemFields(itemID string) ([]Field, error) {
+// getItemFields получает все динамические поля товара по его ID
+func getItemFields(itemID string) ([]DynamicField, error) {
 	item, err := getItemByID(itemID)
 	if err != nil {
 		return nil, err
 	}
 
-	fields := []Field{}
-	for key, value := range item.Fields {
-		fields = append(fields, Field{
-			Name:  key,
-			Value: value,
-		})
-	}
-
-	return fields, nil
+	return item.DynamicFields, nil
 }
 
 // обрабатывает запросы к MongoDB
@@ -114,7 +95,7 @@ func HandlerItemRequest(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		UserName string
 		Item     Item
-		Fields   []Field
+        Fields   []DynamicField
 	}{
 		UserName: userName,
 		Item:     item,
@@ -185,50 +166,35 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 
 // update data item
 func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	err := r.ParseForm()
+	id := mux.Vars(r)["id"]
+	item, err := getItemByID(id)
 	if err != nil {
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		http.Error(w, "Item not found", http.StatusNotFound)
 		return
 	}
 
-	updateFields := make(map[string]interface{})
-	for key, values := range r.Form {
-		if len(values) > 0 {
-			value := values[0]
-			log.Printf("Field name: %s, Field value: %s", key, value)
-			if key == "price" {
-				price, err := strconv.ParseFloat(value, 64)
-				if err != nil {
-					http.Error(w, "Invalid price value", http.StatusBadRequest)
-					return
-				}
-				updateFields["price"] = price
-			} else {
-				updateFields[key] = value
-			}
-		}
-	}
+	// Обновление данных
+	item.Name = r.FormValue("name")
+	item.Price, _ = strconv.ParseFloat(r.FormValue("price"), 64)
 
-	log.Printf("Update fields: %v", updateFields)
+	// Обработка динамических полей
+	dynamicFields := []DynamicField{}
+	fieldNames := r.Form["field-name"]
+	fieldValues := r.Form["field-value"]
+	for i := 0; i < len(fieldNames); i++ {
+		dynamicFields = append(dynamicFields, DynamicField{
+			FieldName:  fieldNames[i],
+			FieldValue: fieldValues[i],
+		})
+	}
+	item.DynamicFields = dynamicFields
 
 	collection := database.Client.Database("myDatabase").Collection("products")
-	oid, err := primitive.ObjectIDFromHex(id)
+	_, err = collection.UpdateByID(context.Background(), item.ID, bson.M{"$set": item})
 	if err != nil {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		http.Error(w, "Error updating database", http.StatusInternalServerError)
 		return
 	}
 
-	update := bson.M{
-		"$set": updateFields,
-	}
-	_, err = collection.UpdateOne(context.Background(), bson.M{"_id": oid}, update)
-	if err != nil {
-		http.Error(w, "Error updating the item", http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("/item/%s", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/item/%s", item.ID.Hex()), http.StatusSeeOther)
 }
