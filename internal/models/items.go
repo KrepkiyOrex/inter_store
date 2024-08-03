@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,14 +16,14 @@ import (
 )
 
 // Specification представляет спецификации продукта
-type Specification struct {
-	Brand       string `json:"brand"`
-	Model       string `json:"model"`
-	ScreenSize  string `json:"screenSize"`
-	Resolution  string `json:"resolution"`
-	RefreshRate string `json:"refreshRate"`
-	SmartTV     bool   `json:"smartTV"`
-}
+// type Specification struct {
+// 	Brand       string `json:"brand"`
+// 	Model       string `json:"model"`
+// 	ScreenSize  string `json:"screenSize"`
+// 	Resolution  string `json:"resolution"`
+// 	RefreshRate string `json:"refreshRate"`
+// 	SmartTV     bool   `json:"smartTV"`
+// }
 
 // Review представляет отзыв на продукт
 type Review struct {
@@ -33,14 +34,15 @@ type Review struct {
 
 // Item представляет структуру товара
 type Item struct {
-	ID               primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	User_ID          int                `json:"user_id"`
-	Name             string             `json:"name"`
-	Price            float64            `json:"price"`
+	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	User_ID int                `json:"user_id"`
+	Name    string             `json:"name"`
+	Price   float64            `json:"price"`
 	// Category         string             `json:"category"`
-	Specifications   Specification      `json:"specifications"`
-	Reviews          []Review           `json:"reviews"`
-	AboutTheProducts AboutTheProduct    `json:"aboutTheProducts"`
+	// Specifications   Specification      `json:"specifications"`
+	// Reviews          []Review        `json:"reviews"`
+	// AboutTheProducts AboutTheProduct `json:"aboutTheProducts"`
+	Fields map[string]string `json:"fields"` // предполагаемое поле для динамических данных
 }
 
 type AboutTheProduct struct {
@@ -51,8 +53,14 @@ type AboutTheProduct struct {
 	Position5 string `json:"position5"`
 }
 
+type Field struct {
+	Name  string `json:"field_name"`
+	Value string `json:"field_value"`
+}
+
 // getItemByID получает документ товара из MongoDB по ObjectID
 func getItemByID(id string) (Item, error) {
+	// Получаем базу данных и коллекцию
 	collection := database.Client.Database("myDatabase").Collection("products")
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -65,6 +73,23 @@ func getItemByID(id string) (Item, error) {
 		return Item{}, err
 	}
 	return item, nil
+}
+
+func getItemFields(itemID string) ([]Field, error) {
+	item, err := getItemByID(itemID)
+	if err != nil {
+		return nil, err
+	}
+
+	fields := []Field{}
+	for key, value := range item.Fields {
+		fields = append(fields, Field{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	return fields, nil
 }
 
 // обрабатывает запросы к MongoDB
@@ -80,20 +105,24 @@ func HandlerItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fields, err := getItemFields(id)
+	if err != nil {
+		http.Error(w, "Unable to fetch fields", http.StatusInternalServerError)
+		return
+	}
+
 	data := struct {
 		UserName string
 		Item     Item
+		Fields   []Field
 	}{
 		UserName: userName,
 		Item:     item,
+		Fields:   fields,
 	}
 
-	utils.RenderTemplate(w, data,
-		"web/html/item.html",
-		"web/html/navigation.html")
+	utils.RenderTemplate(w, data, "web/html/item.html", "web/html/navigation.html")
 }
-
-// =========================================================================
 
 // =========================================================================
 
@@ -107,10 +136,10 @@ func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Создание нового пустого товара
 	newItem := Item{
-		ID:       primitive.NewObjectID(),
-		User_ID:  userID,
-		Name:     "Edit item",
-		Price:    0.0,
+		ID:      primitive.NewObjectID(),
+		User_ID: userID,
+		Name:    "Edit name",
+		Price:   0.0,
 		// Category: "",
 	}
 
@@ -140,37 +169,51 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// data := Template{
-    //     Item: item,
-    // }
+	log.Printf("Item data: %+v", item)
+
+	data := struct {
+		Item Item
+	}{
+		Item: item,
+	}
 
 	// Отправляем данные на страницу редактирования
-	utils.RenderTemplate(w, item,
+	utils.RenderTemplate(w, data,
 		"web/html/edit_item.html",
 		"web/html/navigation.html")
 }
-type Template struct {
-    Item Item
-}
 
+// update data item
 func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// Получаем все данные формы
-	r.ParseForm()
-	fieldNames := r.Form["field-name"]
-	fieldValues := r.Form["field-value"]
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
 
-	// Преобразуем данные формы в динамическую карту
 	updateFields := make(map[string]interface{})
-	for i, name := range fieldNames {
-		if i < len(fieldValues) {
-			updateFields[name] = fieldValues[i]
+	for key, values := range r.Form {
+		if len(values) > 0 {
+			value := values[0]
+			log.Printf("Field name: %s, Field value: %s", key, value)
+			if key == "price" {
+				price, err := strconv.ParseFloat(value, 64)
+				if err != nil {
+					http.Error(w, "Invalid price value", http.StatusBadRequest)
+					return
+				}
+				updateFields["price"] = price
+			} else {
+				updateFields[key] = value
+			}
 		}
 	}
 
-	// Обновление товара в базе данных
+	log.Printf("Update fields: %v", updateFields)
+
 	collection := database.Client.Database("myDatabase").Collection("products")
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -187,6 +230,5 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Перенаправление на страницу просмотра товара после обновления
 	http.Redirect(w, r, fmt.Sprintf("/item/%s", id), http.StatusSeeOther)
 }

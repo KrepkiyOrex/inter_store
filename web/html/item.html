@@ -42,26 +42,12 @@
                             <td class="custom-cell">О товаре</td>
                             <td class="custom-cell">Перейти к описанию > </td>
                         </tr>
+                        {{range .Fields}}
                         <tr class="custom-row">
-                            <td class="custom-cell">Позиция 1</td>
-                            <td class="custom-cell">{{.Item.AboutTheProducts.Position1}}</td>
+                            <td class="custom-cell">{{.Name}}</td>
+                            <td class="custom-cell">{{.Value}}</td>
                         </tr>
-                        <tr class="custom-row">
-                            <td class="custom-cell">Позиция 2</td>
-                            <td class="custom-cell">{{.Item.AboutTheProducts.Position2}}</td>
-                        </tr>
-                        <tr class="custom-row">
-                            <td class="custom-cell">Позиция 3</td>
-                            <td class="custom-cell">{{.Item.AboutTheProducts.Position3}}</td>
-                        </tr>
-                        <tr class="custom-row">
-                            <td class="custom-cell">Позиция 4</td>
-                            <td class="custom-cell">{{.Item.AboutTheProducts.Position4}}</td>
-                        </tr>
-                        <tr class="custom-row">
-                            <td class="custom-cell">Позиция 5</td>
-                            <td class="custom-cell">{{.Item.AboutTheProducts.Position5}}</td>
-                        </tr>
+                        {{end}}
                     </table>
                 </div>
 
