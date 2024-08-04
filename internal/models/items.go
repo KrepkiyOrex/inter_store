@@ -269,3 +269,30 @@ func ListUserSaleItems(w http.ResponseWriter, r *http.Request) {
 		"web/html/my_items.html",
 		"web/html/navigation.html")
 }
+
+// deleting item from DB list
+func DeleteItem(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	itemID := params["id"]
+	if itemID == "" {
+		http.Error(w, "Item ID is required", http.StatusBadRequest)
+		return
+	}
+
+	objID, err := primitive.ObjectIDFromHex(itemID)
+	if err != nil {
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	collection := database.Client.Database("myDatabase").Collection("products")
+	filter := bson.M{"_id": objID}
+	_, err = collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		http.Error(w, "Failed to delete item", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Item deleted successfully")
+}

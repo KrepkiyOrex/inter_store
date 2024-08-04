@@ -68,6 +68,7 @@ func SetupRoutes() *mux.Router {
 	authRoutes.HandleFunc("/cart", models.ViewCartHandler).Methods("GET")
 	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
 	authRoutes.HandleFunc("/my-items", models.ListUserSaleItems).Methods("GET")
+	authRoutes.HandleFunc("/delete-item/{id}", models.DeleteItem).Methods("DELETE")
 
 	// Настройка обработчика для статических файлов
 	// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
