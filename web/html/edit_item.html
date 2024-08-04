@@ -19,47 +19,7 @@
             background-color: #b9b9b9;
         }
     </style>
-    <script>
-        function makeEditable(element) {
-            var currentValue = element.innerText;
-            element.innerHTML = `<input type="text" value="${currentValue}" onblur="updateValue(this)" />`;
-            element.querySelector('input').focus();
-        }
 
-        function updateValue(input) {
-            var newValue = input.value;
-            var element = input.parentElement;
-            element.innerText = newValue;
-            updateHiddenFields();
-        }
-
-        function updateHiddenFields() {
-            var cells = document.querySelectorAll('.editable');
-            document.getElementById('name').value = cells[0].innerText; // Name
-            document.getElementById('price').value = cells[1].innerText.replace('$', '').trim(); // Price
-        }
-
-        function saveChanges() {
-            updateHiddenFields();
-            document.getElementById('editForm').submit();
-        }
-
-        function addField() {
-            var table = document.getElementById("dynamic-fields").getElementsByTagName('tbody')[0];
-            var newRow = table.insertRow();
-            var cell1 = newRow.insertCell(0);
-            var cell2 = newRow.insertCell(1);
-            var cell3 = newRow.insertCell(2);
-            cell1.innerHTML = '<input type="text" name="field-name">';
-            cell2.innerHTML = '<input type="text" name="field-value">';
-            cell3.innerHTML = '<button type="button" onclick="removeRow(this)">Remove</button>';
-        }
-
-        function removeRow(button) {
-            var row = button.parentNode.parentNode;
-            row.parentNode.removeChild(row);
-        }
-    </script>
 </head>
 <body>
     <div class="header">
@@ -67,9 +27,7 @@
             <h1>Редактирование товара</h1>
         </header>
     </div>
-
     {{ template "navigation" . }}
-
     <div class="page-wrapper">
         <div class="list-container">
             <h2>Редактирование товара:</h2>
@@ -77,50 +35,43 @@
                 <div class="img-item">
                     <img src="/static/img/plac1.webp" alt="plac1" class="item-image">
                 </div>
+                <form action="/update-item/{{.Item.ID.Hex}}" method="post">
+                    <div class="product-description">
+                            <input type="hidden" id="name" name="name" value="{{.Item.Name}}">
+                            <input type="hidden" id="price" name="price" value="{{.Item.Price}}">
+                            <div class="Name-item">
+                                <h2>{{.Item.Name}}</h2>
+                                <h4>⭐️4,7 - 924 отзыва 🛣 18 вопросов</h4>
+                            </div>
+                            <table id="dynamic-fields">
+                                <thead>
+                                    <tr>
+                                        <th>Field Name</th>
+                                        <th>Field Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .Item.DynamicFields}}
+                                    <tr>
+                                        <td>{{.FieldName}}</td>
+                                        <td>{{.FieldValue}}</td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
 
-                <div class="product-description">
-                    <form id="editForm" action="/update-item/{{.Item.ID.Hex}}" method="post">
+                    </div>
 
-                        <input type="hidden" id="name" name="name" value="{{.Item.Name}}">
-                        <input type="hidden" id="price" name="price" value="{{.Item.Price}}">
-
-                        <div class="Name-item">
-                            <h2><div class="editable" onclick="makeEditable(this)">{{.Item.Name}}</div></h2>
-                            <h4>⭐️4,7 - 924 отзыва 🛣 18 вопросов</h4>
-                        </div>
-
-                        <table id="dynamic-fields">
-                            <thead>
-                                <tr>
-                                    <th>Field Name</th>
-                                    <th>Field Value</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><input type="text" name="field-name"></td>
-                                    <td><input type="text" name="field-value"></td>
-                                    <td><button type="button" onclick="removeRow(this)">Remove</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <button type="button" onclick="addField()">Add Field</button>
-                        <button type="button" onclick="saveChanges()">Submit</button>
-                    </form>
-                </div>
-
-                <div class="pay-box">
-                    <h3><div class="editable" onclick="makeEditable(this)">$ {{.Item.Price}}</div></h3>
-                    <button class="buy-button">Добавить в корзину</button>
-                    <h3></h3>
-                    <button class="buy-button">Купить в один клик</button>
-                </div>
+                    <div class="pay-box">
+                        <h3>$ {{.Item.Price}}</h3>
+                        <button class="buy-button">Добавить в корзину</button>
+                        <button class="buy-button">Купить в один клик</button>
+                    </div>
+                </form>
 
             </div>
         </div>
     </div>
-
     <footer>
         <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
     </footer>

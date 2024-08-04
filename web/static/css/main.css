@@ -359,6 +359,22 @@
         color: #e75500;
     }
 
+    /* ===================================== /my-items ========================================== */
+
+    .listusersaleitems {
+        width: 1100px;
+        min-height: 600px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        margin-top: 20px;
+        gap: 20px; /* расстояние между элементами */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        padding-top: 20px; /* Отступ сверху */
+    }
+
    /* ===================================== /administrator ========================================== */
    
     .admin-container {

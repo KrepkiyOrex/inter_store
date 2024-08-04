@@ -25,13 +25,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Обработчики HTTP
+// обработчики HTTP
 func SetupRoutes() *mux.Router {
-	// Создаем маршрутизатор
+	// создаем маршрутизатор
 	router := mux.NewRouter()
 
 	database.InitRedis() // initialization redis
-	database.InitMongo() // initialization mongo
+	database.InitMongo() // initialization mongoDB
 
 	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.HandlerItemRequest) // используем маршрут с параметром id
 
@@ -43,10 +43,10 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/headers", others.HeadersHandler)
 	router.HandleFunc("/list", models.ListHandler)
 
-	// Обработчик для отображения страницы регистрации (GET)
+	// обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
 	router.HandleFunc("/register", auth.RegisterHandler) // обработчик для страницы регистрации
-	// Страница входа и её обработчики
+	// страница входа и её обработчики
 	router.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")
 	router.HandleFunc("/logout", auth.LogoutHandler)      // Exit
@@ -55,7 +55,7 @@ func SetupRoutes() *mux.Router {
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
-	// ==========================
+	// =======================================================
 	authRoutes := router.PathPrefix("/").Subrouter()
 	authRoutes.Use(AuthMiddleware)
 
@@ -67,6 +67,7 @@ func SetupRoutes() *mux.Router {
 	authRoutes.HandleFunc("/update_cart", models.UpdateCartHandler).Methods("POST")
 	authRoutes.HandleFunc("/cart", models.ViewCartHandler).Methods("GET")
 	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
+	authRoutes.HandleFunc("/my-items", models.ListUserSaleItems).Methods("GET")
 
 	// Настройка обработчика для статических файлов
 	// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

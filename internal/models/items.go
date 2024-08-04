@@ -15,35 +15,31 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Specification представляет спецификации продукта
-// type Specification struct {
-// 	Brand       string `json:"brand"`
-// 	Model       string `json:"model"`
-// 	ScreenSize  string `json:"screenSize"`
-// 	Resolution  string `json:"resolution"`
-// 	RefreshRate string `json:"refreshRate"`
-// 	SmartTV     bool   `json:"smartTV"`
-// }
-
 // Review представляет отзыв на продукт
-type Review struct {
-	User    string  `json:"user"`
-	Rating  float64 `json:"rating"`
-	Comment string  `json:"comment"`
-}
+// type Review struct {
+// 	User    string  `json:"user"`
+// 	Rating  float64 `json:"rating"`
+// 	Comment string  `json:"comment"`
+// }
 
 // Item представляет структуру товара
 type Item struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	User_ID       int                `json:"user_id"`
-	Name          string             `json:"name"`
-	Price         float64            `json:"price"`
-	DynamicFields []DynamicField     `json:"dynamic_fields"`
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	User_ID           int                `bson:"user_id" json:"user_id"`
+	Name              string             `bson:"name" json:"name"`
+	Price             float64            `bson:"price" json:"price"`
+	DynamicFields     []DynamicField     `bson:"dynamic_fields" json:"dynamic_fields"`
+	DescriptionFields []DescriptionField `bson:"description_fields" json:"description_fields"`
 }
 
 type DynamicField struct {
 	FieldName  string `json:"field_name"`
 	FieldValue string `json:"field_value"`
+}
+
+type DescriptionField struct {
+	NameDep  string `json:"field_name"`
+	ValueDep string `json:"field_value"`
 }
 
 // getItemByID получает документ товара из MongoDB по ObjectID
@@ -64,13 +60,13 @@ func getItemByID(id string) (Item, error) {
 }
 
 // getItemFields получает все динамические поля товара по его ID
-func getItemFields(itemID string) ([]DynamicField, error) {
+func getItemFields(itemID string) ([]DynamicField, []DescriptionField, error) {
 	item, err := getItemByID(itemID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return item.DynamicFields, nil
+	return item.DynamicFields, item.DescriptionFields, nil
 }
 
 // обрабатывает запросы к MongoDB
@@ -86,20 +82,22 @@ func HandlerItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fields, err := getItemFields(id)
+	fieldsDin, fieldsDep, err := getItemFields(id)
 	if err != nil {
 		http.Error(w, "Unable to fetch fields", http.StatusInternalServerError)
 		return
 	}
 
 	data := struct {
-		UserName string
-		Item     Item
-        Fields   []DynamicField
+		UserName  string
+		Item      Item
+		FieldsDin []DynamicField
+		FieldsDep []DescriptionField
 	}{
-		UserName: userName,
-		Item:     item,
-		Fields:   fields,
+		UserName:  userName,
+		Item:      item,
+		FieldsDin: fieldsDin,
+		FieldsDep: fieldsDep,
 	}
 
 	utils.RenderTemplate(w, data, "web/html/item.html", "web/html/navigation.html")
@@ -121,7 +119,6 @@ func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
 		User_ID: userID,
 		Name:    "Edit name",
 		Price:   0.0,
-		// Category: "",
 	}
 
 	log.Printf("Item: %v", newItem)
@@ -189,6 +186,23 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	item.DynamicFields = dynamicFields
 
+	// Обработка динамических полей описания
+	descriptionFields := []DescriptionField{}
+	nameDeps := r.Form["field-name-dep"]
+	valueDeps := r.Form["field-value-dep"]
+	log.Printf("NameDep: %v", nameDeps)   // Лог для отладки
+	log.Printf("ValueDep: %v", valueDeps) // Лог для отладки
+	for i := 0; i < len(nameDeps); i++ {
+		descriptionFields = append(descriptionFields, DescriptionField{
+			NameDep:  nameDeps[i],
+			ValueDep: valueDeps[i],
+		})
+	}
+	item.DescriptionFields = descriptionFields
+
+	log.Printf("Dinamic: %v", item.DynamicFields)
+	log.Printf("Descrip: %v", item.DescriptionFields)
+
 	collection := database.Client.Database("myDatabase").Collection("products")
 	_, err = collection.UpdateByID(context.Background(), item.ID, bson.M{"$set": item})
 	if err != nil {
@@ -197,4 +211,61 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/item/%s", item.ID.Hex()), http.StatusSeeOther)
+}
+
+func ListUserSaleItems(w http.ResponseWriter, r *http.Request) {
+	userName, err := auth.GetUserName(r)
+	if err != nil {
+		// Куки не найдено, показываем форму входа
+		utils.RenderTemplate(w, UserCookie{},
+			"web/html/login.html",
+			"web/html/navigation.html")
+		return
+	}
+
+	// Получение идентификатора пользователя из куки
+	cookieID, err := r.Cookie("userID")
+	if err != nil || cookieID.Value == "" {
+		http.Error(w, "User ID not found", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(cookieID.Value)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("Parsed User ID:", userID) // Отладочное сообщение
+
+	collection := database.Client.Database("myDatabase").Collection("products")
+
+	// Создаем фильтр для поиска документов по user_id
+	filter := bson.M{"user_id": userID}
+
+	// Выполняем запрос к коллекции
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		http.Error(w, "Failed to find items", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	// Читаем документы из курсора
+	var items []Item
+	if err := cursor.All(context.Background(), &items); err != nil {
+		http.Error(w, "Failed to read items", http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		UserName string
+		Items    []Item
+	}{
+		UserName: userName,
+		Items:    items,
+	}
+
+	utils.RenderTemplate(w, data,
+		"web/html/my_items.html",
+		"web/html/navigation.html")
 }
