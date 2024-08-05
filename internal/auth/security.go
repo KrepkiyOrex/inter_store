@@ -5,10 +5,28 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
+
+func GetCookieUserID(w http.ResponseWriter, r *http.Request) (int, error) {
+	cookie, err := r.Cookie("userID")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return 0, fmt.Errorf("user ID cookie not found")
+		}
+		return 0, err
+	}
+
+	userID, err := strconv.Atoi(cookie.Value)
+	if err != nil {
+		return 0, fmt.Errorf("invalid user ID")
+	}
+
+	return userID, nil
+}
 
 // Set userName and userID in cookie
 func SetCookie(w http.ResponseWriter, name, value string, expires time.Time) {
@@ -22,7 +40,6 @@ func SetCookie(w http.ResponseWriter, name, value string, expires time.Time) {
 		Expires:  expires,
 	})
 }
-
 
 // Функция для создания JWT
 func createJWT(user User, secretKey []byte) (string, error) {

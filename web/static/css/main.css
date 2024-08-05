@@ -280,7 +280,7 @@
 
     .description {
         width: 1100px; /* одинаковая ширина для всех элементов */
-        height: 800px;
+        height: 400px;
         padding: 15px;
         border: 1px solid #ccc;
         text-align: left;

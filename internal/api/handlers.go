@@ -30,8 +30,8 @@ func SetupRoutes() *mux.Router {
 	// создаем маршрутизатор
 	router := mux.NewRouter()
 
-	database.InitRedis() // initialization redis
-	database.InitMongo() // initialization mongoDB
+	database.InitRedis()      // initialization redis
+	database.InitMongoClint() // initialization mongoDB
 
 	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.HandlerItemRequest) // используем маршрут с параметром id
 
@@ -69,6 +69,7 @@ func SetupRoutes() *mux.Router {
 	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
 	authRoutes.HandleFunc("/my-items", models.ListUserSaleItems).Methods("GET")
 	authRoutes.HandleFunc("/delete-item/{id}", models.DeleteItem).Methods("DELETE")
+	authRoutes.HandleFunc("/upload", models.UploadImageHandler).Methods("POST")
 
 	// Настройка обработчика для статических файлов
 	// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

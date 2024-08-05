@@ -6,6 +6,7 @@ import (
 	"First_internet_store/internal/utils"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -28,6 +29,7 @@ type Item struct {
 	User_ID           int                `bson:"user_id" json:"user_id"`
 	Name              string             `bson:"name" json:"name"`
 	Price             float64            `bson:"price" json:"price"`
+	Image             string             `bson:"image,omitempty"`
 	DynamicFields     []DynamicField     `bson:"dynamic_fields" json:"dynamic_fields"`
 	DescriptionFields []DescriptionField `bson:"description_fields" json:"description_fields"`
 }
@@ -38,14 +40,14 @@ type DynamicField struct {
 }
 
 type DescriptionField struct {
-	NameDep  string `json:"field_name"`
-	ValueDep string `json:"field_value"`
+	NameDep  string `bson:"field_name"`
+	ValueDep string `bson:"field_value"`
 }
 
 // getItemByID получает документ товара из MongoDB по ObjectID
 func getItemByID(id string) (Item, error) {
 	// Получаем базу данных и коллекцию
-	collection := database.Client.Database("myDatabase").Collection("products")
+	collection := database.GetCollection()
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return Item{}, err
@@ -69,7 +71,7 @@ func getItemFields(itemID string) ([]DynamicField, []DescriptionField, error) {
 	return item.DynamicFields, item.DescriptionFields, nil
 }
 
-// обрабатывает запросы к MongoDB
+// shows the card of a specific product
 func HandlerItemRequest(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -100,7 +102,9 @@ func HandlerItemRequest(w http.ResponseWriter, r *http.Request) {
 		FieldsDep: fieldsDep,
 	}
 
-	utils.RenderTemplate(w, data, "web/html/item.html", "web/html/navigation.html")
+	utils.RenderTemplate(w, data,
+		"web/html/item.html",
+		"web/html/navigation.html")
 }
 
 // =========================================================================
@@ -124,7 +128,7 @@ func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Item: %v", newItem)
 
 	// Сохранение товара в MongoDB
-	collection := database.Client.Database("myDatabase").Collection("products")
+	collection := database.GetCollection()
 	_, err = collection.InsertOne(context.Background(), newItem)
 	if err != nil {
 		http.Error(w, "Error saving to database", http.StatusInternalServerError)
@@ -178,6 +182,8 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	dynamicFields := []DynamicField{}
 	fieldNames := r.Form["field-name"]
 	fieldValues := r.Form["field-value"]
+	log.Printf("fieldNames: %v", fieldNames)   // Лог для отладки
+	log.Printf("fieldValues: %v", fieldValues) // Лог для отладки
 	for i := 0; i < len(fieldNames); i++ {
 		dynamicFields = append(dynamicFields, DynamicField{
 			FieldName:  fieldNames[i],
@@ -203,7 +209,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Dinamic: %v", item.DynamicFields)
 	log.Printf("Descrip: %v", item.DescriptionFields)
 
-	collection := database.Client.Database("myDatabase").Collection("products")
+	collection := database.GetCollection()
 	_, err = collection.UpdateByID(context.Background(), item.ID, bson.M{"$set": item})
 	if err != nil {
 		http.Error(w, "Error updating database", http.StatusInternalServerError)
@@ -213,50 +219,145 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/item/%s", item.ID.Hex()), http.StatusSeeOther)
 }
 
+// shows the sale items created by the specified user
 func ListUserSaleItems(w http.ResponseWriter, r *http.Request) {
 	userName, err := auth.GetUserName(r)
 	if err != nil {
-		// Куки не найдено, показываем форму входа
-		utils.RenderTemplate(w, UserCookie{},
-			"web/html/login.html",
-			"web/html/navigation.html")
+		renderLoginPage(w)
 		return
 	}
 
-	// Получение идентификатора пользователя из куки
-	cookieID, err := r.Cookie("userID")
-	if err != nil || cookieID.Value == "" {
-		http.Error(w, "User ID not found", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := strconv.Atoi(cookieID.Value)
+	userID, err := auth.GetCookieUserID(w, r)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Parsed User ID:", userID) // Отладочное сообщение
+	fmt.Println("Parsed User ID:", userID)
 
-	collection := database.Client.Database("myDatabase").Collection("products")
+	items, err := getUserSaleItems(userID)
+	if err != nil {
+		http.Error(w, "Failed to find items", http.StatusInternalServerError)
+		return
+	}
 
-	// Создаем фильтр для поиска документов по user_id
+	renderUserSaleItemsPage(w, userName, items)
+}
+
+// deleting item from DB list
+func DeleteItem(w http.ResponseWriter, r *http.Request) {
+	itemID, err := getItemIDFromRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	objID, err := convertToObjectID(itemID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = deleteItemFromDatabase(objID)
+	if err != nil {
+		http.Error(w, "Failed to delete item", http.StatusInternalServerError)
+		return
+	}
+
+	sendSuccessResponse(w)
+}
+
+// ========================================================
+
+func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
+	// Парсинг данных формы
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Чтение данных файла
+	tempFile, err := ioutil.TempFile("uploads", "upload-*.png")
+	if err != nil {
+		http.Error(w, "Error creating temp file", http.StatusInternalServerError)
+		return
+	}
+	defer tempFile.Close()
+
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Error reading file", http.StatusInternalServerError)
+		return
+	}
+
+	tempFile.Write(fileBytes)
+
+	// Получение itemID из формы
+	itemID := r.FormValue("itemID")
+
+	// Обновление пути к изображению в базе данных
+	err = updateItemImage(itemID, tempFile.Name())
+	if err != nil {
+		http.Error(w, "Failed to update item image", http.StatusInternalServerError)
+		return
+	}
+
+	// Отправляем успешный ответ
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Successfully uploaded file: %s\n", handler.Filename)
+}
+
+func updateItemImage(itemID string, imagePath string) error {
+	objID, err := primitive.ObjectIDFromHex(itemID)
+	if err != nil {
+		return err
+	}
+
+	collection := database.GetCollection()
+	filter := bson.M{"_id": objID}
+	update := bson.M{"$set": bson.M{"image": imagePath}}
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	return err
+}
+
+// ========================================================
+
+func renderLoginPage(w http.ResponseWriter) {
+	utils.RenderTemplate(w, UserCookie{},
+		"web/html/login.html",
+		"web/html/navigation.html")
+}
+
+func getUserSaleItems(userID int) ([]Item, error) {
+	collection := database.GetCollection()
+
+	// создаем фильтр для поиска документов по user_id
 	filter := bson.M{"user_id": userID}
 
 	// Выполняем запрос к коллекции
 	cursor, err := collection.Find(context.Background(), filter)
 	if err != nil {
-		http.Error(w, "Failed to find items", http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 	defer cursor.Close(context.Background())
 
 	// Читаем документы из курсора
 	var items []Item
 	if err := cursor.All(context.Background(), &items); err != nil {
-		http.Error(w, "Failed to read items", http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 
+	return items, nil
+}
+
+func renderUserSaleItemsPage(w http.ResponseWriter, userName string, items []Item) {
 	data := struct {
 		UserName string
 		Items    []Item
@@ -270,29 +371,35 @@ func ListUserSaleItems(w http.ResponseWriter, r *http.Request) {
 		"web/html/navigation.html")
 }
 
-// deleting item from DB list
-func DeleteItem(w http.ResponseWriter, r *http.Request) {
+func getItemIDFromRequest(r *http.Request) (string, error) {
 	params := mux.Vars(r)
 	itemID := params["id"]
 	if itemID == "" {
-		http.Error(w, "Item ID is required", http.StatusBadRequest)
-		return
+		return "", fmt.Errorf("Item ID is required")
 	}
+	return itemID, nil
+}
 
+func convertToObjectID(itemID string) (primitive.ObjectID, error) {
 	objID, err := primitive.ObjectIDFromHex(itemID)
 	if err != nil {
-		http.Error(w, "Invalid item ID", http.StatusBadRequest)
-		return
+		return primitive.NilObjectID, fmt.Errorf("Invalid item ID")
 	}
+	return objID, nil
+}
 
-	collection := database.Client.Database("myDatabase").Collection("products")
+func deleteItemFromDatabase(objID primitive.ObjectID) error {
+	collection := database.GetCollection()
 	filter := bson.M{"_id": objID}
-	_, err = collection.DeleteOne(context.Background(), filter)
+	_, err := collection.DeleteOne(context.Background(), filter)
 	if err != nil {
-		http.Error(w, "Failed to delete item", http.StatusInternalServerError)
-		return
+		return err
 	}
+	log.Printf("Item deleted successfully: %v", objID.Hex())
+	return nil
+}
 
+func sendSuccessResponse(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Item deleted successfully")
 }
