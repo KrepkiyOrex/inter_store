@@ -40,75 +40,29 @@ type UserCookie struct {
 
 // главная страница с товарами
 func ProductsHandler(w http.ResponseWriter, r *http.Request) {
+	userName, _ := auth.GetUserName(r)
 	cacheKey := "products_list"
-	cachedData, err := database.Rdb.Get(database.Rdb.Context(), cacheKey).Result()
 
+	cachedData, err := getFromCache(cacheKey)
 	// ключ не найден в кэше, выполняем запрос к основной БД
 	if err == redis.Nil {
-		// Connect to the database
-		db, err := database.Connect()
+		products, err := getProductsFromDB()
 		if err != nil {
-			http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-			log.Println("Error connecting to the database")
+			handleError(w, err, "Error fetching products from database")
 			return
 		}
-		defer db.Close()
-
-		// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-		query := `SELECT name, price, id, image_url FROM products`
-		rows, err := db.Query(query)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer rows.Close()
-
-		// Создание списка для хранения товаров
-		var products []Product
-
-		// Считывание данных о товарах из результатов запроса
-		for rows.Next() {
-			var product Product
-
-			if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			// Добавление продуктов в список
-			products = append(products, product)
-		}
-
-		if err := rows.Err(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// сохраняем данные в Redis
-		productsJSON, err := json.Marshal(products)
-		if err != nil {
-			http.Error(w, "Error marshaling products data", http.StatusInternalServerError)
-			return
-		}
-		err = database.Rdb.Set(database.Rdb.Context(), cacheKey, productsJSON, 10*time.Second).Err()
-		if err != nil {
+	
+		if err := saveToCache(w, cacheKey, products); err != nil {
 			log.Printf("Failed to save data in Redis: %v", err)
 		}
 
-		userName, _ := auth.GetUserName(r)
-		data := PageData{}.newPageDataProd(products, userName)
-
-		utils.RenderTemplate(w, data,
-			"web/html/main.html",
-			"web/html/navigation.html",
-		)
+		renderNewPageDataProd(w, products, userName)
 
 		log.Println("[Redis] The data is not in Redis. Load from portgres database.")
 
 	} else if err != nil {
 		http.Error(w, "Error fetching data from Redis: %v", http.StatusInternalServerError)
 		log.Printf("Failed to get data from Redis: %v", err)
-
-		log.Println("Что то пошло не так с Редисом")
 	} else {
 		// данные кеша есть в Редисе
 		var products []Product
@@ -117,16 +71,77 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userName, _ := auth.GetUserName(r)
-		data := PageData{}.newPageDataProd(products, userName)
-
-		utils.RenderTemplate(w, data,
-			"web/html/main.html",
-			"web/html/navigation.html",
-		)
+		renderNewPageDataProd(w, products, userName)
 
 		log.Println("[Redis] The data from Redis has been uploaded!")
 	}
+}
+
+// getting data from Redis
+func getFromCache(cacheKey string) (string, error) {
+	return database.Rdb.Get(database.Rdb.Context(), cacheKey).Result()
+}
+
+func getProductsFromDB() ([]Product, error) {
+	db, err := database.Connect()
+	if err != nil {
+		log.Println("Error connecting to the databaseз", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
+	query := `SELECT name, price, id, image_url FROM products`
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println("Error executing query:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	// создание списка для хранения товаров
+	var products []Product
+	// считывание данных о товарах из результатов запроса
+	for rows.Next() {
+		var product Product
+		if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL); err != nil {
+			log.Println("Error scanning row:", err)
+			return nil, err
+		}
+		// Добавление продуктов в список
+		products = append(products, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating rows:", err)
+		return nil, err
+	}
+
+	return products, nil
+}
+
+func handleError(w http.ResponseWriter, err error, message string) {
+	http.Error(w, message, http.StatusInternalServerError)
+	log.Println(err)
+}
+
+// сохраняем данные в Redis
+func saveToCache(w http.ResponseWriter, cacheKey string, products []Product) error {
+	productsJSON, err := json.Marshal(products)
+	if err != nil {
+		http.Error(w, "Error marshaling products data", http.StatusInternalServerError)
+		return err
+	}
+	return database.Rdb.Set(database.Rdb.Context(), cacheKey, productsJSON, 10*time.Second).Err()
+}
+
+func renderNewPageDataProd(w http.ResponseWriter, products []Product, userName string) {
+	data := PageData{}.newPageDataProd(products, userName)
+
+	utils.RenderTemplate(w, data,
+		"web/html/main.html",
+		"web/html/navigation.html",
+	)
 }
 
 // создание данных для страницы продуктов и куки пользователя
