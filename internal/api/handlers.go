@@ -38,6 +38,7 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/create-new-item", models.CreateNewItemHandler).Methods("POST")
 	router.HandleFunc("/edit-item/{id:[0-9a-fA-F]{24}}", models.EditItemHandler).Methods("GET")
 	router.HandleFunc("/update-item/{id:[0-9a-fA-F]{24}}", models.UpdateItemHandler).Methods("POST")
+	router.HandleFunc("/upload-image", models.UploadImageHandler).Methods("POST")
 
 	router.HandleFunc("/", models.ProductsHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
@@ -52,6 +53,7 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/logout", auth.LogoutHandler)      // Exit
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")
+	router.HandleFunc("/tt", models.Tttt)
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
@@ -69,7 +71,6 @@ func SetupRoutes() *mux.Router {
 	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
 	authRoutes.HandleFunc("/my-items", models.ListUserSaleItems).Methods("GET")
 	authRoutes.HandleFunc("/delete-item/{id}", models.DeleteItem).Methods("DELETE")
-	authRoutes.HandleFunc("/upload", models.UploadImageHandler).Methods("POST")
 
 	// Настройка обработчика для статических файлов
 	// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование товара</title>
+    <link rel="icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/css/main.css">
     <style>
         table {
@@ -18,6 +20,11 @@
         th {
             background-color: #b9b9b9;
         }
+
+
+
+
+
     </style>
     <script>
         function makeEditable(element) {
@@ -83,7 +90,80 @@
                 nameDiv.parentNode.removeChild(nameDiv);
                 valueDiv.parentNode.removeChild(valueDiv);
             }
-    </script>
+
+
+
+
+            
+            function uploadImage() {
+            const input = document.getElementById('itemImage');
+            const file = input.files[0];
+            if (!file) {
+                alert('Пожалуйста, выберите файл для загрузки.');
+                return;
+            }
+
+            const img = new Image();
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                // Задайте размер изображения
+                const MAX_WIDTH = 350;
+                const MAX_HEIGHT = 500;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(function(blob) {
+                    const formData = new FormData();
+                    formData.append('itemImage', blob, file.name);
+
+                    fetch('/upload-image', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        // Обновляем значение hidden поля imageURL
+                        document.getElementById('imageURL').value = result;
+                        document.getElementById('upload-status').innerText = 'Загрузка успешна!';
+                        
+                        // Отображаем изображение
+                        const img = document.getElementById('uploadedImage');
+                        img.src = URL.createObjectURL(blob);
+                        img.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Ошибка загрузки изображения:', error);
+                        document.getElementById('upload-status').innerText = 'Ошибка загрузки изображения';
+                    });
+                }, 'image/jpeg'); // Измените формат по необходимости
+            };
+
+            reader.readAsDataURL(file);
+        }
+</script>
+
 </head>
 <body>
     <div class="header">
@@ -97,9 +177,16 @@
             <h2>Редактирование товара:</h2>
             <form action="/update-item/{{.Item.ID.Hex}}" method="post">
                 <div class="profile-list">
-                    <div class="img-item">
-                        <img src="/static/img/plac1.webp" alt="plac1" class="item-image">
+                    <div class="image-upload">
+                        <label for="itemImage">Загрузить новое изображение:</label>
+                        <input type="file" name="itemImage" id="itemImage" />
+                        <input type="hidden" name="imageURL" id="imageURL" />
+                        <button type="button" onclick="uploadImage()">Загрузить</button>
+                        <div id="upload-status"></div>
+                        <img id="uploadedImage" src="" alt="Uploaded Image" style="display:none;">
                     </div>
+                    
+                    
 
                     <div class="product-description">
                         <input type="hidden" id="name" name="name" value="{{.Item.Name}}">

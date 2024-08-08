@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование товара</title>
+    <link rel="icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/css/main.css">
     <style>
         table {
@@ -32,9 +34,11 @@
         <div class="list-container">
             <h2>Редактирование товара:</h2>
             <div class="profile-list">
+
                 <div class="img-item">
-                    <img src="/static/img/plac1.webp" alt="plac1" class="item-image">
+                    <img src="{{.Item.ImageURL}}" alt="plac1" class="item-image">
                 </div>
+
                 <div class="product-description">
                     <form action="/update-item/{{.Item.ID.Hex}}" method="post">
                         <input type="hidden" id="name" name="name" value="{{.Item.Name}}">
@@ -75,6 +79,8 @@
                     <button class="buy-button">Добавить в корзину</button>
                     <h1></h1>
                     <button class="buy-button">Купить в один клик</button>
+                    <h1></h1>
+                    <button class="edit" onclick="window.location.href='/edit-item/{{.Item.ID.Hex}}'">Edit</button>
                 </div>
 
                 <div class="description">

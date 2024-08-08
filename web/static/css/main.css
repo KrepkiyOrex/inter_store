@@ -147,7 +147,7 @@
         text-align: center;
     }
     
-    .buy-button {
+    .buy-button, .edit {
         background-color: #089403;
         color: #fff;
         text-align: center;
@@ -249,12 +249,36 @@
 
     /* ===================================== /edit-item ========================================== */
 
-    .img-item {
-        width: 400px; /* одинаковая ширина для всех элементов */
+    .edit-list {
+        display: flex;
+        flex-wrap: wrap; /* позволяет элементам переноситься на следующую строку */
+        gap: 20px; /* расстояние между элементами */
+        justify-content: center; /* выравнивание элементов по центру */
+    }
+
+
+    .image-upload {
+        width: 350px; /* одинаковая ширина для всех элементов */
         height: 500px;
+        padding: 15px;
+        border: 1px solid #ccc;
         text-align: left;
         background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    .update-item-form {
+
+            width: 1100px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column; /* Вертикальное расположение элементов */
+            align-items: center; /* Выравнивание по центру */
+            padding: 20px;
+            background-color: #333; /* Фоновый цвет контейнера */
+            border: 1px solid #d86100;
+            border-radius: 8px; /* Скругление углов */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для контейнера */
     }
 
     .product-description {

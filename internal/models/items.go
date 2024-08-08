@@ -6,10 +6,13 @@ import (
 	"First_internet_store/internal/utils"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,7 +32,7 @@ type Item struct {
 	User_ID           int                `bson:"user_id" json:"user_id"`
 	Name              string             `bson:"name" json:"name"`
 	Price             float64            `bson:"price" json:"price"`
-	Image             string             `bson:"image,omitempty"`
+	ImageURL          string             `bson:"imageURL,omitempty"`
 	DynamicFields     []DynamicField     `bson:"dynamic_fields" json:"dynamic_fields"`
 	DescriptionFields []DescriptionField `bson:"description_fields" json:"description_fields"`
 }
@@ -178,6 +181,13 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	item.Name = r.FormValue("name")
 	item.Price, _ = strconv.ParseFloat(r.FormValue("price"), 64)
 
+	// // Получение пути к изображению
+	imageURL := r.FormValue("imageURL")
+	if imageURL != "" {
+		item.ImageURL = imageURL
+		log.Printf("ImageURL: %v", item.ImageURL)
+	}
+
 	// Обработка динамических полей
 	dynamicFields := []DynamicField{}
 	fieldNames := r.Form["field-name"]
@@ -208,6 +218,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Dinamic: %v", item.DynamicFields)
 	log.Printf("Descrip: %v", item.DescriptionFields)
+	log.Printf("ImageURL: %v", item.ImageURL)
 
 	collection := database.GetCollection()
 	_, err = collection.UpdateByID(context.Background(), item.ID, bson.M{"$set": item})
@@ -269,63 +280,43 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 // ========================================================
 
 func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
-	// Парсинг данных формы
-	err := r.ParseMultipartForm(10 << 20) // 10 MB
-	if err != nil {
-		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	file, handler, err := r.FormFile("image")
+	file, header, err := r.FormFile("itemImage")
 	if err != nil {
-		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+		http.Error(w, "Error retrieving file", http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
 
-	// Чтение данных файла
-	tempFile, err := ioutil.TempFile("uploads", "upload-*.png")
+	// делаем уникальное имя
+	uniqueFileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(header.Filename))
+	filePath := filepath.Join("web", "static", "img", uniqueFileName)
+
+	out, err := os.Create(filePath)
 	if err != nil {
-		http.Error(w, "Error creating temp file", http.StatusInternalServerError)
+		http.Error(w, "Error creating file", http.StatusInternalServerError)
 		return
 	}
-	defer tempFile.Close()
+	defer out.Close()
 
-	fileBytes, err := ioutil.ReadAll(file)
+	_, err = io.Copy(out, file)
 	if err != nil {
-		http.Error(w, "Error reading file", http.StatusInternalServerError)
-		return
-	}
-
-	tempFile.Write(fileBytes)
-
-	// Получение itemID из формы
-	itemID := r.FormValue("itemID")
-
-	// Обновление пути к изображению в базе данных
-	err = updateItemImage(itemID, tempFile.Name())
-	if err != nil {
-		http.Error(w, "Failed to update item image", http.StatusInternalServerError)
+		http.Error(w, "Error saving file", http.StatusInternalServerError)
 		return
 	}
 
-	// Отправляем успешный ответ
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Successfully uploaded file: %s\n", handler.Filename)
+	// путь к файлу для сохранения
+	imageURL := "/static/img/" + uniqueFileName
+
+	// отправляем путь к файлу обратно клиенту
+	w.Write([]byte(imageURL))
 }
 
-func updateItemImage(itemID string, imagePath string) error {
-	objID, err := primitive.ObjectIDFromHex(itemID)
-	if err != nil {
-		return err
-	}
-
-	collection := database.GetCollection()
-	filter := bson.M{"_id": objID}
-	update := bson.M{"$set": bson.M{"image": imagePath}}
-	_, err = collection.UpdateOne(context.Background(), filter, update)
-	return err
-}
+// ==========================================================================================
 
 // ========================================================
 
@@ -402,4 +393,20 @@ func deleteItemFromDatabase(objID primitive.ObjectID) error {
 func sendSuccessResponse(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Item deleted successfully")
+}
+
+func Tttt(w http.ResponseWriter, r *http.Request) {
+	userName, err := auth.GetUserName(r)
+	if err != nil {
+		// Куки не найдено, показываем форму входа
+		utils.RenderTemplate(w, UserCookie{},
+			"web/html/list.html",
+			"web/html/navigation.html")
+		return
+	}
+
+	data := UserCookie{UserName: userName}
+	utils.RenderTemplate(w, data,
+		"web/html/my.html",
+		"web/html/navigation.html")
 }
