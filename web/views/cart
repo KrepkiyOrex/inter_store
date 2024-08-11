@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products store</title>
+    <link rel='stylesheet' href='/static/css/main.css'>
+</head>
+<body>
+    <div class="header">
+        <header>
+            <h1>Products store</h1>
+        </header>
+        <div class="condition-auth">
+            {{if .UserName}}
+            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{else}}
+            <p> Пожалуйста, <a href="/login">войдите</a></p>
+            {{end}}
+        </div>
+    </div>
+
+    {{ template "navigation" . }}
+
+    <div class="page-wrapper">
+        <div class="cart-container">
+            <h1>Обновление данных</h1>
+            <form action="/" method="post">
+                <label for="line1">Первая строка:</label><br>
+                <input type="text" id="line1" name="line1" value="{{.Line1}}"><br><br>
+                <label for="line2">Вторая строка:</label><br>
+                <input type="text" id="line2" name="line2" value="{{.Line2}}"><br><br>
+                <input type="submit" value="Сохранить">
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
+    </footer>
+
+</body>
+</html>

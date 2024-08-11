@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Магазин товаров</title>
-
+    <title>Admin panel</title>
+    <link rel="icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/css/main.css">
     
     <!-- Подключение Font Awesome для иконок -->
@@ -12,36 +13,49 @@
 </head>
 
 <body>
-    <header>
-        <h1>Administrator</h1>
-    </header>
+    <div class="header">
+        <header>
+            <h1>Administrator</h1>
+        </header>
+        <div class="condition-auth">
+            {{if .UserName}}
+            <p>Привет, {{.UserName}}! <a href="/logout">Выйти</a></p>
+            {{else}}
+            <p> Пожалуйста, <a href="/login">войдите</a></p>
+            {{end}}
+        </div>
+    </div>
     
     {{ template "navigation" . }}
 
-    <div class="table-users">
-        <h1>Таблица "users"</h1>
-        <table border="1">
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Password</th>
-                <th>Actions</th>
-            </tr>
-            {{range .Users}}
-            <tr>
-                <td>{{.ID}}</td>
-                <td>{{.Username}}</td>
-                <td>{{.Email}}</td>
-                <td>{{.Password}}</td>
-                <td>
-                    <button class="delete-btn" data-id="{{.ID}}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-            {{end}}
-        </table>
+    <div class="page-wrapper">
+        <div class="admin-container">
+            <div class="table-users">
+                <h1>Таблица "users"</h1>
+                <table border="1">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                        <th>Actions</th>
+                    </tr>
+                    {{range .Users}}
+                    <tr>
+                        <td>{{.ID}}</td>
+                        <td>{{.Username}}</td>
+                        <td>{{.Email}}</td>
+                        <td>{{.Password}}</td>
+                        <td>
+                            <button class="delete-btn" data-id="{{.ID}}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {{end}}
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products store</title>
+    <link rel="icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
+    <link rel='stylesheet' href='/static/css/main.css'>
+    <script src="static/js/main.js" defer></script>
+    
+</head>
+<body>
+    <div class="header">
+        <header>
+            <h1>Products store</h1>
+        </header>
+        <div class="condition-auth">
+            {{if .UserCookie.UserName}}
+            <p>Привет, {{.UserCookie.UserName}}! <a href="/logout">Выйти</a></p>
+            {{else}}
+            <p> Пожалуйста, <a href="/login">войдите</a></p>
+            {{end}}
+        </div>
+    </div>
+
+    {{ template "navigation" . }}
+
+    <div class="page-wrapper">
+        <div class="cart-container">
+            <h2>Your Cart Contents:</h2>
+            <form id="cart-form" action="/update_cart" method="post" onsubmit="submitOrder(event)">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .ProductsData.Products}}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td class="price">$ {{.Price}}</td>
+                            <td>
+                                <input type="number" class="quantity-input" name="quantity_{{.ID}}" value="{{.Quantity}}" min="1" data-product-id="{{.ID}}">
+                            </td>
+                            <td class="total-price">$ {{.TotalPrice}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align:right"><strong>Total Amount:</strong></td>
+                            <td class="total-sum">$ {{.TotalSum}}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <h2>Детали заказа:</h2>
+                <label for="address">Адрес доставки:</label><br>
+                <input type="text" id="address" name="address" required><br><br>
+
+                <label for="delivery">Способ доставки:</label><br>
+                <select id="delivery" name="delivery" required>
+                    <option value="courier">Курьерская доставка</option>
+                    <option value="pickup">Самовывоз</option>
+                </select><br><br>
+
+                <label for="payment">Способ оплаты:</label><br>
+                <select id="payment" name="payment" required>
+                    <option value="cash">Наличными при получении</option>
+                    <option value="card">Онлайн оплата картой</option>
+                    <option value="barter">Натурой</option>
+                </select><br><br>
+
+                <input type="submit" value="Оформить заказ">
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
+    </footer>
+</body>
+</html>

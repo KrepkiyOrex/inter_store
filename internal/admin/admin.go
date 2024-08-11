@@ -1,8 +1,9 @@
 package admin
 
 import (
+	"First_internet_store/internal/auth"
 	"First_internet_store/internal/database"
-	"html/template"
+	"First_internet_store/internal/utils"
 	"log"
 	"net/http"
 
@@ -12,28 +13,24 @@ import (
 type User struct {
 	ID       int
 	Username string
-	Email    string
 	Password string
+	Email    string
 }
 
-// type PageData struct {
-//     Users []User
-// }
-
-func renderTemplate(w http.ResponseWriter, data UsersData, tmpl ...string) {
-	template, err := template.ParseFiles(tmpl...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = template.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+type PageData struct {
+	UsersData
+	UserCookie
 }
 
+type UsersData struct {
+	Users []User
+}
+
+type UserCookie struct {
+	UserName string
+}
+
+// удаление юзера из списка БД
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -58,7 +55,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Выполнение SQL-запроса для удаления пользователя
-	query := "DELETE FROM users WHERE id = $1"
+	query := "DELETE FROM users WHERE user_id = $1"
 	log.Println("Executing query:", query, "with userID:", userID)
 	_, err = db.Exec(query, userID)
 	if err != nil {
@@ -71,6 +68,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Admin dashboard
 func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	// Connect to the database
 	db, err := database.Connect()
@@ -81,9 +79,8 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	// id | username | email | password
 	// Выполнение SQL запроса для выдачи всех данных из таблицы users
-	rows, err := db.Query("SELECT username, password, email, id FROM users")
+	rows, err := db.Query("SELECT username, password, email, user_id FROM users")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -108,25 +105,25 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := UsersData{
-		Users: users,
+	userName, _ := auth.GetUserName(r)
+
+	// отображение информации о пользователе, а также любую ошибку
+	data := PageData{}.newPageData(users, userName)
+
+	utils.RenderTemplate(w, data,
+		"web/html/admin.html",
+		"web/html/navigation.html")
+}
+
+// отображение информации о пользователе, а также любую ошибку
+func (pd PageData) newPageData(users []User, userName string) PageData {
+	return PageData{
+		UsersData: UsersData{
+			Users: users,
+		},
+		UserCookie: UserCookie{
+			UserName: userName,
+		},
 	}
-	
-	/* 
-		кажись он тупо не может именно никнеим выгрузить, либо именно список имен с БД.
-		проверь отдельно именно имя без.
-
-		может стоит просто вызвать тут второй раз рендертеимплейт, но уже для 
-		никнейма, а html файлы указать просто как ""? тоесть пустые ссылки.
-
-		может стоит просто вызвать тут второй раз рендертеимплейт, но уже для 
-		никнейма, а html файлы указать просто как ""? тоесть пустые ссылки.
-	*/
-
-	renderTemplate(w, data, "web/html/admin.html",
-		"web/html/navigation.html"/* , "web/static/css/style.html" */)
 }
 
-type UsersData struct {
-	Users []User
-}

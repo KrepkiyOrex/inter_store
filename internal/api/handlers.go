@@ -2,74 +2,86 @@ package api
 
 import (
 	"log"
-	"mime"
 	"net/http"
-	"path/filepath"
-	"strings"
 
 	"First_internet_store/internal/admin"
 	"First_internet_store/internal/auth"
+	"First_internet_store/internal/database"
 	"First_internet_store/internal/models"
 	"First_internet_store/internal/others"
 
 	"github.com/gorilla/mux"
 )
 
-// fs := http.FileServer(http.Dir("./css/")) // "static" - без этого НЕ пашет CSS! F***!
-// http.Handle("/css/", http.StripPrefix("/css/", fs))
+// AuthMiddleware проверяет, авторизован ли пользователь
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookieID, err := r.Cookie("userID")
+		if err != nil || cookieID.Value == "" {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		next.ServeHTTP(w, r) // передать управление следующему хендлеру
+	})
+}
 
-// http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css/"))))
-
-// fileServer := http.FileServer(http.Dir("./web/static/"))
-// router.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
-
-// Обработчики HTTP
+// обработчики HTTP
 func SetupRoutes() *mux.Router {
-	// Создаем маршрутизатор
+	// создаем маршрутизатор
 	router := mux.NewRouter()
 
+	database.InitRedis()      // initialization redis
+	database.InitMongoClint() // initialization mongoDB
+
+	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.HandlerItemRequest) // используем маршрут с параметром id
+
+	router.HandleFunc("/create-new-item", models.CreateNewItemHandler).Methods("POST")
+	router.HandleFunc("/edit-item/{id:[0-9a-fA-F]{24}}", models.EditItemHandler).Methods("GET")
+	router.HandleFunc("/update-item/{id:[0-9a-fA-F]{24}}", models.UpdateItemHandler).Methods("POST")
+	router.HandleFunc("/upload-image", models.UploadImageHandler).Methods("POST")
+
 	router.HandleFunc("/", models.ProductsHandler)
-	// router.HandleFunc("/", others.GreetHandler)
-	// router.HandleFunc("/hello", others.HelloHandler)
-	// router.HandleFunc("/hello", models.HelloHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
-
-	// Настройка обработчика для статических файлов
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		filePath := filepath.Join(".", "web", "static", strings.TrimPrefix(r.URL.Path, "/static/"))
-		ext := filepath.Ext(filePath)
-		mimeType := mime.TypeByExtension(ext)
-		if mimeType != "" {
-			w.Header().Set("Content-Type", mimeType)
-		}
-		http.ServeFile(w, r, filePath)
-	})))
-
-	// router.HandleFunc("/products", models.ProductsHandler)
 	router.HandleFunc("/list", models.ListHandler)
-	// router.HandleFunc("/add-to-cart", models.AddToCartHandler)
-	router.HandleFunc("/add-to-cart", models.AddToCartHandler).Methods("POST")
-	router.HandleFunc("/cart", models.ViewCartHandler)
-	router.HandleFunc("/users-orders", models.UserOrdersHandler) // error "driver"
 
-	// Обработчик для отображения страницы регистрации (GET)
+	// обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
-	router.HandleFunc("/register", auth.RegisterHandler) // Обработчик для страницы регистрации
-
-	// Страница входа и её обработчики
+	router.HandleFunc("/register", auth.RegisterHandler) // обработчик для страницы регистрации
+	// страница входа и её обработчики
 	router.HandleFunc("/login", auth.LoginPageHandler).Methods("GET")
 	router.HandleFunc("/login", auth.LoginHandler).Methods("POST")
-
-	router.HandleFunc("/logout", auth.LogoutHandler) // Exit
-
-	// deprecated из-за ненадобности
-	// router.HandleFunc("/user-dashboard", auth.UserDashboardHandler) // Страница панели управления пользователя
-	router.HandleFunc("/account", models.Account)                   // profile
-
+	router.HandleFunc("/logout", auth.LogoutHandler)      // Exit
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")
+	router.HandleFunc("/tt", models.Tttt) // Test 
+
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+
+	// =======================================================
+	authRoutes := router.PathPrefix("/").Subrouter()
+	authRoutes.Use(AuthMiddleware)
+
+	// группа маршрутов, требующих авторизации
+	authRoutes.HandleFunc("/account", models.Account)                // profile
+	authRoutes.HandleFunc("/add-to-cart", models.AddToCartHandler)   // для добавления товара в корзину
+	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
+	authRoutes.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
+	authRoutes.HandleFunc("/update_cart", models.UpdateCartHandler).Methods("POST")
+	authRoutes.HandleFunc("/cart", models.ViewCartHandler).Methods("GET")
+	authRoutes.HandleFunc("/account/edit", auth.EditProfile)
+	authRoutes.HandleFunc("/my-items", models.ListUserSaleItems).Methods("GET")
+	authRoutes.HandleFunc("/delete-item/{id}", models.DeleteItem).Methods("DELETE")
+
+	// Настройка обработчика для статических файлов
+	// router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	filePath := filepath.Join(".", "web", "static", strings.TrimPrefix(r.URL.Path, "/static/"))
+	// 	ext := filepath.Ext(filePath)
+	// 	mimeType := mime.TypeByExtension(ext)
+	// 	if mimeType != "" {
+	// 		w.Header().Set("Content-Type", mimeType)
+	// 	}
+	// 	http.ServeFile(w, r, filePath)
+	// })))
 
 	return router
 }
@@ -82,11 +94,4 @@ func StartServer() {
 	if err != nil {
 		log.Fatal("Listen and Server:", err)
 	}
-
-	/*
-			Это более короткий способ?
-
-			// Запускаем сервер
-		    log.Fatal(http.ListenAndServe(":8080", nil))
-	*/
 }

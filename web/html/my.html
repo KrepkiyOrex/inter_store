@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование товара</title>
+    <link rel="icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/main.css">
+
+
+
+    <style>
+
+
+        .container1 {
+            border: 2px solid #000;
+            padding: 20px;
+            flex: 1 1 auto; /* Позволяет контейнерам занимать доступное место */
+            max-width: 100%; /* Не позволяет контейнерам выходить за границы экрана */
+            box-sizing: border-box; /* Учитывает паддинг и бордер в ширину контейнера */
+        }
+        .container2 {
+            border: 2px solid #000;
+            padding: 20px;
+            /* flex: 1 1 auto; Позволяет контейнерам занимать доступное место */
+            /* max-width: 100%; Не позволяет контейнерам выходить за границы экрана */
+            /* box-sizing: border-box; Учитывает паддинг и бордер в ширину контейнера */
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .box1 {
+            border: 2px dashed #000;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .box2 {
+            border: 2px dashed #000;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .form-container {
+            border: 2px dotted #000;
+            width: 150px;
+            height: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <header>
+            <h1>Редактирование товара</h1>
+        </header>
+    </div>
+    {{ template "navigation" . }}
+    <div class="page-wrapper">
+        <div class="list-container">
+            <h2>Редактирование товара:</h2>
+            <div class="profile-list">
+                <div class="edit-list">
+<!-- ================================================================== -->
+                        
+<!-- <div class="container1">
+    <h2>Test</h2>
+    <p>{{ .Weather }}</p>
+</div> -->
+
+
+<div style="font: 10px Tahoma;padding:3px;"><a style="color:#000000;text-decoration:none" href="https://freemeteo.com" ></a></div>
+<script>
+//Live weather feeds by freemeteo.com 
+//The use of this script is bound by Freemeteo’s Live Feed Service Agreement, as is published in the following url: https://www.freemeteo.com/data.asp?pid=178&la=1
+// You are not allowed to change or delete any part of this script.
+// Main body background color : FFFFFF
+// Main body fonts color : 000000
+// Header/Footer background color : 6699FF
+// Header/Footer fonts color : FFFFFF
+cIfrm="6";
+gid="610561_20240811_123858";
+</script>
+<script src="https://freemeteo.com/templates/default/HTfeeds.js?v=1" type="text/javascript"></script>
+
+
+<div style="font: 10px Tahoma;padding:3px;"><a style="color:#000000;text-decoration:none" href="https://freemeteo.com" ></a></div>
+<script>
+//Live weather feeds by freemeteo.com 
+//The use of this script is bound by Freemeteo’s Live Feed Service Agreement, as is published in the following url: https://www.freemeteo.com/data.asp?pid=178&la=1
+// You are not allowed to change or delete any part of this script.
+// Main body background color : FFFFFF
+// Main body fonts color : 000000
+// Header/Footer background color : 6699FF
+// Header/Footer fonts color : FFFFFF
+cIfrm="10";
+gid="968997_20240811_124045";
+</script>
+<script src="https://freemeteo.com/templates/default/HTfeeds.js?v=1" type="text/javascript"></script>
+
+
+            </div>
+        </div>
+    </div>
+</div> 
+
+
+
+
+    <footer>
+        <p>&copy; 2024 Магазин товаров. Все права защищены.</p>
+    </footer>
+</body>
+</html>

@@ -1,9 +1,51 @@
     body {
         background-color: #292929;
         color: #e75500;
+        margin: 0; /* Убирает отступы по умолчанию */
+        font-family: Arial, sans-serif; /* Добавьте шрифт для лучшего отображения текста */
+    }
+
+    .page-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 70vh;
+        padding: 10px 0; /* Уменьшаем верхний и нижний отступ */
+    }
+    
+    
+
+    /* ====================================== head ============================================ */
+
+    .header {
+        display: flex;
+        align-items: center;
+        height: 100px; /* или любой другой желаемый размер */
+        max-width: 900px; /* максимальная ширина контейнера */
+        margin: 0 auto; /* центрирование контейнера по горизонтали */
+        text-align: center; /* центрирование текста */
+    }
+
+    header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center; /* центрирование текста */
+    }
+
+    .condition-auth {
+        min-width: 200px;
+        height: 100px;
+        padding: 28px;
+        text-align: left;
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
     }
 
     /* ===================================== UI elem ========================================== */
+
+    h1, h3 {
+        color: #e75500;
+    }
 
     /* Стили для навигации и контейнера товаров */
     nav {
@@ -17,7 +59,7 @@
         margin: 0;
         padding: 0;
         list-style-type: none;
-        }
+    }
 
     nav ul li {
         float: left;
@@ -37,39 +79,75 @@
         background-color: #111;
     }
 
+    .product-image {
+        width: 200px; /* Задайте нужную ширину */
+        height: 200px;
+        object-fit: cover; /* Обеспечивает, что изображение будет хорошо выглядеть в отведенном пространстве */
+    }
+
+    /* стили для числового инпута */
+    .quantity-input {
+        background-color: transparent; /* Прозрачный фон */
+        border: none; /* Убираем границу */
+        text-align: center; /* Центрируем текст */
+        width: 50px; /* Фиксированная ширина */
+        outline: none; /* Убираем выделение при фокусе */
+        font-size: 16px; /* Размер шрифта */
+    }
+
+    /* стили для числового инпута в WebKit-браузерах (например, Chrome, Safari) */
+    .quantity-input::-webkit-outer-spin-button,
+    .quantity-input::-webkit-inner-spin-button {
+        -webkit-appearance: inner-spin-button; /* Сохраняем стрелки */
+    }
+
+    /* настраиваем внешний вид стрелок (опционально) */
+    .quantity-input::-webkit-inner-spin-button {
+        cursor: pointer;
+        color: #21cf21; /* Можно настроить цвет стрелок */
+        width: 20px; /* Настройка ширины стрелок */
+    }
+
+
+
     /* ===================================== /products ========================================== */
 
     .product-container {
-        display: flex;
-        justify-content: center;
-        align-items: flex-start; /* Выравнивание по верхнему краю */
-        margin-top: 20px;
-        gap: 20px; /* расстояние между элементами */
-        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        width: 1100px;
+        padding: 20px 20px; /* Отступы сверху и снизу */
+        border: 1px solid #d86100;
+        border-radius: 8px;
+        box-sizing: border-box; /* Учитывает padding и border в ширину */
     }
-
+    
     .product-list {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-around;
-        width: 300mm; /* Процентное значение ширины контейнера товаров */
+        gap: 20px; /* Расстояние между карточками */
     }
-
+    
     .product-item {
-        width: 200px;
-        height: 170px;
-        margin-bottom: 20px;
-        padding: 15px;
-        border: 1px solid #ccc;
-        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        flex: 1 1 200px; /* Занимает одну часть доступного пространства с минимальной шириной 200px */
+        max-width: 250px; /* Максимальная ширина карточки */
+        max-height: 400px;
+        background-color: #333;
         text-align: center;
-        /* display: inline-block; */
-        /* box-sizing: border-box; */
+        box-sizing: border-box;
     }
-
-    .buy-button {
-        display: block;
-        width: 100%;
+    
+    .product-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+    }
+    
+    .quantity-input {
+        width: 50px;
+        text-align: center;
+    }
+    
+    .buy-button, .edit {
         background-color: #089403;
         color: #fff;
         text-align: center;
@@ -78,11 +156,13 @@
         border-radius: 4px;
         cursor: pointer;
         text-decoration: none;
+        width: calc(100% - 60px); /* Ширина кнопки за вычетом ширины input и отступа */
     }
-
+    
     .buy-button:hover {
         background-color: #0056b3;
     }
+    
 
     /* ===================================== /account ========================================== */
 
@@ -91,17 +171,44 @@
         margin-bottom: 5px;
     }
 
-    .profile-container {
-        max-width: 1200px; /* максимальная ширина центральной части */
-        width: 100%;
+    .profile-container, .account-edit-container {
         display: flex;
         justify-content: center;
-        align-items: center; /* Выравнивание по верхнему краю */
-        flex-direction: column;
-        gap: 20px;
-        padding: 20px;
-        margin: 0 auto; /* центрирование по горизонтали */
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        width: 1100px;
+        min-height: 590px;
+        gap: 20px; /* расстояние между элементами */
+        border: 1px solid #d86100;
+        margin-top: 20px;
+        padding-top: 20px; /* Отступ сверху */
+        border-radius: 8px; /* Скругление углов */
     }
+
+    /* Стили для input с короткой длиной */
+    .short-input {
+        width: 300px; /* или любое другое значение, которое вам нужно */
+        padding: 5px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Стили для контейнера формы */
+    .account-edit-container form {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: 320px; /* ограничение ширины формы */
+        margin: auto;
+    }
+
+    /* Стили для меток */
+    .account-edit-container label {
+        margin-top: 10px;
+        margin-bottom: 5px;
+    }
+
 
     .profile-list {
         display: flex;
@@ -111,7 +218,7 @@
     }
 
     .profile {
-        width: 760px; /* одинаковая ширина для всех элементов */
+        width: 620px; /* одинаковая ширина для всех элементов */
         height: 220px;
         padding: 15px;
         border: 1px solid #ccc;
@@ -121,7 +228,7 @@
     }
 
     .bonus {
-        width: 370px; /* одинаковая ширина для всех элементов */
+        width: 300px; /* одинаковая ширина для всех элементов */
         height: 220px;
         padding: 15px;
         border: 1px solid #ccc;
@@ -130,31 +237,328 @@
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
     }
 
-    .cart, .history, .favorites {
-        width: 370px; /* одинаковая ширина для всех элементов */
+    .cart, .history, .favorites, .my-items, .place {
+        width: 300px; /* одинаковая ширина для всех элементов */
         height: 220px;
         padding: 15px;
         border: 1px solid #ccc;
         text-align: left;
         background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
         box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    /* ===================================== /edit-item ========================================== */
+
+    .edit-list {
+        display: flex;
+        flex-wrap: wrap; /* позволяет элементам переноситься на следующую строку */
+        gap: 20px; /* расстояние между элементами */
+        justify-content: center; /* выравнивание элементов по центру */
+    }
+
+
+    .image-upload {
+        width: 350px; /* одинаковая ширина для всех элементов */
+        height: 500px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    .update-item-form {
+
+            width: 1100px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column; /* Вертикальное расположение элементов */
+            align-items: center; /* Выравнивание по центру */
+            padding: 20px;
+            background-color: #333; /* Фоновый цвет контейнера */
+            border: 1px solid #d86100;
+            border-radius: 8px; /* Скругление углов */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для контейнера */
+    }
+
+    .product-description {
+        width: 350px; /* одинаковая ширина для всех элементов */
+        height: 500px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    .pay-box {
+        width: 300px; /* одинаковая ширина для всех элементов */
+        height: 500px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+        border-radius: 15px; /* Радиус скругления углов */
+    }
+
+    .description {
+        width: 1100px; /* одинаковая ширина для всех элементов */
+        height: 400px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        text-align: left;
+        background-color: #333; /* Цвет фона для лучшего отображения на темном фоне */
+        box-sizing: border-box; /* включает padding и border в ширину и высоту блока */
+    }
+
+    /* Специфические стили для таблицы с классом .custom-table */
+    .custom-table {
+        width: 300px;
+        border-collapse: collapse;
+    }
+
+    /* Удалены стили с чередованием фона */
+    .custom-table tr.custom-row {
+        border-bottom: 1px solid #969696; /* Граница снизу для разделения */
+    }
+
+    .custom-table td.custom-cell {
+        padding: 10px;
+        border: none; /* Убираем границы ячеек */
+    }
+
+    /* Убираем нижнюю границу у последней строки */
+    .custom-table tr.custom-row:last-child {
+        border-bottom: none;
+    }
+
+    /* Стили применяются только к элементам внутри .specific-container */
+    .specific-container h3, .specific-container p {
+        margin: 0; /* Сброс отступов */
+        padding: 0; /* Сброс полей */
+    }
+
+    .specific-container h3 {
+        margin-bottom: 10px; /* Отступ снизу */
+    }
+
+    .specific-container p {
+        margin-top: 0;
+        margin-bottom: 10px; /* Отступ снизу */
+    }
+
+    .item-image {
+        width: 400px; /* Задайте нужную ширину */
+        height: 500px;
+        object-fit: cover; /* Обеспечивает, что изображение будет хорошо выглядеть в отведенном пространстве */
+        border-radius: 15px; /* Радиус скругления углов */
+    }
+
+
+
+
+
+    .table-container {
+        display: flex; /* Включаем Flexbox */
+        flex-direction: row; /* Располагаем таблицы в строку */
+        gap: 20px; /* Расстояние между таблицами, при необходимости измените значение */
+        margin-top: 20px; /* Отступ сверху, если нужен, измените значение */
+    }
+    
+    .custom-table {
+        flex: 1; /* Устанавливаем таблицам одинаковую ширину и возможность растягиваться */
+        border-collapse: collapse; /* Убираем двойные линии между ячейками */
+    }
+    
+
+
+
+    input[type="about"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d86100;
+        border-radius: 4px;
+        background-color: #292929;
+        color: #e75500;
+    }
+
+    /* ===================================== /my-items ========================================== */
+
+    .listusersaleitems {
+        width: 1100px;
+        min-height: 600px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        margin-top: 20px;
+        gap: 20px; /* расстояние между элементами */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        padding-top: 20px; /* Отступ сверху */
     }
 
    /* ===================================== /administrator ========================================== */
    
+    .admin-container {
+        width: 1100px;
+        min-height: 600px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        margin-top: 20px;
+        gap: 20px; /* расстояние между элементами */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        padding-top: 20px; /* Отступ сверху */
+    }
+
     .table-users {
         display: flex;
         flex-direction: column; /* Изменить на column для вертикального размещения */
         justify-content: center; /* выравнивание элементов по центру */
         align-items: center;
-        margin-top: 20px;
+        margin-bottom: 20px;
     }
 
+   /* ===================================== /users-orders ========================================== */
+   
+    .orders-container {
+        width: 1100px;
+        min-height: 600px; /* Минимальная высота бокса, но позволить элементу увеличиваться по высоте, если содержимое больше. */
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Выравнивание по верхнему краю */
+        margin-top: 20px;
+        gap: 20px; /* расстояние между элементами */
+        flex-wrap: wrap; /* позволяет переносить элементы на новую строку, если они не помещаются */
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        padding-top: 20px; /* Отступ сверху */
+    }
+
+   /* ================================== /login ===================================================== */
+   
+   .login-container {
+        width: 100%;
+        max-width: 400px; /* Максимальная ширина контейнера */
+        min-height: 400px; /* Минимальная высота контейнера */
+        display: flex;
+        flex-direction: column; /* Вертикальное расположение элементов */
+        justify-content: center;
+        align-items: center; /* Выравнивание по центру */
+        padding: 20px;
+        background-color: #333; /* Фоновый цвет контейнера */
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для контейнера */
+    }
+
+    label, input[type="submit"], .error {
+        color: #e75500;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #d86100;
+        border-radius: 4px;
+        background-color: #292929;
+        color: #e75500;
+    }
+
+    input[type="submit"] {
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #d86100;
+        background-color: #e75500;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+        background-color: #d86100;
+    }
+
+   /* ===================================== /rigistration ========================================== */
+   
+   .registr-container {
+        width: 100%;
+        max-width: 400px; /* Максимальная ширина контейнера */
+        min-height: 400px; /* Минимальная высота контейнера */
+        display: flex;
+        flex-direction: column; /* Вертикальное расположение элементов */
+        justify-content: center;
+        align-items: center; /* Выравнивание по центру */
+        padding: 20px;
+        background-color: #333; /* Фоновый цвет контейнера */
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для контейнера */
+    }
+
+   /* ===================================== /list ========================================== */
+   
+    .list-container {
+        width: 1100px;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column; /* Вертикальное расположение элементов */
+        justify-content: center;
+        align-items: center; /* Выравнивание по центру */
+        padding: 20px;
+        background-color: #333; /* Фоновый цвет контейнера */
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для контейнера */
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    
+   /* ===================================== /cart ========================================== */
+   
+    .cart-container {
+        width: 1100px;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column; /* Вертикальное расположение элементов */
+        justify-content: center;
+        align-items: center; /* Выравнивание по центру */
+        padding: 20px;
+        border: 1px solid #d86100;
+        border-radius: 8px; /* Скругление углов */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень для контейнера */
+    }
+
+    #address {
+        background-color: #3a3a3a; /* Цвет фона */
+        color: #d86100; /* Цвет текста */
+        border: 1px solid #d86100; /* Цвет рамки */
+        border-radius: 4px; /* Скругленные углы */
+        padding: 10px; /* Внутренний отступ */
+        font-size: 16px; /* Размер шрифта */
+    }
+
+   /* ===================================== other ========================================== */
+   
     /* Стили для подвала */
     footer {
         text-align: center;
-        padding: 20px;
+        padding: 10px; /* Уменьшаем верхний и нижний отступ */
         background-color: #3b3b3b;
-        margin-top: 20px;
     }
- 
+    

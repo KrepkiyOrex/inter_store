@@ -1,5 +1,10 @@
 package utils
 
+import (
+	"net/http"
+	"strconv"
+)
+
 type Product struct {
 	Name  string
 	Price int
@@ -7,8 +12,8 @@ type Product struct {
 }
 
 type UserCookie struct {
-	UserName string
-	Products []Product
+	UserName  string
+	Products  []Product
 	UsersData UsersData // это поле явно линшенее тут!
 }
 
@@ -21,4 +26,13 @@ type User struct {
 
 type UsersData struct {
 	Users []User
+}
+
+// Утильная функция для получения userID из куки
+func GetUserIDFromCookie(r *http.Request) (int, error) {
+	cookie, err := r.Cookie("userID")
+	if err != nil || cookie.Value == "" {
+		return 0, err
+	}
+	return strconv.Atoi(cookie.Value)
 }
