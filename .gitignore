@@ -1,4 +1,6 @@
 config/
+web/html/old
+web/views/
 
 architecture.txt
 JWT_FAQ
