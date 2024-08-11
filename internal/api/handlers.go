@@ -53,7 +53,7 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/logout", auth.LogoutHandler)      // Exit
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")
-	router.HandleFunc("/tt", models.Tttt)
+	router.HandleFunc("/tt", models.Tttt) // Test 
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 

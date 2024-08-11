@@ -395,17 +395,68 @@ func sendSuccessResponse(w http.ResponseWriter) {
 	fmt.Fprintf(w, "Item deleted successfully")
 }
 
+// Структура для хранения данных о погоде
+// type WeatherData struct {
+// 	DataCurrent struct {
+// 		Temperature float64 `json:"temperature"`
+// 		Humidity    int     `json:"humidity"`
+// 		Condition   string  `json:"condition"`
+// 	} `json:"data_current"`
+// }
+
 func Tttt(w http.ResponseWriter, r *http.Request) {
+	// Получаем имя пользователя
 	userName, err := auth.GetUserName(r)
 	if err != nil {
-		// Куки не найдено, показываем форму входа
-		utils.RenderTemplate(w, UserCookie{},
-			"web/html/list.html",
-			"web/html/navigation.html")
+		utils.RenderTemplate(w, nil, "web/html/list.html", "web/html/navigation.html")
 		return
 	}
 
-	data := UserCookie{UserName: userName}
+	// Запрос к API MeteoBlue
+	// resp, err := http.Get("https://my.meteoblue.com/packages/basic-1h_basic-day_current?apikey=OZKqv7rTz8SuNwDI&lat=54.3282&lon=48.3866&asl=176&format=json")
+	// if err != nil {
+	// 	http.Error(w, "Не удалось получить данные о погоде", http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer resp.Body.Close()
+
+	// // // Чтение и парсинг JSON-ответа
+	// body, err := ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	// 	http.Error(w, "Не удалось прочитать данные о погоде", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// // fmt.Println(string(body))
+
+	// var weatherData WeatherData
+	// err = json.Unmarshal(body, &weatherData)
+	// if err != nil {
+	// 	http.Error(w, "Не удалось разобрать данные о погоде", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// // Проверка данных о погоде
+	var weatherInfo string
+	// if weatherData.DataCurrent.Temperature == 0 && weatherData.DataCurrent.Humidity == 0 && weatherData.DataCurrent.Condition == "" {
+	// 	weatherInfo = "Данные о погоде временно недоступны."
+	// } else {
+	// 	weatherInfo = fmt.Sprintf("Температура: %.1f°C, Влажность: %d%%, Условия: %s",
+	// 		weatherData.DataCurrent.Temperature,
+	// 		weatherData.DataCurrent.Humidity,
+	// 		weatherData.DataCurrent.Condition)
+	// }
+
+	// Подготовка данных для шаблона
+	data := struct {
+		UserName string
+		Weather  string
+	}{
+		UserName: userName,
+		Weather:  weatherInfo,
+	}
+
+	// Рендеринг шаблона
 	utils.RenderTemplate(w, data,
 		"web/html/my.html",
 		"web/html/navigation.html")

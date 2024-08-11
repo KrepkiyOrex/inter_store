@@ -36,6 +36,7 @@ type ProductsData struct {
 type UserCookie struct {
 	UserID   int
 	UserName string
+	Weather  string
 }
 
 // главная страница с товарами
@@ -51,7 +52,7 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 			handleError(w, err, "Error fetching products from database")
 			return
 		}
-	
+
 		if err := saveToCache(w, cacheKey, products); err != nil {
 			log.Printf("Failed to save data in Redis: %v", err)
 		}

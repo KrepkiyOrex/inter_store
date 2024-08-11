@@ -5,7 +5,6 @@ import (
 	"text/template"
 )
 
-// func RenderTemplate(w http.ResponseWriter, data UserCookie, tmpl ...string) {
 func RenderTemplate(w http.ResponseWriter, data interface{}, tmpl ...string) {
 	template, err := template.ParseFiles(tmpl...)
 	if err != nil {
