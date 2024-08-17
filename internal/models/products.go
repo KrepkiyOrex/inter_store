@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"First_internet_store/internal/auth"
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/utils"
+	"github.com/KrepkiyOrex/inter_store/internal/auth"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/utils"
 
 	"github.com/go-redis/redis/v8"
 )

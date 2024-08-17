@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"First_internet_store/internal/api"
+	"github.com/KrepkiyOrex/inter_store/internal/api"
 )
 
 func main() {

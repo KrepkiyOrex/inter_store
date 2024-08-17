@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"First_internet_store/internal/admin"
-	"First_internet_store/internal/auth"
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/models"
-	"First_internet_store/internal/others"
+	"github.com/KrepkiyOrex/inter_store/internal/admin"
+	"github.com/KrepkiyOrex/inter_store/internal/auth"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/models"
+	"github.com/KrepkiyOrex/inter_store/internal/others"
 
 	"github.com/gorilla/mux"
 )
@@ -53,7 +53,10 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/logout", auth.LogoutHandler)      // Exit
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")
-	router.HandleFunc("/tt", models.Tttt) // Test 
+	router.HandleFunc("/tt", models.Tttt) // Test
+
+	// Регистрация обработчика для проверки микросервиса
+	router.HandleFunc("/test-inventory", others.TestInventoryHandler).Methods("POST")
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 

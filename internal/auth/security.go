@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"First_internet_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
 	"fmt"
 	"log"
 	"net/http"

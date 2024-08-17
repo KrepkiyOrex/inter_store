@@ -1,9 +1,6 @@
 package models
 
 import (
-	"First_internet_store/internal/auth"
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/utils"
 	"context"
 	"fmt"
 	"io"
@@ -14,12 +11,16 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/KrepkiyOrex/inter_store/internal/auth"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/utils"
+
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Review представляет отзыв на продукт
+// отзыв на продукт
 // type Review struct {
 // 	User    string  `json:"user"`
 // 	Rating  float64 `json:"rating"`
@@ -32,6 +33,7 @@ type Item struct {
 	User_ID           int                `bson:"user_id" json:"user_id"`
 	Name              string             `bson:"name" json:"name"`
 	Price             float64            `bson:"price" json:"price"`
+	Quantity          int32              `bson:"quantity" json:"quantity"`
 	ImageURL          string             `bson:"imageURL,omitempty"`
 	DynamicFields     []DynamicField     `bson:"dynamic_fields" json:"dynamic_fields"`
 	DescriptionFields []DescriptionField `bson:"description_fields" json:"description_fields"`
@@ -122,15 +124,16 @@ func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Создание нового пустого товара
 	newItem := Item{
-		ID:      primitive.NewObjectID(),
-		User_ID: userID,
-		Name:    "Edit name",
-		Price:   0.0,
+		ID:       primitive.NewObjectID(),
+		User_ID:  userID,
+		Name:     "Edit name",
+		Price:    0.0,
+		Quantity: 0,
 	}
 
 	log.Printf("Item: %v", newItem)
 
-	// Сохранение товара в MongoDB
+	// сохранение товара в MongoDB
 	collection := database.GetCollection()
 	_, err = collection.InsertOne(context.Background(), newItem)
 	if err != nil {
@@ -177,18 +180,21 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Обновление данных
+	// обновление данных
 	item.Name = r.FormValue("name")
 	item.Price, _ = strconv.ParseFloat(r.FormValue("price"), 64)
+	// item.Quantity, _ = strconv.ParseInt(r.FormValue("quantity"), 10, 32)
+	quantity, _ := strconv.ParseInt(r.FormValue("quantity"), 10, 32)
+	item.Quantity = int32(quantity)
 
-	// // Получение пути к изображению
+	// Получение пути к изображению
 	imageURL := r.FormValue("imageURL")
 	if imageURL != "" {
 		item.ImageURL = imageURL
 		log.Printf("ImageURL: %v", item.ImageURL)
 	}
 
-	// Обработка динамических полей
+	// обработка динамических полей
 	dynamicFields := []DynamicField{}
 	fieldNames := r.Form["field-name"]
 	fieldValues := r.Form["field-value"]
@@ -202,7 +208,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	item.DynamicFields = dynamicFields
 
-	// Обработка динамических полей описания
+	// обработка динамических полей описания
 	descriptionFields := []DescriptionField{}
 	nameDeps := r.Form["field-name-dep"]
 	valueDeps := r.Form["field-value-dep"]

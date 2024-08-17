@@ -44,6 +44,7 @@
             var cells = document.querySelectorAll('.editable');
             document.getElementById('name').value = cells[0].innerText; // Name
             document.getElementById('price').value = cells[1].innerText; // Price
+            document.getElementById('quantity').value = cells[2].innerText; // Quantity
         }
 
         function addField() {
@@ -191,6 +192,7 @@
                     <div class="product-description">
                         <input type="hidden" id="name" name="name" value="{{.Item.Name}}">
                         <input type="hidden" id="price" name="price" value="{{.Item.Price}}">
+                        <input type="hidden" id="quantity" name="quantity" value="{{.Item.Quantity}}">
                         <div class="Name-item">
                             <h2><div class="editable" onclick="makeEditable(this)">{{.Item.Name}}</div></h2>
                             <h4>⭐️4,7 - 924 отзыва 🛣 18 вопросов</h4>
@@ -229,7 +231,9 @@
                     <div class="pay-box">
                         <h3><div class="editable" onclick="makeEditable(this)">$ {{.Item.Price}}</div></h3>
                         <button class="buy-button">Добавить в корзину</button>
+                        <h4></h4>
                         <button class="buy-button">Купить в один клик</button>
+                        <h3><div class="editable" onclick="makeEditable(this)">Available quantity: {{.Item.Quantity}}</div></h3>
                     </div>
 
                     <div class="description">

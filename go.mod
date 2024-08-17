@@ -1,4 +1,4 @@
-module First_internet_store
+module github.com/KrepkiyOrex/inter_store
 
 go 1.22
 

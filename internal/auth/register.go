@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/utils"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/utils"
 	"database/sql"
 	"log"
 	"net/http"
