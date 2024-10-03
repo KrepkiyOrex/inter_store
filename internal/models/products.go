@@ -83,10 +83,11 @@ func getFromCache(cacheKey string) (string, error) {
 	return database.Rdb.Get(database.Rdb.Context(), cacheKey).Result()
 }
 
+// Get products from postgreSQL
 func getProductsFromDB() ([]Product, error) {
 	db, err := database.Connect()
 	if err != nil {
-		log.Println("Error connecting to the databaseз", err)
+		log.Println("Error connecting to the database", err)
 		return nil, err
 	}
 	defer db.Close()
@@ -162,7 +163,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := database.Connect()
+	db, err := database.Connect() // postgreSQL
 	if err != nil {
 		log.Println("Error connecting to the database:", err)
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
