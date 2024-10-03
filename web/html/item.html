@@ -36,15 +36,15 @@
             <div class="profile-list">
 
                 <div class="img-item">
-                    <img src="{{.Item.ImageURL}}" alt="plac1" class="item-image">
+                    <img src="/{{.ItemPsql.Image_url}}" alt="plac1" class="item-image">
                 </div>
 
                 <div class="product-description">
                     <form action="/update-item/{{.Item.ID.Hex}}" method="post">
-                        <input type="hidden" id="name" name="name" value="{{.Item.Name}}">
-                        <input type="hidden" id="price" name="price" value="{{.Item.Price}}">
+                        <input type="hidden" id="name" name="name" value="{{.ItemPsql.Name}}">
+                        <input type="hidden" id="price" name="price" value="{{.ItemPsql.Price}}">
                         <div class="Name-item">
-                            <h2>{{.Item.Name}}</h2>
+                            <h2>{{.ItemPsql.Name}}</h2>
                             <h4>⭐️4,7 - 924 отзыва 🛣 18 вопросов</h4>
                         </div>
                         
@@ -75,11 +75,12 @@
                 </div>
                 
                 <div class="pay-box">
-                    <h3>$ {{.Item.Price}}</h3>
+                    <h3>$ {{.ItemPsql.Price}}</h3>
                     <button class="buy-button">Добавить в корзину</button>
                     <h1></h1>
                     <button class="buy-button">Купить в один клик</button>
                     <h1></h1>
+                    <h3>Available quantity: {{.Item.Quantity}}</h3>
                     <button class="edit" onclick="window.location.href='/edit-item/{{.Item.ID.Hex}}'">Edit</button>
                 </div>
 

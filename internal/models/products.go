@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"First_internet_store/internal/auth"
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/utils"
+	"github.com/KrepkiyOrex/inter_store/internal/auth"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/utils"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -83,10 +83,11 @@ func getFromCache(cacheKey string) (string, error) {
 	return database.Rdb.Get(database.Rdb.Context(), cacheKey).Result()
 }
 
+// Get products from postgreSQL
 func getProductsFromDB() ([]Product, error) {
 	db, err := database.Connect()
 	if err != nil {
-		log.Println("Error connecting to the databaseз", err)
+		log.Println("Error connecting to the database", err)
 		return nil, err
 	}
 	defer db.Close()
@@ -162,7 +163,7 @@ func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := database.Connect()
+	db, err := database.Connect() // postgreSQL
 	if err != nil {
 		log.Println("Error connecting to the database:", err)
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)

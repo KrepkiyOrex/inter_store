@@ -76,8 +76,8 @@
                             {{range .Items}}
                             <tr class="item">
                                 <td>{{.ID}}</td>
-                                <td><a href="/item/{{.ID.Hex}}">{{.Name}}</a></td>
-                                <td>$ {{.Price}}</td>
+                                <td><a href="/item/{{.ID.Hex}}">{{.ItemPsql.Name}}</a></td>
+                                <td>$ {{.ItemPsql.Price}}</td>
                                 <td>
                                     {{range .DynamicFields}}
                                         {{.FieldName}}: {{.FieldValue}}<br>

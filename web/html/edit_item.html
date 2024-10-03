@@ -44,6 +44,7 @@
             var cells = document.querySelectorAll('.editable');
             document.getElementById('name').value = cells[0].innerText; // Name
             document.getElementById('price').value = cells[1].innerText; // Price
+            document.getElementById('quantity').value = cells[2].innerText; // Quantity
         }
 
         function addField() {
@@ -144,8 +145,8 @@
                     })
                     .then(response => response.text())
                     .then(result => {
-                        // Обновляем значение hidden поля imageURL
-                        document.getElementById('imageURL').value = result;
+                        // Обновляем значение hidden поля Image_url
+                        document.getElementById('Image_url').value = result;
                         document.getElementById('upload-status').innerText = 'Загрузка успешна!';
                         
                         // Отображаем изображение
@@ -180,7 +181,7 @@
                     <div class="image-upload">
                         <label for="itemImage">Загрузить новое изображение:</label>
                         <input type="file" name="itemImage" id="itemImage" />
-                        <input type="hidden" name="imageURL" id="imageURL" />
+                        <input type="hidden" name="Image_url" id="Image_url" />
                         <button type="button" onclick="uploadImage()">Загрузить</button>
                         <div id="upload-status"></div>
                         <img id="uploadedImage" src="" alt="Uploaded Image" style="display:none;">
@@ -189,10 +190,11 @@
                     
 
                     <div class="product-description">
-                        <input type="hidden" id="name" name="name" value="{{.Item.Name}}">
-                        <input type="hidden" id="price" name="price" value="{{.Item.Price}}">
+                        <input type="hidden" id="name" name="name" value="{{.ItemPsql.Name}}">
+                        <input type="hidden" id="price" name="price" value="{{.ItemPsql.Price}}">
+                        <input type="hidden" id="quantity" name="quantity" value="{{.Item.Quantity}}">
                         <div class="Name-item">
-                            <h2><div class="editable" onclick="makeEditable(this)">{{.Item.Name}}</div></h2>
+                            <h2><div class="editable" onclick="makeEditable(this)">{{.ItemPsql.Name}}</div></h2>
                             <h4>⭐️4,7 - 924 отзыва 🛣 18 вопросов</h4>
                         </div>
                         
@@ -227,9 +229,11 @@
                     </div>
 
                     <div class="pay-box">
-                        <h3><div class="editable" onclick="makeEditable(this)">$ {{.Item.Price}}</div></h3>
+                        <h3><div class="editable" onclick="makeEditable(this)">$ {{.ItemPsql.Price}}</div></h3>
                         <button class="buy-button">Добавить в корзину</button>
+                        <h4></h4>
                         <button class="buy-button">Купить в один клик</button>
+                        <h3><div class="editable" onclick="makeEditable(this)">Available quantity: {{.Item.Quantity}}</div></h3>
                     </div>
 
                     <div class="description">

@@ -23,6 +23,7 @@ type DB struct {
 	*sql.DB
 }
 
+// postgreSQL DB
 func Connect() (*DB, error) {
 	// Load the configuration from the file
 	cfg, err := toml.LoadFile("config/config.toml")

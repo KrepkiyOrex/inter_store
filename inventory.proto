@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package inventory;
+
+option go_package = "/inventory";
+
+service InventoryService {
+  rpc AddInventory (AddInventoryRequest) returns (AddInventoryResponse);
+  rpc RemoveInventory (RemoveInventoryRequest) returns (RemoveInventoryResponse);
+  rpc GetInventory (GetInventoryRequest) returns (GetInventoryResponse);
+}
+
+message AddInventoryRequest {
+  string product_id = 1;
+  string warehouse_id = 2;
+  int32 quantity = 3;
+}
+
+message AddInventoryResponse {
+  bool success = 1;
+}
+
+message RemoveInventoryRequest {
+  string product_id = 1;
+  string warehouse_id = 2;
+  int32 quantity = 3;
+}
+
+message RemoveInventoryResponse {
+  bool success = 1;
+}
+
+message GetInventoryRequest {
+  string product_id = 1;
+  string warehouse_id = 2;
+}
+
+message GetInventoryResponse {
+  int32 quantity = 1;
+  string location = 2;
+}
