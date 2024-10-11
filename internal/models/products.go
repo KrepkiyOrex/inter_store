@@ -21,6 +21,7 @@ type PageData struct {
 
 type Product struct {
 	ID         int
+	MongoID   string
 	Name       string
 	Price      float64
 	ImageURL   string
@@ -44,10 +45,10 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	userName, _ := auth.GetUserName(r)
 	cacheKey := "products_list"
 
-	cachedData, err := getFromCache(cacheKey)
+	cachedData, err := getFromRedisCache(cacheKey)
 	// ключ не найден в кэше, выполняем запрос к основной БД
 	if err == redis.Nil {
-		products, err := getProductsFromDB()
+		products, err := getProductsFromPostgre()
 		if err != nil {
 			handleError(w, err, "Error fetching products from database")
 			return
@@ -59,7 +60,7 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 
 		renderNewPageDataProd(w, products, userName)
 
-		log.Println("[Redis] The data is not in Redis. Load from portgres database.")
+		log.Println("[Redis] The data is not in Redis. Load from database.")
 
 	} else if err != nil {
 		http.Error(w, "Error fetching data from Redis: %v", http.StatusInternalServerError)
@@ -79,12 +80,12 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // getting data from Redis
-func getFromCache(cacheKey string) (string, error) {
+func getFromRedisCache(cacheKey string) (string, error) {
 	return database.Rdb.Get(database.Rdb.Context(), cacheKey).Result()
 }
 
-// Get products from postgreSQL
-func getProductsFromDB() ([]Product, error) {
+// get products from postgreSQL
+func getProductsFromPostgre() ([]Product, error) {
 	db, err := database.Connect()
 	if err != nil {
 		log.Println("Error connecting to the database", err)
@@ -93,33 +94,31 @@ func getProductsFromDB() ([]Product, error) {
 	defer db.Close()
 
 	// Выполнение SQL запроса для выборки всех товаров из таблицы "products"
-	query := `SELECT name, price, id, image_url FROM products`
+	query := `SELECT name, price, id, image_url, mongo_id FROM products`
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Println("Error executing query:", err)
 		return nil, err
 	}
 	defer rows.Close()
-
-	// создание списка для хранения товаров
+	
 	var products []Product
-	// считывание данных о товарах из результатов запроса
 	for rows.Next() {
 		var product Product
-		if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL); err != nil {
+		if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL, &product.MongoID); err != nil {
 			log.Println("Error scanning row:", err)
 			return nil, err
 		}
-		// Добавление продуктов в список
 		products = append(products, product)
 	}
-
+	
 	if err := rows.Err(); err != nil {
 		log.Println("Error iterating rows:", err)
 		return nil, err
 	}
-
+	
 	return products, nil
+	
 }
 
 func handleError(w http.ResponseWriter, err error, message string) {

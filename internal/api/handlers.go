@@ -36,6 +36,7 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.HandlerItemRequest) // используем маршрут с параметром id
 
 	router.HandleFunc("/create-new-item", models.CreateNewItemHandler).Methods("POST")
+
 	router.HandleFunc("/edit-item/{id:[0-9a-fA-F]{24}}", models.EditItemHandler).Methods("GET")
 	router.HandleFunc("/update-item/{id:[0-9a-fA-F]{24}}", models.UpdateItemHandler).Methods("POST")
 	router.HandleFunc("/upload-image", models.UploadImageHandler).Methods("POST")

@@ -67,6 +67,7 @@
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Price</th>
+                                <th>Quantity</th>
                                 <th>Dynamic Fields</th>
                                 <th>Description Fields</th>
                                 <th>Actions</th>
@@ -76,8 +77,9 @@
                             {{range .Items}}
                             <tr class="item">
                                 <td>{{.ID}}</td>
-                                <td><a href="/item/{{.ID.Hex}}">{{.ItemPsql.Name}}</a></td>
-                                <td>$ {{.ItemPsql.Price}}</td>
+                                <td><a href="/item/{{.ID.Hex}}">{{.Name}}</a></td>
+                                <td>$ {{.Price}}</td>
+                                <td>{{.Quantity}}</td>
                                 <td>
                                     {{range .DynamicFields}}
                                         {{.FieldName}}: {{.FieldValue}}<br>
@@ -98,7 +100,7 @@
                             </tr>
                             {{else}}
                             <tr>
-                                <td colspan="6">No items found</td>
+                                <td colspan="7">No items found</td>
                             </tr>
                             {{end}}
                         </tbody>

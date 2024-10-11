@@ -1,11 +1,13 @@
 module github.com/KrepkiyOrex/inter_store
 
-go 1.22
+go 1.23
+
+toolchain go1.23.0
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gorilla/mux v1.8.1
-	github.com/gorilla/sessions v1.2.2
+	github.com/gorilla/sessions v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/pelletier/go-toml v1.9.5

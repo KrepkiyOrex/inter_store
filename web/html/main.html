@@ -63,7 +63,7 @@
                 {{range .Products}}
                 <div class="product-item">
                     <img src="/{{.ImageURL}}" alt="{{.Name}}" class="product-image">
-                    <h3>{{.Name}}</h3>
+                    <h3><a href="/item/{{.MongoID}}">{{.Name}}</a></h3>
                     <p>Price: ${{.Price}}</p>
                     <div class="product-details">
                         <button class="buy-button" data-product-id="{{.ID}}">Купить</button>

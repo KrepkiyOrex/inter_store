@@ -19,7 +19,12 @@ import (
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/gorilla/sessions"
 )
+
+// store is the global variable for the session store
+var store = sessions.NewCookieStore([]byte("super-secret-key"))
 
 // отзыв на продукт
 // type Review struct {
@@ -32,10 +37,9 @@ import (
 type Item struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	User_ID           int                `bson:"user_id" json:"user_id"`
-	Name              string             `bson:"name" json:"name"`
-	Price             float64            `bson:"price" json:"price"`
 	Quantity          int32              `bson:"quantity" json:"quantity"`
-	ImageURL          string             `bson:"imageURL,omitempty"`
+	Name              string             `json:"name"`  // для combineItems
+	Price             float64            `json:"price"` // для combineItems
 	DynamicFields     []DynamicField     `bson:"dynamic_fields" json:"dynamic_fields"`
 	DescriptionFields []DescriptionField `bson:"description_fields" json:"description_fields"`
 }
@@ -171,10 +175,12 @@ func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Создание нового пустого товара
 	newItemMongo := Item{
-		ID:       primitive.NewObjectID(),
-		User_ID:  userID,
-		Name:     "Edit name",
-		Price:    0.0,
+		ID:      primitive.NewObjectID(),
+		User_ID: userID,
+		// Name:              "Edit name",
+		// Price:             0.0,
+		// DynamicFields:     []DynamicField{},
+		// DescriptionFields: []DescriptionField{},
 		Quantity: 0,
 	}
 
@@ -204,7 +210,7 @@ func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = db.QueryRowContext(
 		context.Background(),
-		`INSERT INTO products (mongo_id, name, price, image_url) 
+		`INSERT INTO products (mongo_id, name, price, image_url)
 			 VALUES ($1, $2, $3, $4) RETURNING id`,
 		newItemPostgre.Mongo_id, newItemPostgre.Name, newItemPostgre.Price, newItemPostgre.Image_url,
 	).Scan(&newItemPostgre.ID)
@@ -219,6 +225,174 @@ func CreateNewItemHandler(w http.ResponseWriter, r *http.Request) {
 	// перенаправление на страницу редактирования нового товара
 	http.Redirect(w, r, fmt.Sprintf("/edit-item/%s", newItemMongo.ID.Hex()), http.StatusSeeOther)
 }
+
+// create new item
+// func CreateDraftHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Получаем сессию
+// 	session, err := store.Get(r, "session")
+// 	if err != nil {
+// 		http.Error(w, "Error getting session: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Получаем UserID из cookies или сессии
+// 	userID, err := utils.GetUserIDFromCookie(r)
+// 	if err != nil {
+// 		http.Error(w, "User ID not found: "+err.Error(), http.StatusUnauthorized)
+// 		return
+// 	}
+
+// 	// Создаем черновик товара
+// 	draftItem := Item{
+// 		ID:       primitive.NewObjectID(),
+// 		User_ID:  userID,
+// 		Name:     "",
+// 		Price:    0.0,
+// 		Quantity: 0,
+// 	}
+
+// 	// Сохраняем черновик в сессии
+// 	session.Values["draftItem"] = draftItem
+// 	err = session.Save(r, w)
+// 	if err != nil {
+// 		http.Error(w, "Failed to save session: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Перенаправляем на страницу редактирования черновика
+// 	http.Redirect(w, r, "/edit-item/"+draftItem.ID.Hex(), http.StatusSeeOther)
+// }
+
+// Редактирование черновика товара
+// func EditDraftItemHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Получаем сессию
+// 	session, err := store.Get(r, "session")
+// 	if err != nil {
+// 		http.Error(w, "Error getting session: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Получаем черновик товара из сессии
+// 	draftItem, ok := session.Values["draftItem"].(Item)
+// 	if !ok {
+// 		http.Error(w, "Draft item not found", http.StatusNotFound)
+// 		return
+// 	}
+
+// 	// Отображаем шаблон редактирования с черновиком товара
+// 	utils.RenderTemplate(w, draftItem, "web/html/edit_item.html", "web/html/navigation.html")
+// }
+
+// edit item
+func EditItemHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	// получаем объект товара из базы данных Mongo
+	itemMongo, err := getItemByIDMongo(id)
+	if err != nil {
+		http.Error(w, "Mongo item not found", http.StatusNotFound)
+		return
+	}
+	log.Printf("Mongo item data: %+v", itemMongo)
+
+	// получаем объект товара из базы данных Postgre
+	itemPsql, err := getItemByMongoIDPostgre(id)
+	if err != nil {
+		http.Error(w, "Postgre item not found", http.StatusNotFound)
+		return
+	}
+	log.Printf("Postgre item data: %+v", itemPsql)
+
+	data := struct {
+		Item     Item
+		ItemPsql ItemPsql
+	}{
+		Item:     itemMongo,
+		ItemPsql: itemPsql,
+	}
+
+	// Отправляем данные на страницу редактирования
+	utils.RenderTemplate(w, data,
+		"web/html/edit_item.html",
+		"web/html/navigation.html")
+}
+
+// SaveItemHandler - сохраняет редактируемый товар в базу данных
+// func SaveItemHandler(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	id := vars["id"]
+
+// 	// Получаем сессию
+// 	session, err := store.Get(r, "session")
+// 	if err != nil {
+// 		http.Error(w, "Error getting session: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Проверяем, есть ли в сессии черновик товара
+// 	draftItem, ok := session.Values["draftItem"].(Item)
+// 	if !ok || draftItem.ID.Hex() != id {
+// 		http.Error(w, "Draft item not found in session", http.StatusNotFound)
+// 		return
+// 	}
+
+// 	// Получаем данные из формы
+// 	name := r.FormValue("name")
+// 	priceStr := r.FormValue("price")
+// 	quantityStr := r.FormValue("quantity")
+
+// 	// Преобразуем строковые значения в нужные типы
+// 	price, err := strconv.ParseFloat(priceStr, 64)
+// 	if err != nil {
+// 		http.Error(w, "Invalid price value", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	quantity, err := strconv.Atoi(quantityStr)
+// 	if err != nil {
+// 		http.Error(w, "Invalid quantity value", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Обновляем черновик товара
+// 	draftItem.Name = name
+// 	draftItem.Price = price
+// 	draftItem.Quantity = int32(quantity) // Преобразуем quantity в int32
+
+// 	// Сохраняем черновик в MongoDB
+// 	collection := database.GetCollection()
+// 	_, err = collection.InsertOne(context.Background(), draftItem)
+// 	if err != nil {
+// 		http.Error(w, "Error saving to MongoDB: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Сохраняем черновик в PostgreSQL
+// 	db, err := database.Connect()
+// 	if err != nil {
+// 		http.Error(w, "Error connecting to PostgreSQL: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	_, err = db.ExecContext(
+// 		context.Background(),
+// 		`INSERT INTO products (mongo_id, name, price, quantity)
+//         VALUES ($1, $2, $3, $4)`,
+// 		draftItem.ID.Hex(), draftItem.Name, draftItem.Price, draftItem.Quantity,
+// 	)
+// 	if err != nil {
+// 		http.Error(w, "Error saving to PostgreSQL: "+err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Удаляем черновик из сессии
+// 	delete(session.Values, "draftItem")
+// 	session.Save(r, w)
+
+// 	// Перенаправляем на страницу редактирования товара
+// 	http.Redirect(w, r, fmt.Sprintf("/edit-item/%s", draftItem.ID.Hex()), http.StatusSeeOther)
+// }
 
 func getItemByMongoIDPostgre(mongoID string) (ItemPsql, error) {
 	db, err := database.Connect() // Подключение к базе данных PostgreSQL
@@ -244,51 +418,19 @@ func getItemByMongoIDPostgre(mongoID string) (ItemPsql, error) {
 	return itemPsql, nil
 }
 
-// edit item
-func EditItemHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	// Получаем объект товара из базы данных
-	itemMongo, err := getItemByIDMongo(id)
-	if err != nil {
-		http.Error(w, "Mongo item not found", http.StatusNotFound)
-		return
-	}
-	log.Printf("Mongo item data: %+v", itemMongo)
-
-	itemPsql, err := getItemByMongoIDPostgre(id)
-	if err != nil {
-		http.Error(w, "Postgre item not found", http.StatusNotFound)
-		return
-	}
-	log.Printf("Postgre item data: %+v", itemPsql)
-
-	data := struct {
-		Item     Item
-		ItemPsql ItemPsql
-	}{
-		Item:     itemMongo,
-		ItemPsql: itemPsql,
-	}
-
-	// Отправляем данные на страницу редактирования
-	utils.RenderTemplate(w, data,
-		"web/html/edit_item.html",
-		"web/html/navigation.html")
-}
-
 type ItemPsql struct {
-	Mongo_id  string
-	ID        int
-	UserID    int
-	Price     float64
-	Name      string
-	Image_url string
+	ID        int     `db:"id"`
+	Mongo_id  string  `db:"mongo_id"`
+	UserID    int     `db:"user_id"`
+	Name      string  `db:"name"`
+	Price     float64 `db:"price"`
+	Image_url string  `db:"image_url"`
 }
 
 // update data item
 func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(" +++ start item ")
+
 	id := mux.Vars(r)["id"]
 	item, err := getItemByIDMongo(id)
 	if err != nil {
@@ -311,6 +453,9 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 		id).Scan(&itemPsql.ID, &userID, &itemPsql.Name, &itemPsql.Price, &itemPsql.Image_url)
 
 	if err == sql.ErrNoRows {
+
+		fmt.Println(" +++ sql.ErrNoRows", itemPsql, item.Quantity)
+
 		itemPsql.UserID, err = auth.GetCookieUserID(w, r)
 		if err != nil {
 			http.Error(w, "Invalid user_ID", http.StatusInternalServerError)
@@ -341,6 +486,43 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error saving to PostgreSQL database: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+		// Обработка динамических полей
+		// dynamicFields := []DynamicField{}
+		// fieldNames := r.Form["field-name"]
+		// fieldValues := r.Form["field-value"]
+		// for i := 0; i < len(fieldNames); i++ {
+		// 	dynamicFields = append(dynamicFields, DynamicField{
+		// 		FieldName:  fieldNames[i],
+		// 		FieldValue: fieldValues[i],
+		// 	})
+		// }
+		// item.DynamicFields = dynamicFields
+
+		// // Обработка динамических полей описания
+		// descriptionFields := []DescriptionField{}
+		// nameDeps := r.Form["field-name-dep"]
+		// valueDeps := r.Form["field-value-dep"]
+		// for i := 0; i < len(nameDeps); i++ {
+		// 	descriptionFields = append(descriptionFields, DescriptionField{
+		// 		NameDep:  nameDeps[i],
+		// 		ValueDep: valueDeps[i],
+		// 	})
+		// }
+		// item.DescriptionFields = descriptionFields
+
+		item.DynamicFields, item.DescriptionFields = processDynamicFields(r)
+
+		// collection := database.GetCollection()
+		// _, err = collection.UpdateByID(context.Background(), item.ID, bson.M{"$set": item})
+		// if err != nil {
+		// 	http.Error(w, "Error updating MongoDB database", http.StatusInternalServerError)
+		// 	return
+		// }
+
+		// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	} else if err == nil {
 		// Если запись найдена — обновляем ее
@@ -380,6 +562,48 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error updating PostgreSQL database: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		fmt.Println(" *** else if err")
+
+		// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+		// Обработка динамических полей
+		// dynamicFields := []DynamicField{}
+		// fieldNames := r.Form["field-name"]
+		// fieldValues := r.Form["field-value"]
+		// for i := 0; i < len(fieldNames); i++ {
+		// 	dynamicFields = append(dynamicFields, DynamicField{
+		// 		FieldName:  fieldNames[i],
+		// 		FieldValue: fieldValues[i],
+		// 	})
+		// }
+		// item.DynamicFields = dynamicFields
+
+		// // Обработка динамических полей описания
+		// descriptionFields := []DescriptionField{}
+		// nameDeps := r.Form["field-name-dep"]
+		// valueDeps := r.Form["field-value-dep"]
+		// for i := 0; i < len(nameDeps); i++ {
+		// 	descriptionFields = append(descriptionFields, DescriptionField{
+		// 		NameDep:  nameDeps[i],
+		// 		ValueDep: valueDeps[i],
+		// 	})
+		// }
+		// item.DescriptionFields = descriptionFields
+
+		item.DynamicFields, item.DescriptionFields = processDynamicFields(r)
+
+		// collection := database.GetCollection()
+		// _, err = collection.UpdateByID(context.Background(), item.ID, bson.M{"$set": item})
+		// if err != nil {
+		// 	http.Error(w, "Error updating MongoDB database", http.StatusInternalServerError)
+		// 	return
+		// }
+
+		fmt.Println(" [TEST] process func:", item.DynamicFields, item.DescriptionFields)
+
+		// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 	} else {
 		http.Error(w, "Error querying PostgreSQL database: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -397,6 +621,31 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/item/%s", item.ID.Hex()), http.StatusSeeOther)
 }
 
+// обработка динамических полей
+func processDynamicFields(r *http.Request) ([]DynamicField, []DescriptionField) {
+	dynamicFields := []DynamicField{}
+	fieldNames := r.Form["field-name"]
+	fieldValues := r.Form["field-value"]
+	for i := 0; i < len(fieldNames); i++ {
+		dynamicFields = append(dynamicFields, DynamicField{
+			FieldName:  fieldNames[i],
+			FieldValue: fieldValues[i],
+		})
+	}
+
+	descriptionFields := []DescriptionField{}
+	nameDeps := r.Form["field-name-dep"]
+	valueDeps := r.Form["field-value-dep"]
+	for i := 0; i < len(nameDeps); i++ {
+		descriptionFields = append(descriptionFields, DescriptionField{
+			NameDep:  nameDeps[i],
+			ValueDep: valueDeps[i],
+		})
+	}
+
+	return dynamicFields, descriptionFields
+}
+
 // shows the sale items created by the specified user
 func ListUserSaleItems(w http.ResponseWriter, r *http.Request) {
 	userName, err := auth.GetUserName(r)
@@ -411,12 +660,13 @@ func ListUserSaleItems(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("Parsed User ID:", userID)
 
-	// Получаем товары из MongoDB
+	// Получаем товары из Mongo
 	mongoItems, err := getUserSaleItemsMongo(userID)
 	if err != nil {
-		http.Error(w, "Failed to find items from MongoDB", http.StatusInternalServerError)
+		http.Error(w, "Failed to find items from Mongo", http.StatusInternalServerError)
 		return
 	}
+	fmt.Println("Mongo Items:", mongoItems)
 
 	// Получаем товары из PostgreSQL
 	postgresItem, err := getItemsByUserIDPostgre(userID)
@@ -424,31 +674,48 @@ func ListUserSaleItems(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to find item from PostgreSQL", http.StatusInternalServerError)
 		return
 	}
+	fmt.Println("PostgreSQL Items:", postgresItem)
 
 	combinedItems := combineItems(mongoItems, postgresItem)
+	fmt.Println("Combined Items:", combinedItems)
 
 	renderUserSaleItemsPage(w, userName, combinedItems)
 }
 
 func combineItems(mongoItems []Item, postgresItems []ItemPsql) []Item {
-	var combinedItems []Item
+    var combinedItems []Item
 
-	// Преобразуем все товары из PostgreSQL в формат Item и добавляем в combinedItems
-	for _, postgresItem := range postgresItems {
-		combinedItems = append(combinedItems, Item{
-			ID:       primitive.NewObjectID(), // ID для PostgreSQL не нужен, может быть пустым
-			User_ID:  postgresItem.UserID,
-			Name:     postgresItem.Name,
-			Price:    float64(postgresItem.Price),
-			ImageURL: postgresItem.Image_url,
-			Quantity: 1, // Или другой дефолтный параметр
-		})
-	}
+    // Создаём мапу для быстрого поиска товаров из Mongo по mongo_id
+    mongoItemsMap := make(map[string]Item)
+    for _, mongoItem := range mongoItems {
+        mongoItemsMap[mongoItem.ID.Hex()] = mongoItem
+    }
+    
+    fmt.Println("Mongo Map:", mongoItemsMap) // Отладочный вывод карты Mongo товаров
 
-	// Добавляем товары из MongoDB
-	combinedItems = append(combinedItems, mongoItems...)
+    // Соединяем товары PostgreSQL и Mongo
+    for _, postgresItem := range postgresItems {
+        mongoItem, found := mongoItemsMap[postgresItem.Mongo_id]
+        if found {
+            // если товар найден в Mongo, объединяем данные
+            combinedItems = append(combinedItems, Item{
+                ID:               mongoItem.ID,
+                User_ID:          postgresItem.UserID,
+                Quantity:         mongoItem.Quantity,
+                Name:             postgresItem.Name,
+                Price:            postgresItem.Price,
+                DynamicFields:    mongoItem.DynamicFields,
+                DescriptionFields: mongoItem.DescriptionFields,
+            })
+        } else {
+            // если товар не найден в Mongo, пропускаем его
+            fmt.Printf("Skipping PostgreSQL item with Mongo_id: %s (not found in Mongo)\n", postgresItem.Mongo_id)
+        }
+    }
 
-	return combinedItems
+    fmt.Println("Combined Items after merge:", combinedItems) // Вывод объединённых товаров после обработки
+
+    return combinedItems
 }
 
 // deleting item from DB list
@@ -526,17 +793,14 @@ func renderLoginPage(w http.ResponseWriter) {
 func getUserSaleItemsMongo(userID int) ([]Item, error) {
 	collection := database.GetCollection()
 
-	// создаем фильтр для поиска документов по user_id
 	filter := bson.M{"user_id": userID}
 
-	// Выполняем запрос к коллекции
 	cursor, err := collection.Find(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
 
-	// Читаем документы из курсора
 	var items []Item
 	if err := cursor.All(context.Background(), &items); err != nil {
 		return nil, err
