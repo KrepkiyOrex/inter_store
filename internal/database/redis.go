@@ -2,12 +2,12 @@ package database
 
 import (
 	"context"
-	"log"
 	"os"
 	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -19,15 +19,15 @@ var (
 func InitRedis() {
 	err := godotenv.Load("config/config.env")
 	if err != nil {
-		log.Printf("Error loading config.env file")
+		log.Error("Error loading config.env file")
 	}
 
-    addr := os.Getenv("REDIS_ADDR")
-    password := os.Getenv("REDIS_PASSWORD")
-    db, err := strconv.Atoi(os.Getenv("REDIS_DB"))
-    if err != nil {
-        log.Fatalf("Invalid REDIS_DB value: %v", err)
-    }
+	addr := os.Getenv("REDIS_ADDR")
+	password := os.Getenv("REDIS_PASSWORD")
+	db, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+	if err != nil {
+		log.Fatalf("Invalid REDIS_DB value: %v", err)
+	}
 
 	Rdb = redis.NewClient(&redis.Options{
 		Addr:     addr,

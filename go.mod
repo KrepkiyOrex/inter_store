@@ -37,4 +37,5 @@ require (
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/sirupsen/logrus v1.9.3
 )

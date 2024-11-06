@@ -2,10 +2,10 @@ package others
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/KrepkiyOrex/inter_store/inventory"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -36,17 +36,17 @@ func TestInventoryHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to connect to gRPC server", http.StatusInternalServerError)
 		return
 	}
-		defer conn.Close()
+	defer conn.Close()
 
-	/* 
+	/*
 		сперва для оформления сделай, потом для страницы с товаром.
 		это именно добавляет или убавляет все таки кол товара на складе?
-		Переменные уже сможешь подставить сразу сюда, за место product123 и warehouse456 
+		Переменные уже сможешь подставить сразу сюда, за место product123 и warehouse456
 		и прочее, для декремента. сама функция будет срабатывать, только после нажатия
 		 кнопки "оформить заказ", засунешь в ту функ.
 
 		с GetInventory как получить тут инфу о наличии на складе? у меня пока так
-		 работает, что отправляет инфу на сервак и там все завершается, но нету 
+		 работает, что отправляет инфу на сервак и там все завершается, но нету
 		 обратного ответа для вывода на фронт для карты.
 
 		*кстати по поводу соедниения, как будет выглядеть код для интернет соединеня,

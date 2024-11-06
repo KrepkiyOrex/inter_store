@@ -1,13 +1,13 @@
 package models
 
 import (
+	"database/sql"
+	"net/http"
+
 	"github.com/KrepkiyOrex/inter_store/internal/auth"
 	"github.com/KrepkiyOrex/inter_store/internal/database"
 	"github.com/KrepkiyOrex/inter_store/internal/utils"
-	"database/sql"
-	"log"
-	"net/http"
-	"strconv"
+	log "github.com/sirupsen/logrus"
 )
 
 type User struct {
@@ -27,42 +27,28 @@ type PersonDetails struct {
 	Phone       string
 }
 
-/*
-	Здесь выполняю 2 разных запроса по отдельности т.к. если вместе сделать через
-	JOIN, то вылазит ошибка на пустые данные БД и страницу на отображает в браузере.
-	person_details изначально же с пустыми данными т.к. после регистрации пользователи
-	обычно не заполняют сразу данные. ХЗ как ошибку убрать.
-*/
-
 // user profile
 func Account(w http.ResponseWriter, r *http.Request) {
 	// Подключаемся к базе данных
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-		log.Println("Error connecting to the database:", err)
+		log.Error("Error connecting to the database: ", err)
 		return
 	}
 	defer db.Close()
 
-	// получаем ID пользователя из куки
-	cookieID, err := r.Cookie("userID")
+	userID, err := auth.GetCookieUserID(w, r)
 	if err != nil {
-		if err == http.ErrNoCookie {
-			http.Error(w, "User not authenticated", http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, "Error retrieving userID", http.StatusInternalServerError)
-		return
+		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+	log.WithFields(log.Fields{
+		"error": err,
+		"route": "Account",
+		"userIP": r.RemoteAddr,
+	}).Error("Invalid user ID from cookie")
+	return
 	}
-
-	userID, err := strconv.Atoi(cookieID.Value)
-	if err != nil {
-		http.Error(w, "Invalid userID format", http.StatusBadRequest)
-		return
-	}
-
-	log.Println("Extracted userID from cookie:", userID)
+	log.Info("Parsed User ID: ", userID)
 
 	// запрос для получения данных пользователя из таблицы users
 	userQuery := `SELECT username, email, user_id 
@@ -75,10 +61,10 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		&user.User_ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Println("No user found for userID:", userID)
+			log.Info("No user found for userID: ", userID)
 			http.Error(w, "User not found", http.StatusNotFound)
 		} else {
-			log.Println("Error querying user:", err)
+			log.Error("Error querying user: ", err)
 			http.Error(w, "Error retrieving user data", http.StatusInternalServerError)
 		}
 		return
@@ -95,7 +81,7 @@ func Account(w http.ResponseWriter, r *http.Request) {
 		&user.PersonDetails.Phone)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("No person details found for userID: %v, UserName: %s", userID, user.UserName)
+			log.Infof("No person details found for userID: %v, UserName: %s", userID, user.UserName)
 			user.PersonDetails = PersonDetails{}
 		} else {
 			log.Println("Error querying person details:", err)
@@ -106,10 +92,9 @@ func Account(w http.ResponseWriter, r *http.Request) {
 
 	userName, _ := auth.GetUserName(r)
 
-	// Создаем структуру данных для передачи в шаблон
+	// создаем структуру данных для передачи в шаблон
 	data := PageData{}.newPageDataAcc(user, userName)
 
-	// Рендерим шаблон с данными пользователя
 	utils.RenderTemplate(w, data,
 		"web/html/account.html",
 		"web/html/navigation.html")

@@ -2,13 +2,13 @@ package auth
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/KrepkiyOrex/inter_store/internal/database"
 	"github.com/KrepkiyOrex/inter_store/internal/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,22 +107,17 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		db, err := database.Connect()
 		if err != nil {
 			http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-			log.Println("Error connecting to the database")
+			log.Error("Error connecting to the database: ", err)
 			return
 		}
 		defer db.Close()
 
-		cookieID, err := r.Cookie("userID")
+		userID, err := GetCookieUserID(w, r)
 		if err != nil {
-			http.Error(w, "Invalid userID", http.StatusUnauthorized)
-			return
+			http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+			log.Error("Invalid user ID: ", err)
 		}
-
-		userID, err := strconv.Atoi(cookieID.Value)
-		if err != nil {
-			http.Error(w, "Invalid userID format", http.StatusBadRequest)
-			return
-		}
+		log.Info("Parsed User ID: ", userID)
 
 		var user User
 		queryUsers := `SELECT username, email, user_id 
@@ -135,8 +130,10 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "User not found", http.StatusNotFound)
+				log.Warn("User not found for User ID: ", userID)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Error("Error querying user data: ", err)
 			}
 			return
 		}
@@ -152,8 +149,10 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if err == sql.ErrNoRows {
 				user.PersonDetails = PersonDetails{}
+				log.Warn("No personal details found for User ID: ", userID)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Error("Error querying personal details: ", err)
 				return
 			}
 		}
@@ -169,6 +168,7 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, "Unable to parse form", http.StatusBadRequest)
+			log.Error("Error parsing form: ", err)
 			return
 		}
 
@@ -182,25 +182,19 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		db, err := database.Connect()
 		if err != nil {
 			http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+			log.Error("Error connecting to the database: ", err)
 			return
 		}
 		defer db.Close()
 
-		cookieID, err := r.Cookie("userID")
+		userID, err := GetCookieUserID(w, r)
 		if err != nil {
-			http.Error(w, "Invalid userID", http.StatusUnauthorized)
-			return
+			http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+			log.Error("Invalid user ID: ", err)
 		}
+		log.Info("Parsed User ID: ", userID)
 
-		userID, err := strconv.Atoi(cookieID.Value)
-		if err != nil {
-			http.Error(w, "Invalid userID format", http.StatusBadRequest)
-			return
-		}
-
-		log.Println("Updating user data:", username, email, userID)
-
-		// Обновление данных пользователя
+		// обновление данных пользователя
 		_, err = db.Exec(`
 				UPDATE users 
 					SET username = $1, email = $2 
@@ -208,10 +202,11 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 			username, email, userID)
 		if err != nil {
 			http.Error(w, "Unable to update user data", http.StatusInternalServerError)
+			log.Error("Unable to update user data for User ID: ", userID, "Error: ", err)
 			return
 		}
 
-		log.Println("Checking if personal details exist for user:", userID)
+		log.Info("Checking if personal details exist for User ID: ", userID)
 		var count int
 		err = db.QueryRow(`
 				SELECT COUNT(*) 
@@ -220,6 +215,7 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 			userID).Scan(&count)
 		if err != nil {
 			http.Error(w, "Unable to check person details", http.StatusInternalServerError)
+			log.Error("Unable to check person details for User ID: ", userID, "Error: ", err)
 			return
 		}
 
@@ -231,6 +227,7 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 				firstName, lastName, middleName, phone, userID)
 			if err != nil {
 				http.Error(w, "Unable to insert personal details", http.StatusInternalServerError)
+				log.Error("Unable to insert personal details for User ID: ", userID, "Error: ", err)
 				return
 			}
 		} else {
@@ -241,8 +238,10 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 				firstName, lastName, middleName, phone, userID)
 			if err != nil {
 				http.Error(w, "Unable to update personal details", http.StatusInternalServerError)
+				log.Error("Unable to update personal details for User ID: ", userID, "Error: ", err)
 				return
 			}
+			log.Info("Updated personal details for User ID: ", userID)
 		}
 
 		http.Redirect(w, r, "/account", http.StatusSeeOther)

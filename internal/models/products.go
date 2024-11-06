@@ -2,13 +2,14 @@ package models
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/KrepkiyOrex/inter_store/internal/auth"
 	"github.com/KrepkiyOrex/inter_store/internal/database"
 	"github.com/KrepkiyOrex/inter_store/internal/utils"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -21,7 +22,7 @@ type PageData struct {
 
 type Product struct {
 	ID         int
-	MongoID   string
+	MongoID    string
 	Name       string
 	Price      float64
 	ImageURL   string
@@ -46,8 +47,9 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 	cacheKey := "products_list"
 
 	cachedData, err := getFromRedisCache(cacheKey)
-	// ключ не найден в кэше, выполняем запрос к основной БД
 	if err == redis.Nil {
+		// ключ не найден в кэше, выполняем запрос к основной БД
+		log.Info("[Redis] Cache miss. Fetching data from the database.")
 		products, err := getProductsFromPostgre()
 		if err != nil {
 			handleError(w, err, "Error fetching products from database")
@@ -55,27 +57,32 @@ func ProductsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := saveToCache(w, cacheKey, products); err != nil {
-			log.Printf("Failed to save data in Redis: %v", err)
+			log.WithFields(log.Fields{
+				"error": err,
+				"cacheKey": cacheKey,
+			}).Warn("Failed to save data in Redis")
 		}
 
 		renderNewPageDataProd(w, products, userName)
 
-		log.Println("[Redis] The data is not in Redis. Load from database.")
 
 	} else if err != nil {
-		http.Error(w, "Error fetching data from Redis: %v", http.StatusInternalServerError)
-		log.Printf("Failed to get data from Redis: %v", err)
+		// error while retrieving data from Redis
+		handleError(w, err, "Error fetching data from Redis")
+		log.WithFields(log.Fields{
+			"error": err,
+			"cacheKey": cacheKey,
+		}).Error("Failed to get data from Redis")
 	} else {
 		// данные кеша есть в Редисе
 		var products []Product
 		if err = json.Unmarshal([]byte(cachedData), &products); err != nil {
-			http.Error(w, "Error marshaling products data", http.StatusInternalServerError)
+			handleError(w, err, "Error unmarshaling products data from Redis")
 			return
 		}
 
+		log.Info("[Redis] Cache hit. Data loaded successfully from Redis.")
 		renderNewPageDataProd(w, products, userName)
-
-		log.Println("[Redis] The data from Redis has been uploaded!")
 	}
 }
 
@@ -88,7 +95,7 @@ func getFromRedisCache(cacheKey string) (string, error) {
 func getProductsFromPostgre() ([]Product, error) {
 	db, err := database.Connect()
 	if err != nil {
-		log.Println("Error connecting to the database", err)
+		log.Error("Error connecting to the database", err)
 		return nil, err
 	}
 	defer db.Close()
@@ -97,33 +104,37 @@ func getProductsFromPostgre() ([]Product, error) {
 	query := `SELECT name, price, id, image_url, mongo_id FROM products`
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Println("Error executing query:", err)
+		log.Error("Error executing query:", err)
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var products []Product
 	for rows.Next() {
 		var product Product
 		if err := rows.Scan(&product.Name, &product.Price, &product.ID, &product.ImageURL, &product.MongoID); err != nil {
-			log.Println("Error scanning row:", err)
+			log.Error("Error scanning row:", err)
 			return nil, err
 		}
 		products = append(products, product)
 	}
-	
+
 	if err := rows.Err(); err != nil {
-		log.Println("Error iterating rows:", err)
+		log.Error("Error iterating rows:", err)
 		return nil, err
 	}
-	
+
+	log.Info("Products successfully retrieved from database")
 	return products, nil
-	
+
 }
 
 func handleError(w http.ResponseWriter, err error, message string) {
 	http.Error(w, message, http.StatusInternalServerError)
-	log.Println(err)
+	log.WithFields(log.Fields{
+		"error":   err,
+		"message": message,
+	}).Error("Internal server error")
 }
 
 // сохраняем данные в Redis
@@ -133,7 +144,15 @@ func saveToCache(w http.ResponseWriter, cacheKey string, products []Product) err
 		http.Error(w, "Error marshaling products data", http.StatusInternalServerError)
 		return err
 	}
-	return database.Rdb.Set(database.Rdb.Context(), cacheKey, productsJSON, 10*time.Second).Err()
+	err = database.Rdb.Set(database.Rdb.Context(), cacheKey, productsJSON, 10*time.Second).Err()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error":   err,
+			"cachKey": cacheKey,
+		}).Error("Failed to save data in Redis")
+	}
+
+	return err
 }
 
 func renderNewPageDataProd(w http.ResponseWriter, products []Product, userName string) {
@@ -157,57 +176,66 @@ func (pd PageData) newPageDataProd(products []Product, userName string) PageData
 
 // Обработчик для добавления товара в корзину
 func AddToCartHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
+    if r.Method != http.MethodPost {
+        log.Error("Invalid request method")
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
 
-	db, err := database.Connect() // postgreSQL
-	if err != nil {
-		log.Println("Error connecting to the database:", err)
-		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
+    db, err := database.Connect()
+    if err != nil {
+        log.Error("Error connecting to the database:", err)
+        http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
+        return
+    }
+    defer db.Close()
 
-	var requestData struct {
-		ProductID int `json:"product_id"`
-		Quantity  int `json:"quantity"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		log.Println("Invalid request body:", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
+    var requestData struct {
+        ProductID int    `json:"product_id"`
+        Quantity  int    `json:"quantity"`
+        MongoID   string `json:"mongo_id"`
+    }
 
-	userName, err := auth.GetUserName(r)
-	if err != nil {
-		log.Println("User not authenticated:", err)
-		http.Error(w, "User not authenticated", http.StatusUnauthorized)
-		return
-	}
+    if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+        log.Error("Invalid request body:", err)
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
 
-	var userID int
-	err = db.QueryRow("SELECT user_id FROM users WHERE username = $1", userName).Scan(&userID)
-	if err != nil {
-		log.Println("User not found:", err)
-		http.Error(w, "User not found", http.StatusInternalServerError)
-		return
-	}
+    userName, err := auth.GetUserName(r)
+    if err != nil {
+        log.Error("User not authenticated:", err)
+        http.Error(w, "User not authenticated", http.StatusUnauthorized)
+        return
+    }
 
-	_, err = db.Exec(`
-        INSERT INTO carts (user_id, product_id, quantity) 
-        	VALUES ($1, $2, $3) 
-       		ON CONFLICT (user_id, product_id) 
-        	DO UPDATE SET quantity = carts.quantity + EXCLUDED.quantity`,
-		userID, requestData.ProductID, requestData.Quantity,
-	)
-	if err != nil {
-		log.Println("Error adding product to cart:", err)
-		http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
-		return
-	}
+    var userID int
+    err = db.QueryRow("SELECT user_id FROM users WHERE username = $1", userName).Scan(&userID)
+    if err != nil {
+        log.Error("User not found:", err)
+        http.Error(w, "User not found", http.StatusInternalServerError)
+        return
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	fmt.Println("	BUG		Before:", requestData)
+
+    _, err = db.Exec(`
+        INSERT INTO carts (user_id, product_id, quantity, mongo_id) 
+        VALUES ($1, $2, $3, $4) 
+        ON CONFLICT (user_id, product_id) 
+        DO UPDATE SET quantity = carts.quantity + EXCLUDED.quantity`,
+        userID, requestData.ProductID, requestData.Quantity, requestData.MongoID,
+    )
+
+	fmt.Println("	BUG		After:", requestData)
+	
+    if err != nil {
+        log.Error("Error adding product to cart:", err)
+        http.Error(w, "Error adding product to cart", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
+

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/KrepkiyOrex/inter_store/internal/admin"
@@ -9,6 +8,7 @@ import (
 	"github.com/KrepkiyOrex/inter_store/internal/database"
 	"github.com/KrepkiyOrex/inter_store/internal/models"
 	"github.com/KrepkiyOrex/inter_store/internal/others"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 )
@@ -43,7 +43,7 @@ func SetupRoutes() *mux.Router {
 
 	router.HandleFunc("/", models.ProductsHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
-	router.HandleFunc("/list", models.ListHandler)
+	// router.HandleFunc("/list", models.ListHandler) del
 
 	// обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
@@ -68,7 +68,7 @@ func SetupRoutes() *mux.Router {
 	// группа маршрутов, требующих авторизации
 	authRoutes.HandleFunc("/account", models.Account)                // profile
 	authRoutes.HandleFunc("/add-to-cart", models.AddToCartHandler)   // для добавления товара в корзину
-	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
+	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) // orders for User ID
 	authRoutes.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
 	authRoutes.HandleFunc("/update_cart", models.UpdateCartHandler).Methods("POST")
 	authRoutes.HandleFunc("/cart", models.ViewCartHandler).Methods("GET")
