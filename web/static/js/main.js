@@ -7,7 +7,8 @@
                 },
                 body: new URLSearchParams({
                     'product_id': productID,
-                    'quantity': quantity
+                    'quantity': quantity,
+                    'mongo_id': mongoID
                 })
             }).then(response => {
                 if (!response.ok) {

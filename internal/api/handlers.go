@@ -1,14 +1,14 @@
 package api
 
 import (
-	"log"
 	"net/http"
 
-	"First_internet_store/internal/admin"
-	"First_internet_store/internal/auth"
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/models"
-	"First_internet_store/internal/others"
+	"github.com/KrepkiyOrex/inter_store/internal/admin"
+	"github.com/KrepkiyOrex/inter_store/internal/auth"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/models"
+	"github.com/KrepkiyOrex/inter_store/internal/others"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 )
@@ -36,13 +36,14 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/item/{id:[0-9a-fA-F]{24}}", models.HandlerItemRequest) // используем маршрут с параметром id
 
 	router.HandleFunc("/create-new-item", models.CreateNewItemHandler).Methods("POST")
+
 	router.HandleFunc("/edit-item/{id:[0-9a-fA-F]{24}}", models.EditItemHandler).Methods("GET")
 	router.HandleFunc("/update-item/{id:[0-9a-fA-F]{24}}", models.UpdateItemHandler).Methods("POST")
 	router.HandleFunc("/upload-image", models.UploadImageHandler).Methods("POST")
 
 	router.HandleFunc("/", models.ProductsHandler)
 	router.HandleFunc("/headers", others.HeadersHandler)
-	router.HandleFunc("/list", models.ListHandler)
+	// router.HandleFunc("/list", models.ListHandler) del
 
 	// обработчик для отображения страницы регистрации (GET)
 	router.HandleFunc("/registration", auth.ShowRegistrationPage)
@@ -53,7 +54,10 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/logout", auth.LogoutHandler)      // Exit
 	router.HandleFunc("/administrator", admin.AdminPanel) // admin panel
 	router.HandleFunc("/administrator/{id}", admin.DeleteUser).Methods("DELETE")
-	router.HandleFunc("/tt", models.Tttt) // Test 
+	router.HandleFunc("/tt", models.Tttt) // Test
+
+	// Регистрация обработчика для проверки микросервиса
+	router.HandleFunc("/test-inventory", others.TestInventoryHandler).Methods("POST")
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
@@ -64,7 +68,7 @@ func SetupRoutes() *mux.Router {
 	// группа маршрутов, требующих авторизации
 	authRoutes.HandleFunc("/account", models.Account)                // profile
 	authRoutes.HandleFunc("/add-to-cart", models.AddToCartHandler)   // для добавления товара в корзину
-	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) /* доделать html */
+	authRoutes.HandleFunc("/users-orders", models.UserOrdersHandler) // orders for User ID
 	authRoutes.HandleFunc("/submit_order", models.SubmitOrderHandler).Methods("POST")
 	authRoutes.HandleFunc("/update_cart", models.UpdateCartHandler).Methods("POST")
 	authRoutes.HandleFunc("/cart", models.ViewCartHandler).Methods("GET")

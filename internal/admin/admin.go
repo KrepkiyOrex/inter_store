@@ -1,12 +1,12 @@
 package admin
 
 import (
-	"First_internet_store/internal/auth"
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/utils"
-	"log"
+	"github.com/KrepkiyOrex/inter_store/internal/auth"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/utils"
 	"net/http"
-
+	
+	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/mux"
 )
 
@@ -34,6 +34,7 @@ type UserCookie struct {
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		log.Warn("Invalid request method for deleting user")
 		return
 	}
 
@@ -42,6 +43,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := vars["id"]
 	if userID == "" {
 		http.Error(w, "Missing user ID", http.StatusBadRequest)
+		log.Warn("Missing user ID in request")
 		return
 	}
 
@@ -49,7 +51,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-		log.Println("Error connecting to the database:", err)
+		log.Error("Error connecting to the database:", err)
 		return
 	}
 	defer db.Close()
@@ -60,11 +62,11 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(query, userID)
 	if err != nil {
 		http.Error(w, "Error deleting user", http.StatusInternalServerError)
-		log.Println("Error deleting user:", err)
+		log.Error("Error deleting user:", err)
 		return
 	}
 
-	// Успешное удаление
+	// успешное удаление
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -74,7 +76,7 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-		log.Println("Error connecting to the database")
+		log.Error("Error connecting to the database")
 		return
 	}
 	defer db.Close()
@@ -83,6 +85,7 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("SELECT username, password, email, user_id FROM users")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error("Error querying database:", err)
 		return
 	}
 	defer rows.Close()
@@ -95,6 +98,7 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 		err := rows.Scan(&user.Username, &user.Password, &user.Email, &user.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error("Error scanning row:", err)
 			return
 		}
 		users = append(users, user)
@@ -102,8 +106,11 @@ func AdminPanel(w http.ResponseWriter, r *http.Request) {
 
 	if err := rows.Err(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error("Error reading rows:", err)
 		return
 	}
+
+	log.Info("Successfully retrieved users from database, count:", len(users))
 
 	userName, _ := auth.GetUserName(r)
 

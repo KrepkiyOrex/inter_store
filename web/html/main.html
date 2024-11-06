@@ -8,37 +8,42 @@
     <link rel="shortcut icon" href="/static/img/favicon/favicon.ico" type="image/x-icon">
     <link rel='stylesheet' href='/static/css/main.css'>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.buy-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const productDetails = e.target.closest('.product-details');
-                    const quantityInput = productDetails.querySelector('.quantity-input');
-                    const productId = parseInt(e.target.dataset.productId, 10);
-                    const quantity = parseInt(quantityInput.value, 10);
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.buy-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const productDetails = e.target.closest('.product-details');
+                        const quantityInput = productDetails.querySelector('.quantity-input');
+                        
+                        const productId = parseInt(e.target.dataset.productId, 10);
+                        const mongoId = e.target.dataset.mongoId; // Получаем MongoID
+                        const quantity = parseInt(quantityInput.value, 10);
 
-                    fetch('/add-to-cart', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ product_id: productId, quantity: quantity })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Товар добавлен в корзину!');
-                        } else {
+                        fetch('/add-to-cart', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                                product_id: productId, 
+                                mongo_id: mongoId, // Добавляем MongoID в JSON
+                                quantity: quantity
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Товар добавлен в корзину!');
+                            } else {
+                                alert('Ошибка при добавлении товара в корзину.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
                             alert('Ошибка при добавлении товара в корзину.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Ошибка при добавлении товара в корзину.');
+                        });
                     });
                 });
             });
-        });
-
     </script>
 </head>
 <body>
@@ -63,10 +68,10 @@
                 {{range .Products}}
                 <div class="product-item">
                     <img src="/{{.ImageURL}}" alt="{{.Name}}" class="product-image">
-                    <h3>{{.Name}}</h3>
+                    <h3><a href="/item/{{.MongoID}}">{{.Name}}</a></h3>
                     <p>Price: ${{.Price}}</p>
                     <div class="product-details">
-                        <button class="buy-button" data-product-id="{{.ID}}">Купить</button>
+                        <button class="buy-button" data-product-id="{{.ID}}" data-mongo-id="{{.MongoID}}">Купить</button>
                         <input type="number" value="1" min="1" class="quantity-input">
                     </div>
                 </div>

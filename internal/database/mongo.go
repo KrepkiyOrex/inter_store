@@ -3,9 +3,10 @@ package database
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
+	"time"
 
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -33,16 +34,26 @@ func init() {
 
 // инициализирует клиент MongoDB и подключается к базе данных.
 func InitMongoClint() {
+	log.Info("Connecting to MongoDB...")
+
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
 		log.Fatalf("Mongo connect error: %v", err)
 	}
 
-	err = client.Ping(context.TODO(), nil)
+	log.Info("Pinging MongoDB...")
+
+	// Увеличим таймаут для контекста, чтобы более наглядно показать процесс ожидания
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Fatalf("Mongo ping error: %v", err)
 	}
+
+	log.Info("MongoDB connection established successfully.")
 
 	Client = client
 }

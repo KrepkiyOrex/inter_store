@@ -1,10 +1,13 @@
 package auth
 
 import (
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/utils"
 	"database/sql"
-	"log"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/utils"
+
 	"net/http"
 	"strconv"
 	"strings"
@@ -44,7 +47,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
-		log.Fatal("Error connecting to the database:", err)
+		log.Fatal("Error connecting to the database: ", err)
 		return
 	}
 	defer db.Close()
@@ -53,7 +56,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		http.Error(w, "Error parsing form data", http.StatusInternalServerError)
-		log.Fatal("Error parsing form data:", err)
+		log.Fatal("Error parsing form data: ", err)
 		return
 	}
 
@@ -70,7 +73,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	duplicate, err := checkDuplicateAccounts(db, email)
 	if err != nil {
 		http.Error(w, "Error checking for duplicate accounts", http.StatusInternalServerError)
-		log.Fatal("Error checking for duplicate accounts:", err)
+		log.Fatal("Error checking for duplicate accounts: ", err)
 		return
 	}
 
@@ -92,7 +95,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		userName, email, password).Scan(&userID)
 	if err != nil {
 		http.Error(w, "Error saving user data to the database", http.StatusInternalServerError)
-		log.Fatal("Error saving user data to the database:", err)
+		log.Fatal("Error saving user data to the database: ", err)
 		return
 	}
 
@@ -102,7 +105,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// устанавливаем ID пользователя в куки
 	SetCookie(w, "userID", strconv.Itoa(userID), time.Now().Add(24*time.Hour))
 
-	log.Printf("User %s added to the database with ID %d", userName, userID)
+	log.Infof("User %s added to the database with ID %d", userName, userID)
 
 	// Перенаправляем пользователя на страницу аккаунта
 	http.Redirect(w, r, "/account", http.StatusSeeOther)
@@ -157,7 +160,7 @@ func validateAndRender(w http.ResponseWriter, field, fieldName, userName, email 
 	return true
 }
 
-// Обработчик для отображения HTML-страницы регистрации
+// обработчик для отображения HTML-страницы регистрации
 func ShowRegistrationPage(w http.ResponseWriter, r *http.Request) {
 	// link := "web/html/register.html"
 	// http.ServeFile(w, r, link)

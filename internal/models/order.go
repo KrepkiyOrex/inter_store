@@ -1,47 +1,48 @@
 package models
 
 import (
-	"First_internet_store/internal/auth"
-	"First_internet_store/internal/database"
-	"First_internet_store/internal/utils"
+	"context"
+	"fmt"
+
+	"github.com/KrepkiyOrex/inter_store/internal/auth"
+	"github.com/KrepkiyOrex/inter_store/internal/database"
+	"github.com/KrepkiyOrex/inter_store/internal/others"
+	"github.com/KrepkiyOrex/inter_store/internal/utils"
+	"github.com/KrepkiyOrex/inter_store/inventory"
+	log "github.com/sirupsen/logrus"
+
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-// Ваша функция для рендеринга шаблона
+// показывает заказы пользователя по ID
 func UserOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	// Получение ID пользователя из куки
-	cookieID, err := r.Cookie("userID")
+	userID, err := auth.GetCookieUserID(w, r)
 	if err != nil {
-		http.Error(w, "Invalid userID", http.StatusUnauthorized)
-		return
+		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+		log.Error("Failed to retrieve user ID from cookie")
 	}
-
-	userID, err := strconv.Atoi(cookieID.Value)
-	if err != nil {
-		http.Error(w, "Invalid userID format", http.StatusBadRequest)
-		return
-	}
-
-	log.Println("Extracted userID from cookie:", userID)
+	log.Info("Parsed User ID: ", userID)
 
 	// Получение заказов пользователя с БД
 	orders, err := getOrdersForUser(userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to retrieve orders", http.StatusInternalServerError)
+		log.Error("Error retrieving user orders: ", err)
 		return
 	}
 
 	if orders == nil {
-		orders = []Order{} // Инициализация пустого списка заказов, если nil
+		log.Info("No orders found for user: ", userID)
+		orders = []Order{} // инициализация пустого списка заказов, если nil
 	}
 
 	userName, _ := auth.GetUserName(r)
 
 	data := OrderPageData{}.newOrderPageData(orders, userID, userName)
+	log.Info("Renderind user ordors page for user: ", userID)
 
 	utils.RenderTemplate(w, data,
 		"web/html/orders.html",
@@ -82,7 +83,6 @@ type OrdersDate struct {
 
 // корзина добавленых заказов, перед оплатой
 func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
-	// Подключение к базе данных
 	db, err := database.Connect()
 	if err != nil {
 		http.Error(w, "Error connecting to the database", http.StatusInternalServerError)
@@ -91,27 +91,20 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	// Получение идентификатора пользователя из куки
-	cookie, err := r.Cookie("userID")
-	if err != nil || cookie.Value == "" {
-		http.Error(w, "User ID not found", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := strconv.Atoi(cookie.Value)
+	userID, err := auth.GetCookieUserID(w, r)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
-		return
 	}
+	log.Println("Parsed User ID:", userID)
 
 	// Выполнение SQL запроса для получения данных из корзины и продуктов
 	query := `
 		SELECT p.id, p.name, p.price, c.quantity 
 		FROM carts c
 		JOIN products p ON c.product_id = p.id
-		WHERE c.user_id = $1` // Используем $1 для параметра
+		WHERE c.user_id = $1`
 
-	rows, err := db.Query(query, userID) // Пример с user_id = 59
+	rows, err := db.Query(query, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,7 +120,7 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		product.TotalPrice = product.Price * float64(product.Quantity) // Приведение Quantity к float64
+		product.TotalPrice = product.Price * float64(product.Quantity)
 		products = append(products, product)
 		totalSum += product.TotalPrice // Суммируем общую стоимость каждого продукта
 	}
@@ -137,19 +130,27 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получение имени пользователя (пример)
+	// Получение имени пользователя
 	userName, _ := auth.GetUserName(r) // Пример получения имени пользователя
 
-	// Подготовка данных для шаблона
-	data := PageData{
+	renderViewCartPage(w, r, userName, products, totalSum)
+}
+
+func (pd PageData) newCartPageData(w http.ResponseWriter, userName string, products []Product, totalSum float64) PageData {
+	// подготовка данных для шаблона
+	return PageData{
 		ProductsData: ProductsData{
 			Products: products,
-			TotalSum: totalSum, // Передаем общую сумму в шаблон
+			TotalSum: totalSum, // передаем общую сумму товаров в шаблон
 		},
 		UserCookie: UserCookie{
 			UserName: userName,
 		},
 	}
+}
+
+func renderViewCartPage(w http.ResponseWriter, r *http.Request, userName string, products []Product, totalSum float64) {
+	data := PageData{}.newCartPageData(w, userName, products, totalSum)
 
 	// Рендеринг шаблона
 	utils.RenderTemplate(w, data,
@@ -157,8 +158,6 @@ func ViewCartHandler(w http.ResponseWriter, r *http.Request) {
 		"web/html/navigation.html",
 	)
 }
-
-// обновление счетчика в корзине во время оформления
 
 // обновление счетчика в корзине во время оформления
 func UpdateCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -223,23 +222,23 @@ func UpdateCartHandler(w http.ResponseWriter, r *http.Request) {
 
 // depr
 // Содержимое вашей корзины
-func ListHandler(w http.ResponseWriter, r *http.Request) {
-	userName, err := auth.GetUserName(r)
-	if err != nil {
-		// Куки не найдено, показываем форму входа
-		utils.RenderTemplate(w, UserCookie{},
-			"web/html/list.html",
-			"web/html/navigation.html")
-		return
-	}
+// func ListHandler(w http.ResponseWriter, r *http.Request) {
+// 	userName, err := auth.GetUserName(r)
+// 	if err != nil {
+// 		// Куки не найдено, показываем форму входа
+// 		utils.RenderTemplate(w, UserCookie{},
+// 			"web/html/list.html",
+// 			"web/html/navigation.html")
+// 		return
+// 	}
 
-	data := UserCookie{UserName: userName}
-	utils.RenderTemplate(w, data,
-		"web/html/list.html",
-		"web/html/navigation.html")
-}
+// 	data := UserCookie{UserName: userName}
+// 	utils.RenderTemplate(w, data,
+// 		"web/html/list.html",
+// 		"web/html/navigation.html")
+// }
 
-// Для получения купленых заказов пользователя из БД orders
+// для получения купленых заказов пользователя из БД orders
 func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {
 	db, err := database.Connect()
 	if err != nil {
@@ -292,45 +291,38 @@ func getOrdersForUser( /* db *sql.DB, */ userId int) ([]Order, error) {
 	return orders, nil
 }
 
-// Перенос с добавленых в корзину заказов, в историю оплаченых заказов
+// перенос с добавленых в корзину заказов, в историю оплаченых заказов
 func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
-	// Подключение к базе данных
 	db, err := database.Connect()
 	if err != nil {
 		log.Fatal("Error connecting to the database", err)
 	}
 	defer db.Close()
 
-	// Получение идентификатора пользователя из куки
-	cookieID, err := r.Cookie("userID")
-	if err != nil || cookieID.Value == "" {
-		http.Error(w, "User ID not found", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := strconv.Atoi(cookieID.Value)
+	userID, err := auth.GetCookieUserID(w, r)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusInternalServerError)
-		return
 	}
+	log.Println("Parsed User ID:", userID)
 
 	// Получение данных из формы
 	address := r.FormValue("address")
 	// delivery := r.FormValue("delivery")
 	payment := r.FormValue("payment")
 
-	// Извлечение данных из таблицы cart
+	// Извлечение данных из таблицы carts
 	type CartItem struct {
 		CartID    int
 		UserID    int
 		ProductID int
+		MongoID   string
 		Quantity  int
 		DateAdded time.Time
 	}
 
 	var cartItems []CartItem
 
-	query := `SELECT cart_id, user_id, product_id, quantity, date_added 
+	query := `SELECT cart_id, user_id, product_id, quantity, date_added, mongo_id
 			FROM carts 
 			WHERE user_id = $1`
 
@@ -344,7 +336,13 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var item CartItem
-		if err := rows.Scan(&item.CartID, &item.UserID, &item.ProductID, &item.Quantity, &item.DateAdded); err != nil {
+		if err := rows.Scan(
+			&item.CartID,
+			&item.UserID,
+			&item.ProductID,
+			&item.Quantity,
+			&item.DateAdded,
+			&item.MongoID); err != nil {
 			http.Error(w, "Error scanning cart items", http.StatusInternalServerError)
 			log.Println("Error scanning cart items:", err)
 			return
@@ -361,6 +359,9 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 	// Подготовка данных для таблицы order
 	var totalAmount float64
 
+	log.Println("Mongo ID:", cartItems)
+
+	// Массив для хранения ID продуктов и их количеств для декрементации
 	for _, item := range cartItems {
 		var price float64
 		err = db.QueryRow("SELECT price FROM products WHERE id = $1", item.ProductID).Scan(&price)
@@ -370,6 +371,14 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		totalAmount += price * float64(item.Quantity)
+
+		// Декрементирование товара в MongoDB через gRPC
+		success, err := DecremInventoryGRPC(item.MongoID, int32(item.Quantity))
+		if err != nil || !success {
+			http.Error(w, "Failed to update inventory", http.StatusInternalServerError)
+			log.Println("Failed to decrement inventory:", err)
+			return
+		}
 	}
 
 	orderQuery := `INSERT INTO orders 
@@ -384,7 +393,7 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Очистка таблицы carts пользователя, после оплаыт
+	// Очистка таблицы carts пользователя, после оплаты
 	deleteQuery := `DELETE FROM carts WHERE user_id = $1`
 
 	_, err = db.Exec(deleteQuery, userID)
@@ -396,4 +405,27 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Перенаправление пользователя на страницу /users-orders
 	http.Redirect(w, r, "/users-orders", http.StatusSeeOther)
+}
+
+func DecremInventoryGRPC(productID string, quantity int32) (bool, error) {
+	invClient, conn, err := others.NewInventoryClient()
+	if err != nil {
+		return false, fmt.Errorf("failed to create gRPC inventory client: %v", err)
+	}
+	defer conn.Close()
+
+	// Создаём запрос с `productID` и `quantity`
+	req := &inventory.RemoveInventoryRequest{
+		ProductId: productID,
+		Quantity:  quantity, // Количество для уменьшения
+	}
+
+	// Вызываем `RemoveInventory` на клиенте
+	resp, err := invClient.RemoveInventory(context.Background(), req)
+	if err != nil {
+		return false, fmt.Errorf("failed to update inventory via gRPC: %v", err)
+	}
+
+	// проверяем, успешно ли выполнен запрос
+	return resp.Success, nil
 }
