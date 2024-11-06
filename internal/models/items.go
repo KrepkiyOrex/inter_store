@@ -471,6 +471,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid quantity", http.StatusBadRequest)
 		return
 	}
+	
 	itemMongo.Quantity = int32(quantity)
 
 	itemMongo.DynamicFields, itemMongo.DescriptionFields = processDynamicFields(r)
