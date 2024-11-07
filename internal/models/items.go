@@ -471,7 +471,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid quantity", http.StatusBadRequest)
 		return
 	}
-	
+
 	itemMongo.Quantity = int32(quantity)
 
 	itemMongo.DynamicFields, itemMongo.DescriptionFields = processDynamicFields(r)
@@ -667,8 +667,8 @@ func combineItems(mongoItems []ItemMongo, postgresItems []ItemPsql) []ItemMongo 
 	return combinedItems
 }
 
-// deleting item from DB list
-func DeleteItem(w http.ResponseWriter, r *http.Request) {
+// deleting item from mongoDB list
+func DeleteItemMongo(w http.ResponseWriter, r *http.Request) {
 	itemID, err := getItemIDFromRequest(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -681,16 +681,41 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = deleteItemFromDatabase(objID)
+	err = deleteItemFromPostgres(itemID)
 	if err != nil {
-		http.Error(w, "Failed to delete item", http.StatusInternalServerError)
-		return
+        log.Errorf("Error deleting item from PostgreSQL: %v", err)
+        http.Error(w, "Failed to delete item from PostgreSQL", http.StatusInternalServerError)
+        return
+	}
+
+	err = deleteItemFromMongo(objID)
+	if err != nil {
+        log.Errorf("Error deleting item from MongoDB: %v", err)
+        http.Error(w, "Failed to delete item from MongoDB", http.StatusInternalServerError)
+        return
 	}
 
 	sendSuccessResponse(w)
 }
 
-// ========================================================
+func deleteItemFromPostgres(mongoID string) error {
+	db, err := database.Connect()
+	if err != nil {
+		log.Error("Error connecting to the database", err)
+		return err
+	}
+	defer db.Close()
+
+	// запрос на удаление записи в postgreSQL
+	query := `DELETE FROM products WHERE mongo_id = $1`
+	_, err = db.Exec(query, mongoID)
+	if err != nil {
+		return fmt.Errorf("failed to delete item from PostgreSQL: %v", err)
+	}
+
+	log.Printf("Item with mongo_id %s successfully deleted from PostgreSQL.", mongoID)
+	return nil
+}
 
 func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -728,10 +753,6 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
 	// отправляем путь к файлу обратно клиенту
 	w.Write([]byte(imageURL))
 }
-
-// ==========================================================================================
-
-// ========================================================
 
 func renderLoginPage(w http.ResponseWriter) {
 	utils.RenderTemplate(w, UserCookie{},
@@ -789,7 +810,7 @@ func convertToObjectID(itemID string) (primitive.ObjectID, error) {
 	return objID, nil
 }
 
-func deleteItemFromDatabase(objID primitive.ObjectID) error {
+func deleteItemFromMongo(objID primitive.ObjectID) error {
 	collection := database.GetCollection()
 	filter := bson.M{"_id": objID}
 	_, err := collection.DeleteOne(context.Background(), filter)

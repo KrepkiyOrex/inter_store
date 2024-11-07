@@ -27,7 +27,7 @@
                                 itemElement.remove();
                             }
                         } else {
-                            alert('Failed to delete item');
+                            response.text().then(text => alert(`Failed to delete item: ${text}`));
                         }
                     })
                     .catch(error => {

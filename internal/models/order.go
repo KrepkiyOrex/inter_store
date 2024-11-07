@@ -376,7 +376,7 @@ func SubmitOrderHandler(w http.ResponseWriter, r *http.Request) {
 		success, err := DecremInventoryGRPC(item.MongoID, int32(item.Quantity))
 		if err != nil || !success {
 			http.Error(w, "Failed to update inventory", http.StatusInternalServerError)
-			log.Println("Failed to decrement inventory:", err)
+			log.Error("Failed to decrement inventory:", err)
 			return
 		}
 	}
